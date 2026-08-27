@@ -382,7 +382,6 @@ function Row({
   );
   const mine = state.history.filter((h) => h.cible === ch.id);
   const last = mine.length ? mine[mine.length - 1] : null;
-  const tags = state.tags[ch.id] || [];
   const flagged = !!state.flags[ch.id];
 
   return (
@@ -520,24 +519,6 @@ function Row({
             )}
           </div>
           <span style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 5 }}>
-            {tags.map((tg) => (
-              <span
-                key={tg}
-                title="Tag de suivi — contrôle de gestion"
-                style={{
-                  padding: "3px 8px",
-                  borderRadius: 20,
-                  fontSize: 10.5,
-                  fontWeight: 700,
-                  background: "#f3f0ff",
-                  color: "#5b21b6",
-                  border: "1px solid #ddd6fe",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {tg}
-              </span>
-            ))}
             <span
               style={{
                 padding: "4px 10px",

@@ -38,9 +38,11 @@ function Coefficients({ store }: { store: Store }) {
         <div>
           <div style={{ fontSize: 14, fontWeight: 700 }}>Coefficients de baseline</div>
           <div style={{ fontSize: 12, color: "#6b7681", marginTop: 3 }}>
-            Un coefficient <b>commun</b> s'applique à tout le portefeuille. Un coefficient{" "}
-            <b>particulier</b> est rattaché à tous les chantiers mais reste neutre (× 1) tant qu'il
-            n'est pas renseigné chantier par chantier, dans le détail du chantier.
+            Les coefficients se saisissent en <b>% d'évolution</b> : <code>0 %</code> vaut
+            × 1,000, <code>2,4 %</code> vaut × 1,024. Un coefficient <b>commun</b> s'applique à tout
+            le portefeuille ; un coefficient <b>particulier</b> est rattaché à tous les chantiers
+            mais reste à 0 % — donc neutre — tant qu'il n'est pas renseigné chantier par chantier,
+            dans le détail du chantier.
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
@@ -139,10 +141,10 @@ function Coefficients({ store }: { store: Store }) {
                   <div key={m} style={{ padding: "5px 4px", textAlign: "right" }}>
                     {particulier ? (
                       <span
-                        title="Valeur propre à chaque chantier — se règle dans le détail du chantier"
+                        title="Valeur propre à chaque chantier — se règle dans le détail du chantier. 0 % = × 1,000"
                         style={{ fontSize: 12, color: "#a78bfa" }}
                       >
-                        × 1
+                        0 %
                       </span>
                     ) : isCG ? (
                       <input
@@ -179,7 +181,7 @@ function Coefficients({ store }: { store: Store }) {
                   }}
                 >
                   {particulier
-                    ? "propre"
+                    ? "par chantier"
                     : (FULL_YEAR.reduce((a, m) => a + (Number(r.values[m]) || 0), 0) / 12)
                         .toFixed(2)
                         .replace(".", ",") + " %"}

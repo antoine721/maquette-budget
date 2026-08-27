@@ -143,8 +143,6 @@ export const VILLES = [
   "Tourcoing",
 ];
 
-export const TAGS = ["Sensible", "Renégociation", "Perte de marge", "Nouveau marché"];
-
 export const PERIODES = [
   "Année complète",
   "S1 (jan-juin)",

@@ -220,7 +220,6 @@ function TopChantiers({ store }: { store: Store }) {
                 ? "À valider"
                 : "Complet",
         riskColor: st === "Non budgétisé" || miss.length ? "#b91c1c" : "#6b7681",
-        tags: state.tags[ch.id] || [],
         flagged: !!state.flags[ch.id],
       };
     });
@@ -343,23 +342,6 @@ function TopChantiers({ store }: { store: Store }) {
                 >
                   {r.risk}
                 </span>
-                {r.tags.map((tg) => (
-                  <span
-                    key={tg}
-                    style={{
-                      padding: "2px 7px",
-                      borderRadius: 20,
-                      fontSize: 10,
-                      fontWeight: 700,
-                      background: "#f3f0ff",
-                      color: "#5b21b6",
-                      border: "1px solid #ddd6fe",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {tg}
-                  </span>
-                ))}
               </span>
             </div>
           ))}

@@ -1,4 +1,4 @@
-import { TAGS, type Statut } from "../../data/constants";
+import type { Statut } from "../../data/constants";
 import type { Chantier } from "../../data/chantiers";
 import { buildDetail, menuActions, menuPlaceholder, type DetailLine } from "../../lib/detail";
 import type { Store } from "../../state/store";
@@ -24,7 +24,6 @@ export default function ChantierDetail({
     toast,
     setStatutFlow,
     validateBudget,
-    toggleTag,
   } = store;
   const met = engine.metric;
   const cat = state.cat;
@@ -363,46 +362,6 @@ export default function ChantierDetail({
       >
         <div style={{ fontSize: 12.5, color: "#6b7681" }}>{trace}</div>
         <span style={{ flex: 1 }} />
-        {isCG && (
-          <span
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "5px 9px",
-              border: "1px solid #ddd6fe",
-              borderRadius: 8,
-              background: "#f8f7ff",
-            }}
-          >
-            <span style={{ fontSize: 11.5, fontWeight: 700, color: "#5b21b6" }}>Tags</span>
-            {TAGS.map((t) => {
-              const on = (state.tags[ch.id] || []).includes(t);
-              return (
-                <button
-                  key={t}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleTag(ch, t);
-                  }}
-                  style={{
-                    padding: "4px 9px",
-                    border: "1px solid " + (on ? "#5b21b6" : "#ddd6fe"),
-                    borderRadius: 20,
-                    background: on ? "#5b21b6" : "#fff",
-                    color: on ? "#fff" : "#6b7681",
-                    fontFamily: "inherit",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    cursor: "pointer",
-                  }}
-                >
-                  {t}
-                </button>
-              );
-            })}
-          </span>
-        )}
       </div>
     </div>
   );

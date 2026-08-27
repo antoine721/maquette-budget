@@ -219,13 +219,7 @@ function RexConsolidated({ store }: { store: Store }) {
 
   const rows = names
     .map((nom) => {
-      const list = engine
-        .scope()
-        .filter(
-          (ch) =>
-            REX[ch.id] === nom &&
-            (state.fTag === "Tous les tags" || (state.tags[ch.id] || []).includes(state.fTag)),
-        );
+      const list = engine.scope().filter((ch) => REX[ch.id] === nom);
       let done = 0,
         tot = 0;
       list.forEach((ch) =>
@@ -280,7 +274,6 @@ function RexConsolidated({ store }: { store: Store }) {
           {"Campagne " +
             state.year +
             (state.fEntity === "Toutes" ? " · toutes entités" : " · " + state.fEntity) +
-            (state.fTag === "Tous les tags" ? "" : " · tag " + state.fTag) +
             " · les moins avancés en premier"}
         </span>
       </div>

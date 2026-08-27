@@ -147,11 +147,13 @@ export function buildDetail(
   const lineN1 = mkLine("n1", "Réalisé N-1 (source Gescof) — N-2 de septembre à décembre", { labelColor: "#6b7681" });
   const refLines = s.refs.map((r) => ({
     ref: r,
-    line: mkLine("ref:" + r.id, "× " + r.label, {
+    line: mkLine("ref:" + r.id, "× " + r.label + " (%)", {
+      // Les coefficients se saisissent en pourcentage d'évolution : 0 % vaut × 1,000.
       title:
-        r.scope === "commun"
+        (r.scope === "commun"
           ? r.label + " — coefficient commun à tout le portefeuille"
-          : r.label + " — coefficient particulier, valeur propre à ce chantier",
+          : r.label + " — coefficient particulier, valeur propre à ce chantier") +
+        " · saisi en % d'évolution : 0 % = × 1,000",
       labelColor: r.scope === "particulier" ? "#5b21b6" : "#475569",
     }),
   }));
@@ -307,6 +309,10 @@ export function buildDetail(
         rl.line.cells.push({
           editable: true,
           raw: String(v),
+          ghost: "0",
+          ghostTitle:
+            "% d'évolution propre à ce chantier — 0 % = × 1,000 (neutre) · actuellement × " +
+            c.toFixed(3).replace(".", ","),
           border: "#ddd6fe",
           dash: "solid",
           fg: "#5b21b6",

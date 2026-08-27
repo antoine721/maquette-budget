@@ -57,7 +57,6 @@ function initialState(): AppState {
     searchDraft: "",
     fPeriode: "Année complète",
     fEntity: "Toutes",
-    fTag: "Tous les tags",
     fRex: "Tous",
     onlyTodo: false,
     onlyFlagged: false,
@@ -70,11 +69,6 @@ function initialState(): AppState {
     baseEdits: {},
     statutOverride: {},
     history: [],
-    tags: {
-      "C00027-001": ["Sensible"],
-      "C00034-003": ["Perte de marge"],
-      "C00088-001": ["Nouveau marché"],
-    },
     flags: {},
     refValues: {},
     cristal: {},
@@ -127,7 +121,6 @@ function signature(s: AppState): string {
     s.fSearch,
     s.fPeriode,
     s.fSort,
-    s.fTag,
     s.fRex,
     s.onlyTodo,
     s.onlyFlagged,
@@ -137,7 +130,6 @@ function signature(s: AppState): string {
     JSON.stringify(s.baseEdits),
     JSON.stringify(s.statutOverride),
     JSON.stringify(s.periods),
-    JSON.stringify(s.tags),
     JSON.stringify(s.flags),
     JSON.stringify(s.refs),
     JSON.stringify(s.refValues),
@@ -460,25 +452,6 @@ export function useApp() {
     [set],
   );
 
-  const toggleTag = useCallback(
-    (ch: Chantier, tag: string) => {
-      const on = (state.tags[ch.id] || []).includes(tag);
-      set((prev) => {
-        const cur = prev.tags[ch.id] || [];
-        return {
-          tags: {
-            ...prev.tags,
-            [ch.id]: on ? cur.filter((x) => x !== tag) : cur.concat([tag]),
-          },
-        };
-      });
-      toast(
-        on ? "Tag « " + tag + " » retiré de " + ch.id : "Tag « " + tag + " » ajouté à " + ch.id,
-      );
-    },
-    [set, state.tags, toast],
-  );
-
   const addRef = useCallback(
     (scope: RefScope) => {
       if (state.role !== "Contrôle de gestion") {
@@ -556,7 +529,6 @@ export function useApp() {
     setCell,
     setSearch,
     openChantier,
-    toggleTag,
     toggleFlag,
     addRef,
     setRefValue,

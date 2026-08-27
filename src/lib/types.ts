@@ -71,7 +71,6 @@ export interface AppState {
   searchDraft: string;
   fPeriode: string;
   fEntity: string;
-  fTag: string;
   fRex: string;
   onlyTodo: boolean;
   /** N'afficher que les chantiers signalés par un drapeau. */
@@ -87,7 +86,6 @@ export interface AppState {
   baseEdits: EditMap;
   statutOverride: Record<string, Statut>;
   history: HistoryEntry[];
-  tags: Record<string, string[]>;
   /** Chantiers signalés : difficiles à repérer dans les analytiques mais à problème. */
   flags: Record<string, boolean>;
   /**

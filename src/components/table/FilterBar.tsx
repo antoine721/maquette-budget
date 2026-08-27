@@ -1,4 +1,4 @@
-import { CAT, ENTITIES, METRICS, TAGS, YEARS } from "../../data/constants";
+import { CAT, ENTITIES, METRICS, YEARS } from "../../data/constants";
 import type { Store } from "../../state/store";
 
 const SELECT: React.CSSProperties = {
@@ -112,27 +112,6 @@ export default function FilterBar({ store }: { store: Store }) {
         Signalés
         <span style={{ fontWeight: 600, opacity: 0.7 }}>{flaggedCount}</span>
       </button>
-
-      {engine.isCG && (
-        <select
-          value={state.fTag}
-          onChange={(e) => set({ fTag: e.target.value })}
-          title="Filtrer par tag de suivi"
-          style={{
-            ...SELECT,
-            border: "1px solid #ddd6fe",
-            background: "#f8f7ff",
-            fontWeight: 600,
-            color: "#5b21b6",
-          }}
-        >
-          {["Tous les tags", ...TAGS].map((tg) => (
-            <option key={tg} value={tg}>
-              {tg}
-            </option>
-          ))}
-        </select>
-      )}
 
       <span style={{ width: 1, height: 22, background: "#e6eaee" }} />
 

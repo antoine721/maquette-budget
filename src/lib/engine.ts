@@ -492,7 +492,6 @@ export class Engine {
         if (s.fAgence !== "Toutes les agences" && c.agence !== s.fAgence) return false;
         if (s.fClient !== "Tous les clients" && c.client !== s.fClient) return false;
         if (s.fEntity !== "Toutes" && c.entite !== s.fEntity) return false;
-        if (s.fTag !== "Tous les tags" && !(s.tags[c.id] || []).includes(s.fTag)) return false;
         if (s.fRex !== "Tous" && REX[c.id] !== s.fRex) return false;
         if (!s.fStatuts.includes(this.st(c))) return false;
         if (
