@@ -83,10 +83,42 @@ calculés sur **tout** le périmètre filtré. La recherche est débouncée à 2
 ## Onglets
 
 - **Accueil** — voir ci-dessous.
-- **Tableau prévisionnel** — vue liste 12 mois, colonne chantier figée au scroll horizontal, détail
-  dépliable par chantier (réalisé N-1 → coefficients → baseline → saisie → indicateurs calculés),
-  menu ⋯ d'actions en masse par ligne avec historique et annulation.
-- **Pilotage CDG** — indicateurs de portefeuille, Top 20 chantiers (80 % du CA) et avancement par REX.
+- **Tableau prévisionnel** — vue liste 12 mois, colonne chantier figée au scroll horizontal. Le REX
+  n'y voit que ses chantiers ; le contrôle de gestion voit tout. Chaque ligne porte le nom du
+  marché, son code, son entité, un **pourcentage de complétion** et un **drapeau de signalement**
+  (filtrable par la puce « Signalés »). Les colonnes **septembre à décembre** sont teintées et
+  marquées **N-2** : les réalisés de l'année en cours n'étant pas connus, la référence remonte d'un
+  exercice.
+
+  Le détail dépliable est découpé en trois groupes : **1 · Baseline** (réalisé N-1 → coefficients →
+  baseline CG), **2 · À remplir** (CA par catégorie, nombre d'heures, taux horaire chargé, d'où
+  découle la masse salariale), **3 · Indicateurs calculés**. Le menu ⋯ de chaque ligne propose deux
+  gestes — appliquer un % d'évolution, recopier le 1er mois saisi — avec historique et annulation.
+  Le récapitulatif **Prévu CG / Déclaré / % objectif / Couverture** est en bas, contre les boutons
+  du circuit.
+- **Pilotage CDG** — quatre onglets internes : **Vue d'ensemble** (indicateurs de portefeuille,
+  évolution mensuelle du CA, anneaux d'avancement), **Chantiers** (Top 20 = 80 % du CA),
+  **Responsables** (avancement de chaque REX) et **Réglages**.
+
+## Cristallisations
+
+Chaque envoi en validation crée une **cristallisation** que le contrôle de gestion doit valider.
+Un budget validé reste modifiable : dès que l'exploitation y touche, il repasse automatiquement en
+« À valider » et la cristallisation suivante s'ouvre. Le compteur est affiché dans le détail du
+chantier (« Cristallisation n°2 à valider »).
+
+## Coefficients et périodes
+
+Les deux se règlent dans **Pilotage CDG › Réglages**.
+
+Un coefficient de baseline est soit **commun** — une valeur mensuelle appliquée à tout le
+portefeuille —, soit **particulier** : rattaché à tous les chantiers mais neutre (× 1) tant qu'il
+n'est pas renseigné, chantier par chantier, depuis le détail du chantier. C'est ce qui permet de
+porter une exigence de performance propre à un client sans fausser les autres calculs.
+
+Les périodes de gestion (rebudgétisation, modification, fermeture) sont **informatives par
+défaut**. Cocher « bloquante » sur une période active gèle réellement la saisie de l'exploitation
+et affiche la raison sur la page d'accueil de tout le monde.
 
 ## L'accueil, situation par situation
 

@@ -1,12 +1,19 @@
-import { CAT, PER_MONTHS, SHORT, ST, STATUT_OPTS, type Statut } from "../../data/constants";
+import {
+  N2_TINT,
+  N2_TINT_STRONG,
+  N2_FG,
+  PER_MONTHS,
+  SAISIE_FIELDS,
+  SHORT,
+  ST,
+  STATUT_OPTS,
+  isN2,
+  type Statut,
+} from "../../data/constants";
 import type { Chantier } from "../../data/chantiers";
 import type { Store } from "../../state/store";
-import AdminPeriods from "./AdminPeriods";
 import ChantierDetail from "./ChantierDetail";
-import Coefficients from "./Coefficients";
 import FilterBar from "./FilterBar";
-
-const ALL_FIELDS = CAT.map((c) => c.k as string).concat(["heures", "masse"]);
 
 /** Séparateurs de trimestre. */
 const sepColor = (m: number) => (m === 2 || m === 5 || m === 8 ? "#e6eaee" : "transparent");
@@ -49,11 +56,6 @@ export default function TableTab({ store }: { store: Store }) {
         }}
       >
         <FilterBar store={store} />
-
-        {state.role === "Admin" && <AdminPeriods store={store} />}
-        {engine.isCG && (
-          <Coefficients store={store} mIdx={mIdx} gridCols={gridCols} tableMin={tableMin} />
-        )}
 
         <div
           style={{
@@ -144,22 +146,30 @@ export default function TableTab({ store }: { store: Store }) {
                 </div>
                 {mIdx.map((m) => {
                   const open = state.periods["Saint Ouen"][m];
+                  const n2 = isN2(m);
                   return (
                     <div
                       key={m}
+                      title={n2 ? "Référence N-2" : undefined}
                       style={{
-                        padding: "11px 8px",
+                        padding: "9px 8px",
                         textAlign: "right",
                         fontSize: 11,
                         fontWeight: 700,
                         letterSpacing: "0.5px",
                         textTransform: "uppercase",
-                        color: open ? "#0a9bd8" : "#8a95a1",
+                        color: n2 ? N2_FG : open ? "#0a9bd8" : "#8a95a1",
                         borderRight: "1px solid " + sepColor(m),
-                        background: open ? "#f5fbff" : "#fff",
+                        background: n2 ? N2_TINT_STRONG : open ? "#f5fbff" : "#fff",
                       }}
                     >
-                      {SHORT[m]}
+                      <div>{SHORT[m]}</div>
+                      {/* Les réalisés de l'année en cours manquent sur ces mois : la référence est N-2. */}
+                      {n2 && (
+                        <div style={{ fontSize: 9, fontWeight: 700, opacity: 0.8, letterSpacing: 0 }}>
+                          N-2
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -291,7 +301,7 @@ function Row({
   gridCols: string;
   gridColsDetail: string;
 }) {
-  const { state, engine, set } = store;
+  const { state, engine, set, toggleFlag } = store;
   const met = engine.metric;
   const cat = state.cat;
   const st = engine.st(ch) as Statut;
@@ -303,31 +313,33 @@ function Row({
     const v = engine.metricFrom(engine.prims(ch, m, "saisi"), met.key, cat);
     const b = engine.metricFrom(engine.prims(ch, m, "base"), met.key, cat);
     const periodOpen = state.periods[ch.agence][m];
-    const touched = ALL_FIELDS.some(
+    const touched = SAISIE_FIELDS.some(
       (f) => engine.edited(ch, f, m, false) || engine.edited(ch, f, m, true),
     );
+    const n2 = isN2(m);
     return {
       m,
       text: engine.fmt(v, met.kind),
       color: engine.markerColor(v, b, met.better),
-      bg: v === null ? (periodOpen ? "#fffbeb" : "#fff") : stc.cell,
+      bg: v === null ? (periodOpen ? "#fffbeb" : n2 ? N2_TINT : "#fff") : stc.cell,
       mark: touched ? "#0a9bd8" : "transparent",
-      markTitle: touched ? "Valeur modifiée manuellement" : "",
+      markTitle: touched ? "Valeur modifiée manuellement" : n2 ? "Référence N-2" : "",
     };
   });
 
   const rowSaisi = engine.aggregate([ch], mIdx, "saisi", met.key, cat);
-  const filledM = mIdx.filter((m) => engine.prims(ch, m, "saisi"));
+  const completion = engine.completionPct(ch, mIdx);
   const nEdits = mIdx.reduce(
     (a, m) =>
       a +
-      ALL_FIELDS.filter((f) => engine.edited(ch, f, m, false) || engine.edited(ch, f, m, true))
+      SAISIE_FIELDS.filter((f) => engine.edited(ch, f, m, false) || engine.edited(ch, f, m, true))
         .length,
     0,
   );
   const mine = state.history.filter((h) => h.cible === ch.id);
   const last = mine.length ? mine[mine.length - 1] : null;
   const tags = state.tags[ch.id] || [];
+  const flagged = !!state.flags[ch.id];
 
   return (
     <div style={{ borderBottom: "1px solid #f1f4f7", background: rowBg }}>
@@ -371,6 +383,34 @@ function Row({
               >
                 {ch.nom}
               </span>
+              {/* Signalement : les chantiers durs à repérer dans les analytiques. */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFlag(ch);
+                }}
+                title={
+                  flagged
+                    ? "Chantier signalé — cliquer pour retirer le signalement"
+                    : "Signaler ce chantier"
+                }
+                style={{
+                  flex: "0 0 auto",
+                  width: 22,
+                  height: 22,
+                  padding: 0,
+                  border: "1px solid " + (flagged ? "#fecaca" : "#e6eaee"),
+                  borderRadius: 6,
+                  background: flagged ? "#fee2e2" : "transparent",
+                  color: flagged ? "#dc2626" : "#c7d0d9",
+                  fontFamily: "inherit",
+                  fontSize: 12,
+                  lineHeight: 1,
+                  cursor: "pointer",
+                }}
+              >
+                ⚑
+              </button>
             </div>
             <div
               style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3, minWidth: 0 }}
@@ -397,18 +437,13 @@ function Row({
                   textOverflow: "ellipsis",
                 }}
               >
-                {ch.entite +
-                  " · " +
-                  ch.ville +
-                  " · " +
-                  ch.agence +
-                  (engine.isCG ? " · " + ch.client : "")}
+                {ch.entite + (engine.isCG ? " · " + ch.client : "")}
               </span>
               <span
                 title={
                   last
                     ? "Dernière action : " + last.label + " (" + last.count + " cellules)"
-                    : "Aucune action manuelle sur ce chantier"
+                    : completion + " % des champs renseignés sur la période"
                 }
                 style={{
                   flex: "0 0 auto",
@@ -416,16 +451,12 @@ function Row({
                   borderRadius: 20,
                   fontSize: 10.5,
                   fontWeight: 700,
-                  background: nEdits ? "#e8f6fd" : "#f4f6f8",
-                  color: nEdits ? "#0782b6" : "#8a95a1",
+                  background: completion === 100 ? "#dcfce7" : nEdits ? "#e8f6fd" : "#f4f6f8",
+                  color: completion === 100 ? "#166534" : nEdits ? "#0782b6" : "#8a95a1",
                   whiteSpace: "nowrap",
                 }}
               >
-                {filledM.length +
-                  "/" +
-                  mIdx.length +
-                  " mois saisis" +
-                  (nEdits ? " · " + nEdits + " modif." : "")}
+                {completion + " %" + (nEdits ? " · " + nEdits + " modif." : "")}
               </span>
             </div>
             {mine.length > 0 && (

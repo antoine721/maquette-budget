@@ -39,6 +39,37 @@ export default function HomeTab({ store }: { store: Store }) {
     >
       <CampaignBanner store={store} />
 
+      {/* Une période bloquante posée par le contrôle de gestion s'annonce ici, avec sa raison. */}
+      {(() => {
+        const block = engine.activeBlock();
+        if (!block) return null;
+        return (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "12px 16px",
+              background: "#fff7f7",
+              border: "1px solid #fecaca",
+              borderLeft: "3px solid #dc2626",
+              borderRadius: 12,
+            }}
+          >
+            <span style={{ fontSize: 15 }}>🔒</span>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#991b1b" }}>
+                Période « {block.label} » — modifications bloquées
+              </div>
+              <div style={{ fontSize: 12.5, color: "#b91c1c", marginTop: 1 }}>
+                {block.reason || "Aucune raison précisée par le contrôle de gestion."}
+                <span style={{ color: "#c98b8b" }}> · {block.window}</span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {open ? <CampaignLayout store={store} /> : <HistoryLayout store={store} />}
 
       {engine.isCG && <RexConsolidated store={store} />}

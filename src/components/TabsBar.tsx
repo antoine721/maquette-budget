@@ -4,8 +4,9 @@ import type { Store } from "../state/store";
 /** Onglets Accueil / Tableau, plus Pilotage CDG réservé au contrôle de gestion. */
 export default function TabsBar({ store }: { store: Store }) {
   const { state, engine, set } = store;
+  // Le pilotage porte aussi les réglages (coefficients, périodes) : l'admin y a accès.
   const tabs: Tab[] = (["Accueil", "Tableau prévisionnel"] as Tab[]).concat(
-    engine.isCG ? (["Pilotage CDG"] as Tab[]) : [],
+    engine.isExploit ? [] : (["Pilotage CDG"] as Tab[]),
   );
 
   return (

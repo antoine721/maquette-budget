@@ -29,6 +29,7 @@ export default function FilterBar({ store }: { store: Store }) {
   const met = engine.metric;
   const metricLabel = met.key === "ca" ? catLabel : met.label;
   const list = engine.filtered();
+  const flaggedCount = Object.values(state.flags).filter(Boolean).length;
 
   return (
     <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
@@ -87,6 +88,30 @@ export default function FilterBar({ store }: { store: Store }) {
           );
         })}
       </div>
+
+      {/* Les chantiers signalés : durs à repérer dans les analytiques, mais à problème. */}
+      <button
+        onClick={() => set({ onlyFlagged: !state.onlyFlagged })}
+        title="N'afficher que les chantiers signalés"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          padding: "8px 12px",
+          border: "1px solid " + (state.onlyFlagged ? "#fecaca" : "#dde3e8"),
+          borderRadius: 999,
+          background: state.onlyFlagged ? "#fee2e2" : "#fff",
+          color: state.onlyFlagged ? "#991b1b" : "#6b7681",
+          fontFamily: "inherit",
+          fontSize: 12.5,
+          fontWeight: 700,
+          cursor: "pointer",
+        }}
+      >
+        <span style={{ fontSize: 12 }}>⚑</span>
+        Signalés
+        <span style={{ fontWeight: 600, opacity: 0.7 }}>{flaggedCount}</span>
+      </button>
 
       {engine.isCG && (
         <select

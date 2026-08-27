@@ -84,7 +84,7 @@ export const ST: Record<Statut, StatutStyle> = {
   "Non budgétisé": { bg: "#fee2e2", fg: "#991b1b", border: "#fecaca", cell: "#fffafa", accent: "#dc2626" },
 };
 
-export type MetricKey = "ca" | "heures" | "masse" | "msRatio" | "phv" | "marge";
+export type MetricKey = "ca" | "heures" | "taux" | "masse" | "msRatio" | "phv" | "marge";
 export type MetricKind = "money" | "h" | "pct" | "eur2";
 
 export interface Metric {
@@ -99,7 +99,8 @@ export interface Metric {
 export const METRICS: Metric[] = [
   { key: "ca", label: "CA", kind: "money", better: "high", agg: "sum", formula: "CA = Forfait + Réel + PAD + TE" },
   { key: "heures", label: "Heures", kind: "h", better: "high", agg: "sum", formula: "Heures saisies par l'exploitation" },
-  { key: "masse", label: "Masse salariale", kind: "money", better: "low", agg: "sum", formula: "MS saisie par l'exploitation" },
+  { key: "taux", label: "Taux horaire", kind: "eur2", better: "low", agg: "ratio", formula: "Taux horaire chargé saisi par l'exploitation" },
+  { key: "masse", label: "Masse salariale", kind: "money", better: "low", agg: "sum", formula: "MS = nombre d'heures × taux horaire" },
   { key: "msRatio", label: "% MS / CA", kind: "pct", better: "low", agg: "ratio", formula: "% MS = MS / CA × 100" },
   { key: "phv", label: "€/h vendu", kind: "eur2", better: "high", agg: "ratio", formula: "Prix horaire vendu = CA / nombre d'heures" },
   { key: "marge", label: "% marge après MS", kind: "pct", better: "high", agg: "ratio", formula: "% marge = (CA − MS) / CA × 100" },
@@ -165,6 +166,20 @@ export const PER_MONTHS: Record<string, number[]> = {
 };
 
 export const FULL_YEAR = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
+
+/** Postes saisis par l'exploitation : le CA par catégorie, les heures et le taux horaire. */
+export const SAISIE_FIELDS = CAT.map((c) => c.k as string).concat(["heures", "taux"]);
+
+/**
+ * Septembre à décembre : la campagne se déroule en septembre N-1, les réalisés de
+ * l'année en cours ne sont pas connus sur ces mois, la référence est donc N-2.
+ */
+export const N2_MONTHS = [8, 9, 10, 11];
+export const isN2 = (m: number) => m >= 8;
+/** Teinte très légère qui signale une colonne adossée à N-2. */
+export const N2_TINT = "#fdf9f2";
+export const N2_TINT_STRONG = "#fbf1e2";
+export const N2_FG = "#a16207";
 
 export const SORTS = [
   "Priorité à déclarer",

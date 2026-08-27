@@ -3,7 +3,7 @@ import type { Chantier } from "../../data/chantiers";
 import { buildDetail, menuActions, menuPlaceholder, type DetailLine } from "../../lib/detail";
 import type { Store } from "../../state/store";
 
-/** Détail du calcul d'un chantier : le tableau des postes mois par mois et le circuit de validation. */
+/** Détail du calcul d'un chantier : les trois groupes de lignes et le circuit de validation. */
 export default function ChantierDetail({
   store,
   ch,
@@ -15,7 +15,8 @@ export default function ChantierDetail({
   mIdx: number[];
   gridColsDetail: string;
 }) {
-  const { state, engine, set, setCell, toast, setStatutFlow, toggleTag } = store;
+  const { state, engine, set, setCell, setChantierRef, toast, setStatutFlow, validateBudget, toggleTag } =
+    store;
   const met = engine.metric;
   const cat = state.cat;
   const st = engine.st(ch) as Statut;
@@ -26,6 +27,7 @@ export default function ChantierDetail({
   const rowSaisi = engine.aggregate([ch], mIdx, "saisi", met.key, cat);
   const rowBase = engine.aggregate([ch], mIdx, "base", met.key, cat);
   const filledM = mIdx.filter((m) => engine.prims(ch, m, "saisi"));
+  const cristal = engine.cristal(ch);
 
   const predRate = rowBase && rowSaisi !== null ? Math.round((rowSaisi / rowBase) * 100) + " %" : "—";
   const predRateColor = (() => {
@@ -41,14 +43,16 @@ export default function ChantierDetail({
         " — aucune baseline ni saisie : le contrôle de gestion doit initialiser le budget."
       : st === "Baseline CG"
         ? "Baseline saisie par le contrôle de gestion — non encore publiée à l'exploitation."
-        : "Baseline vérifiée par le contrôle de gestion · " +
-          (filledM.length ? filledM.length + "/" + mIdx.length + " mois saisis" : "aucune saisie") +
-          " · " +
-          (st === "Validé"
-            ? "validé le 04/08/" + state.year
-            : st === "Clôturé"
-              ? "exercice clôturé"
-              : "en attente de validation");
+        : st === "À valider"
+          ? "Cristallisation n°" +
+            (cristal + 1) +
+            " en attente de validation du contrôle de gestion."
+          : st === "Validé"
+            ? "Cristallisation n°" +
+              cristal +
+              " validée — toute correction ouvrira une nouvelle cristallisation."
+            : "Baseline vérifiée · " +
+              (filledM.length ? filledM.length + "/" + mIdx.length + " mois saisis" : "aucune saisie");
 
   return (
     <div
@@ -89,38 +93,10 @@ export default function ChantierDetail({
             padding: "4px 9px",
           }}
         >
-          {met.formula +
-            "  ·  PAD = Prestations à la Demande  ·  TE = Travaux Exceptionnels"}
+          {met.formula + "  ·  PAD = Prestations à la Demande  ·  TE = Travaux Exceptionnels"}
         </div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 14,
-            marginLeft: "auto",
-            padding: "6px 12px",
-            background: "#fff",
-            border: "1px solid #e6eaee",
-            borderRadius: 8,
-          }}
-        >
-          <Stat label="Prévu CG" value={engine.fmt(rowBase, met.kind)} color="#475569" />
-          <Sep />
-          <Stat label="Déclaré" value={engine.fmt(rowSaisi, met.kind)} color="#17202a" />
-          <Sep />
-          <Stat label="% objectif" value={predRate} color={predRateColor} />
-          <Sep />
-          <Stat
-            label="Couverture"
-            value={
-              filledM.length === mIdx.length
-                ? "12 mois saisis"
-                : filledM.length + "/" + mIdx.length + " mois saisis"
-            }
-            color="#6b7681"
-            small
-          />
-        </div>
+        <span style={{ flex: 1 }} />
+        <CristalBadge n={cristal} pending={st === "À valider"} />
       </div>
 
       {detail.map((d) => (
@@ -170,9 +146,7 @@ export default function ChantierDetail({
               >
                 {d.label}
               </span>
-              {d.quick && (
-                <LineQuick store={store} ch={ch} line={d} onBaseline={isCG} />
-              )}
+              {d.quick && <LineQuick store={store} ch={ch} line={d} onBaseline={isCG} />}
             </span>
             {d.applied && (
               <span
@@ -199,7 +173,9 @@ export default function ChantierDetail({
                 <input
                   value={c.raw}
                   onChange={(e) =>
-                    setCell(ch, c.field!, c.month!, e.target.value, !!c.onBaseline)
+                    c.refId
+                      ? setChantierRef(c.refId, ch, c.month!, e.target.value)
+                      : setCell(ch, c.field!, c.month!, e.target.value, !!c.onBaseline)
                   }
                   placeholder={c.ghost}
                   title={c.ghostTitle}
@@ -249,17 +225,36 @@ export default function ChantierDetail({
         </div>
       ))}
 
+      {/* Bandeau de clôture : le récapitulatif chiffré, puis les actions du circuit. */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           gap: 12,
           flexWrap: "wrap",
-          marginTop: 16,
+          marginTop: 18,
+          padding: "12px 14px",
+          background: "#fff",
+          border: "1px solid #e6eaee",
+          borderRadius: 10,
         }}
       >
-        <div style={{ fontSize: 12.5, color: "#6b7681" }}>{trace}</div>
-        <div style={{ flex: 1 }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <Stat label="Prévu CG" value={engine.fmt(rowBase, met.kind)} color="#475569" />
+          <Sep />
+          <Stat label="Déclaré" value={engine.fmt(rowSaisi, met.kind)} color="#17202a" />
+          <Sep />
+          <Stat label="% objectif" value={predRate} color={predRateColor} />
+          <Sep />
+          <Stat
+            label="Couverture"
+            value={filledM.length + "/" + mIdx.length + " mois saisis"}
+            color="#6b7681"
+            small
+          />
+        </div>
+
+        <span style={{ flex: 1 }} />
 
         {isCG && st === "Baseline CG" && (
           <FlowButton
@@ -277,21 +272,25 @@ export default function ChantierDetail({
             bg="#0a9bd8"
             onClick={(e) => {
               e.stopPropagation();
-              setStatutFlow(ch, "À valider", ch.id + " envoyé en validation");
+              setStatutFlow(
+                ch,
+                "À valider",
+                ch.id + " envoyé en validation — cristallisation n°" + (cristal + 1),
+              );
             }}
           >
             Envoyer en validation
           </FlowButton>
         )}
-        {isExploit && st === "À valider" && (
+        {isCG && st === "À valider" && (
           <FlowButton
             bg="#16a34a"
             onClick={(e) => {
               e.stopPropagation();
-              setStatutFlow(ch, "Validé", "Budget " + ch.id + " validé");
+              validateBudget(ch);
             }}
           >
-            Valider le budget
+            Valider ce budget
           </FlowButton>
         )}
         {isCG && st === "Validé" && (
@@ -316,6 +315,38 @@ export default function ChantierDetail({
           </button>
         )}
 
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            toast("Export de " + ch.id + " en cours…");
+          }}
+          style={{
+            padding: "9px 15px",
+            border: "1px solid #dde3e8",
+            borderRadius: 8,
+            background: "#fff",
+            fontFamily: "inherit",
+            fontSize: 13,
+            fontWeight: 600,
+            color: "#3b4753",
+            cursor: "pointer",
+          }}
+        >
+          Exporter ce chantier
+        </button>
+      </div>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          flexWrap: "wrap",
+          marginTop: 10,
+        }}
+      >
+        <div style={{ fontSize: 12.5, color: "#6b7681" }}>{trace}</div>
+        <span style={{ flex: 1 }} />
         {isCG && (
           <span
             style={{
@@ -356,32 +387,34 @@ export default function ChantierDetail({
             })}
           </span>
         )}
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            toast("Export de " + ch.id + " en cours…");
-          }}
-          style={{
-            padding: "9px 15px",
-            border: "1px solid #dde3e8",
-            borderRadius: 8,
-            background: "#fff",
-            fontFamily: "inherit",
-            fontSize: 13,
-            fontWeight: 600,
-            color: "#3b4753",
-            cursor: "pointer",
-          }}
-        >
-          Exporter ce chantier
-        </button>
       </div>
     </div>
   );
 }
 
-/** Badge « déjà effectué » + menu ⋯ des actions en masse propres à la ligne. */
+/** Rappelle où en est le budget dans le cycle de cristallisation. */
+function CristalBadge({ n, pending }: { n: number; pending: boolean }) {
+  if (!n && !pending) return null;
+  return (
+    <span
+      title="Chaque envoi en validation crée une cristallisation ; corriger un budget validé en ouvre une nouvelle."
+      style={{
+        padding: "4px 10px",
+        borderRadius: 20,
+        fontSize: 11,
+        fontWeight: 700,
+        background: pending ? "#e0f2fe" : "#dcfce7",
+        color: pending ? "#075985" : "#166534",
+        border: "1px solid " + (pending ? "#bae6fd" : "#bbf7d0"),
+        whiteSpace: "nowrap",
+      }}
+    >
+      {pending ? "Cristallisation n°" + (n + 1) + " à valider" : "Cristallisation n°" + n + " validée"}
+    </span>
+  );
+}
+
+/** Badge de complétion + menu ⋯ des actions en masse propres à la ligne. */
 function LineQuick({
   store,
   ch,
@@ -401,13 +434,7 @@ function LineQuick({
 
   return (
     <span
-      style={{
-        marginLeft: "auto",
-        display: "flex",
-        alignItems: "center",
-        gap: 6,
-        flex: "0 0 auto",
-      }}
+      style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, flex: "0 0 auto" }}
     >
       <span
         title={q.doneTitle}
@@ -430,7 +457,7 @@ function LineQuick({
             e.stopPropagation();
             set({ openMenu: menuOpen ? null : q.menuId, menuStep: null, menuValue: "" });
           }}
-          title="Autres actions en masse sur cette ligne"
+          title="Actions en masse sur cette ligne"
           style={{
             width: 24,
             height: 24,
@@ -475,7 +502,7 @@ function LineQuick({
               }}
             >
               {listOpen &&
-                menuActions(state.year).map((a) => (
+                menuActions().map((a) => (
                   <button
                     key={a.act}
                     className="hov-f4"

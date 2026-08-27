@@ -1,9 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CONFIG } from "../config";
-import { AGENCES, CAT, MONTHS, type Statut } from "../data/constants";
+import { AGENCES, MONTHS, type Statut } from "../data/constants";
 import type { Chantier } from "../data/chantiers";
 import { Engine } from "../lib/engine";
-import type { AppState, EditMap, EditStore, HistoryEntry } from "../lib/types";
+import type {
+  AppState,
+  EditMap,
+  EditStore,
+  HistoryEntry,
+  PeriodRule,
+  RefScope,
+} from "../lib/types";
 
 function initialState(): AppState {
   const periods: Record<string, boolean[]> = {};
@@ -20,6 +27,7 @@ function initialState(): AppState {
         label: "Inflation",
         role: "Source INSEE — saisie contrôle de gestion",
         dot: "#0a9bd8",
+        scope: "commun",
         values: [2.4, 2.4, 2.3, 2.3, 2.2, 2.2, 2.1, 2.1, 2.0, 2.0, 2.0, 1.9],
       },
       {
@@ -27,7 +35,16 @@ function initialState(): AppState {
         label: "Revalorisation contractuelle",
         role: "Indexation clients au 1er avril",
         dot: "#16a34a",
+        scope: "commun",
         values: [0, 0, 0, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8, 0.8],
+      },
+      {
+        id: "perfClient",
+        label: "Performance client",
+        role: "Particulier — à renseigner chantier par chantier",
+        dot: "#8b5cf6",
+        scope: "particulier",
+        values: MONTHS.map(() => 0),
       },
     ],
     fSort: "Priorité à déclarer",
@@ -43,6 +60,7 @@ function initialState(): AppState {
     fTag: "Tous les tags",
     fRex: "Tous",
     onlyTodo: false,
+    onlyFlagged: false,
     openRow: null,
     openCa: {},
     openMenu: null,
@@ -57,7 +75,37 @@ function initialState(): AppState {
       "C00034-003": ["Perte de marge"],
       "C00088-001": ["Nouveau marché"],
     },
+    flags: {},
+    refValues: {},
+    cristal: {},
     periods,
+    pilotTab: "Vue d'ensemble",
+    periodRules: [
+      {
+        id: "rebudget",
+        label: "Rebudgétisation",
+        window: "septembre → octobre " + (CONFIG.campaignYear - 1),
+        active: true,
+        blocking: false,
+        reason: "",
+      },
+      {
+        id: "modif",
+        label: "Modification",
+        window: "novembre " + (CONFIG.campaignYear - 1) + " → février " + CONFIG.campaignYear,
+        active: false,
+        blocking: false,
+        reason: "",
+      },
+      {
+        id: "fermeture",
+        label: "Fermeture",
+        window: "mars " + CONFIG.campaignYear,
+        active: false,
+        blocking: true,
+        reason: "Arrêté des comptes en cours — aucune modification de budget acceptée.",
+      },
+    ],
     pageSize: 40,
     hoverSeg: null,
     campaignModal: true,
@@ -83,6 +131,7 @@ function signature(s: AppState): string {
     s.fTag,
     s.fRex,
     s.onlyTodo,
+    s.onlyFlagged,
     s.metric,
     s.cat,
     JSON.stringify(s.edits),
@@ -90,7 +139,11 @@ function signature(s: AppState): string {
     JSON.stringify(s.statutOverride),
     JSON.stringify(s.periods),
     JSON.stringify(s.tags),
+    JSON.stringify(s.flags),
     JSON.stringify(s.refs),
+    JSON.stringify(s.refValues),
+    JSON.stringify(s.cristal),
+    JSON.stringify(s.periodRules),
     s.history.length,
   ].join("|");
 }
@@ -182,6 +235,61 @@ export function useApp() {
       toast(msg);
     },
     [set, toast],
+  );
+
+  /**
+   * Validation d'une cristallisation par le contrôle de gestion : le budget déclaré
+   * est figé et le compteur de cristallisations avance.
+   */
+  const validateBudget = useCallback(
+    (ch: Chantier) => {
+      const n = (state.cristal[ch.id] || 0) + 1;
+      set((prev) => ({
+        statutOverride: { ...prev.statutOverride, [ch.id]: "Validé" as Statut },
+        cristal: { ...prev.cristal, [ch.id]: n },
+      }));
+      toast("Cristallisation n°" + n + " validée sur " + ch.id);
+    },
+    [set, state.cristal, toast],
+  );
+
+  /**
+   * Corriger un budget déjà validé est permis, mais cela ouvre une nouvelle
+   * cristallisation qui doit repasser par le contrôle de gestion.
+   */
+  const reopenIfValidated = useCallback(
+    (ch: Chantier) => {
+      if (!engine.isExploit || engine.st(ch) !== "Validé") return;
+      set((prev) => ({
+        statutOverride: { ...prev.statutOverride, [ch.id]: "À valider" as Statut },
+      }));
+      toast(
+        "Budget modifié — cristallisation n°" +
+          (engine.cristal(ch) + 1) +
+          " à faire valider par le contrôle de gestion",
+      );
+    },
+    [engine, set, toast],
+  );
+
+  const toggleFlag = useCallback(
+    (ch: Chantier) => {
+      const on = !!state.flags[ch.id];
+      set((prev) => ({ flags: { ...prev.flags, [ch.id]: !on } }));
+      toast(on ? "Signalement retiré de " + ch.id : ch.id + " signalé");
+    },
+    [set, state.flags, toast],
+  );
+
+  /** Valeur d'un coefficient particulier, propre à un chantier. */
+  const setChantierRef = useCallback(
+    (refId: string, ch: Chantier, m: number, raw: string) => {
+      const num = parseFloat(String(raw).replace(",", ".").replace(/[^\d.-]/g, ""));
+      set((prev) => ({
+        refValues: { ...prev.refValues, [refId + "|" + ch.id + "|" + m]: isNaN(num) ? 0 : num },
+      }));
+    },
+    [set],
   );
 
   /** Applique une action en masse sur une ligne (baseline en rôle CG, prévisionnel sinon). */
@@ -306,8 +414,9 @@ export function useApp() {
         fields,
         shorts[action] || action,
       );
+      if (!onBaseline) reopenIfValidated(ch);
     },
-    [commit, engine, state, toast],
+    [commit, engine, reopenIfValidated, state, toast],
   );
 
   /** Saisie directe d'une cellule (prévisionnel ou baseline). */
@@ -321,8 +430,9 @@ export function useApp() {
             [store]: { ...prev[store], [engine.ek(ch, field, m)]: isNaN(num) ? null : num },
           }) as Patch,
       );
+      if (!onBaseline) reopenIfValidated(ch);
     },
-    [engine, set],
+    [engine, reopenIfValidated, set],
   );
 
   const setSearch = useCallback(
@@ -361,25 +471,36 @@ export function useApp() {
     [set, state.tags, toast],
   );
 
-  const addRef = useCallback(() => {
-    if (state.role !== "Contrôle de gestion") {
-      toast("Seul le contrôle de gestion peut ajouter un coefficient");
-      return;
-    }
-    const n = state.refs.length + 1;
-    set((prev) => ({
-      refs: prev.refs.concat([
-        {
-          id: "ref" + n,
-          label: "Nouveau coefficient " + n,
-          role: "À qualifier — contrôle de gestion",
-          dot: "#f59e0b",
-          values: MONTHS.map(() => 0),
-        },
-      ]),
-    }));
-    toast("Coefficient ajouté — renseignez les mois");
-  }, [set, state.refs.length, state.role, toast]);
+  const addRef = useCallback(
+    (scope: RefScope) => {
+      if (state.role !== "Contrôle de gestion") {
+        toast("Seul le contrôle de gestion peut ajouter un coefficient");
+        return;
+      }
+      const n = state.refs.length + 1;
+      set((prev) => ({
+        refs: prev.refs.concat([
+          {
+            id: "ref" + n,
+            label: "Nouveau coefficient " + n,
+            role:
+              scope === "commun"
+                ? "Commun — appliqué à tout le portefeuille"
+                : "Particulier — à renseigner chantier par chantier",
+            dot: scope === "commun" ? "#f59e0b" : "#8b5cf6",
+            scope,
+            values: MONTHS.map(() => 0),
+          },
+        ]),
+      }));
+      toast(
+        scope === "commun"
+          ? "Coefficient commun ajouté — renseignez les mois"
+          : "Coefficient particulier ajouté — neutre (× 1) tant qu'il n'est pas renseigné sur un chantier",
+      );
+    },
+    [set, state.refs.length, state.role, toast],
+  );
 
   const setRefValue = useCallback(
     (refIndex: number, m: number, raw: string) => {
@@ -389,6 +510,15 @@ export function useApp() {
         refs[refIndex].values[m] = isNaN(num) ? 0 : num;
         return { refs };
       });
+    },
+    [set],
+  );
+
+  const updatePeriodRule = useCallback(
+    (id: string, patch: Partial<PeriodRule>) => {
+      set((prev) => ({
+        periodRules: prev.periodRules.map((r) => (r.id === id ? { ...r, ...patch } : r)),
+      }));
     },
     [set],
   );
@@ -405,9 +535,6 @@ export function useApp() {
     [set],
   );
 
-  /** Postes retouchés d'un couple chantier/mois — utilisé pour le soulignement bleu. */
-  const editedFields = useMemo(() => CAT.map((c) => c.k as string).concat(["heures", "masse"]), []);
-
   return {
     state,
     engine,
@@ -416,15 +543,18 @@ export function useApp() {
     commit,
     undoLast,
     setStatutFlow,
+    validateBudget,
     applyAction,
     setCell,
     setSearch,
     openChantier,
     toggleTag,
+    toggleFlag,
     addRef,
     setRefValue,
+    setChantierRef,
     togglePeriod,
-    editedFields,
+    updatePeriodRule,
   };
 }
 

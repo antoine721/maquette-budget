@@ -5,6 +5,7 @@ import {
   METRICS,
   MONTHS,
   PER_MONTHS,
+  SAISIE_FIELDS,
   SEASON,
   SHORT,
   type CatKey,
@@ -13,7 +14,7 @@ import {
   type Statut,
 } from "../data/constants";
 import { CHANTIERS, LATE, REX, hash, rng, type Chantier } from "../data/chantiers";
-import type { AppState, EditStore, Prims, Todo } from "./types";
+import type { AppState, EditStore, Prims, RefIndicator, Todo } from "./types";
 
 export type CalcMode = "base" | "saisi";
 
@@ -68,9 +69,15 @@ export class Engine {
     return this.s.statutOverride[ch.id] || ch.statut;
   }
 
-  /** Produit des coefficients de baseline du mois (inflation × revalorisation …). */
-  coef(m: number): number {
-    return this.s.refs.reduce((a, r) => a * (1 + (Number(r.values[m]) || 0) / 100), 1);
+  /** Valeur d'un coefficient sur un chantier : commune, ou propre au chantier si particulier. */
+  refValue(ref: RefIndicator, ch: Chantier, m: number): number {
+    if (ref.scope === "commun") return Number(ref.values[m]) || 0;
+    return Number(this.s.refValues[ref.id + "|" + ch.id + "|" + m]) || 0;
+  }
+
+  /** Produit des coefficients de baseline appliqués à ce chantier ce mois-là. */
+  coef(ch: Chantier, m: number): number {
+    return this.s.refs.reduce((a, r) => a * (1 + this.refValue(r, ch, m) / 100), 1);
   }
 
   ek(ch: Chantier, field: string, m: number): string {
@@ -119,6 +126,8 @@ export class Engine {
     const c = CAT.find((x) => x.k === field);
     if (c) return monthCA * c.share * (0.9 + r() * 0.2);
     if (field === "heures") return monthCA / ch.taux;
+    // Taux horaire chargé : la masse salariale en découle (heures × taux).
+    if (field === "taux") return ch.msRate * ch.taux * (0.99 + r() * 0.02);
     if (field === "masse") return monthCA * ch.msRate;
     return monthCA;
   }
@@ -128,7 +137,8 @@ export class Engine {
     const e = this.s.baseEdits[this.ek(ch, field, m)];
     if (e !== undefined && e !== null) return e;
     const raw = this.n1(ch, m, field, this.s.year);
-    return field === "heures" ? raw : raw * this.coef(m);
+    // Les coefficients portent sur les valeurs en euros, pas sur un volume d'heures.
+    return field === "heures" ? raw : raw * this.coef(ch, m);
   }
 
   /** Prévisionnel déclaré par l'exploitation — `null` tant que le mois n'est pas saisi. */
@@ -169,15 +179,17 @@ export class Engine {
       ca += v;
     }
     const heures = f("heures");
-    const masse = f("masse");
-    if (heures === null || masse === null) return null;
-    return { cats, ca, heures, masse };
+    const taux = f("taux");
+    if (heures === null || taux === null) return null;
+    // La masse salariale n'est plus saisie : elle découle des heures et du taux.
+    return { cats, ca, heures, taux, masse: heures * taux };
   }
 
   metricFrom(p: Prims | null, metric: MetricKey, cat?: string | null): number | null {
     if (!p) return null;
     if (metric === "ca") return cat && cat !== "Total" ? p.cats[this.catKey(cat)] : p.ca;
     if (metric === "heures") return p.heures;
+    if (metric === "taux") return p.taux;
     if (metric === "masse") return p.masse;
     if (metric === "msRatio") return p.ca ? (p.masse / p.ca) * 100 : null;
     if (metric === "phv") return p.heures ? p.ca / p.heures : null;
@@ -221,6 +233,8 @@ export class Engine {
     if (!n) return null;
     if (metric === "ca") return cat && cat !== "Total" ? catSum : ca;
     if (metric === "heures") return heures;
+    // Taux horaire agrégé = masse totale / heures totales, donc pondéré.
+    if (metric === "taux") return heures ? masse / heures : null;
     if (metric === "masse") return masse;
     if (metric === "msRatio") return ca ? (masse / ca) * 100 : null;
     if (metric === "phv") return heures ? ca / heures : null;
@@ -451,6 +465,9 @@ export class Engine {
       const s = this.s;
       const q = s.fSearch.trim().toLowerCase();
       return CHANTIERS.filter((c) => {
+        // L'exploitation ne voit que les chantiers dont elle est responsable.
+        if (this.isExploit && REX[c.id] !== CURRENT_REX) return false;
+        if (s.onlyFlagged && !s.flags[c.id]) return false;
         if (s.fSecteur !== "Tous les secteurs" && c.secteur !== s.fSecteur) return false;
         if (s.fVille !== "Toutes les villes" && c.ville !== s.fVille) return false;
         if (s.fAgence !== "Toutes les agences" && c.agence !== s.fAgence) return false;
@@ -522,23 +539,50 @@ export class Engine {
     return arr;
   }
 
-  /** Mois réellement modifiables sur ce chantier, selon le rôle, le statut et les périodes ouvertes. */
+  /**
+   * Mois réellement modifiables sur ce chantier, selon le rôle, le statut et les
+   * périodes ouvertes. Un budget déjà validé reste modifiable : la correction
+   * déclenche simplement une nouvelle cristallisation à faire valider.
+   */
   editableMonths(ch: Chantier, mIdx: number[]): number[] {
     const st = this.st(ch);
     if (this.isCG) return st === "Clôturé" ? [] : mIdx;
     if (!this.isExploit) return [];
+    // Une période explicitement bloquante gèle la saisie de l'exploitation.
+    if (this.activeBlock()) return [];
     return mIdx.filter(
-      (m) =>
-        this.s.periods[ch.agence][m] &&
-        st !== "Clôturé" &&
-        st !== "Validé" &&
-        st !== "Baseline CG",
+      (m) => this.s.periods[ch.agence][m] && st !== "Clôturé" && st !== "Baseline CG",
     );
+  }
+
+  /** Période de gestion active qui bloque explicitement les modifications, s'il y en a une. */
+  activeBlock() {
+    return this.s.periodRules.find((r) => r.active && r.blocking) || null;
+  }
+
+  /** Numéro de la cristallisation en cours sur un chantier. */
+  cristal(ch: Chantier): number {
+    return this.s.cristal[ch.id] || 0;
+  }
+
+  /**
+   * Part des champs réellement renseignés sur la période : 100 % quand les six
+   * postes sont saisis sur tous les mois.
+   */
+  completionPct(ch: Chantier, mIdx: number[]): number {
+    let done = 0;
+    mIdx.forEach((m) =>
+      SAISIE_FIELDS.forEach((f) => {
+        if (this.saisiField(ch, m, f) !== null) done++;
+      }),
+    );
+    const tot = mIdx.length * SAISIE_FIELDS.length;
+    return tot ? Math.round((done / tot) * 100) : 0;
   }
 
   /** Libellé lisible d'un ensemble de postes (« tout le CA », « tous les postes »…). */
   fieldNames(fields: string[]): string {
-    const map: Record<string, string> = { heures: "Nombre d'heures", masse: "Masse salariale" };
+    const map: Record<string, string> = { heures: "Nombre d'heures", taux: "Taux horaire" };
     CAT.forEach((c) => (map[c.k] = "CA " + c.label));
     const names = fields.map((f) => map[f] || f);
     if (names.length === 6) return "tous les postes";
