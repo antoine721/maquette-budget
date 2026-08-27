@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import type { EChartsOption } from "echarts";
+import { CONFIG } from "../../config";
 import { SHORT } from "../../data/constants";
 import type { Store } from "../../state/store";
 import EChart from "../EChart";
 import { CARD } from "./cardStyles";
+import YearSelect from "./YearSelect";
 
 type SerieKey = "prev" | "declare" | "objectif";
 
@@ -12,9 +14,11 @@ type SerieKey = "prev" | "declare" | "objectif";
  * Toujours affichée ; seules les séries se filtrent.
  */
 export default function MonthlyEvolutionChart({ store }: { store: Store }) {
-  const { state, engine } = store;
+  const { engine } = store;
+  const [year, setYear] = useState(CONFIG.campaignYear);
+  const view = engine.atYear(year);
   const isGlobal = !engine.isExploit;
-  const rows = engine.monthly(isGlobal);
+  const rows = view.monthly(isGlobal);
   const [shown, setShown] = useState<Record<SerieKey, boolean>>({
     prev: true,
     declare: true,
@@ -22,9 +26,9 @@ export default function MonthlyEvolutionChart({ store }: { store: Store }) {
   });
 
   const series: { key: SerieKey; label: string; color: string; dashed?: boolean }[] = [
-    { key: "prev", label: "Budgété " + (state.year - 1), color: "#94a3b8" },
-    { key: "declare", label: "Budgété " + state.year, color: "#0a9bd8" },
-    { key: "objectif", label: "Objectif CDG " + state.year, color: "#8b5cf6", dashed: true },
+    { key: "prev", label: "Budgété " + (year - 1), color: "#94a3b8" },
+    { key: "declare", label: "Budgété " + year, color: "#0a9bd8" },
+    { key: "objectif", label: "Objectif CDG " + year, color: "#8b5cf6", dashed: true },
   ];
 
   const total = rows.reduce((a, r) => a + (r.declare || 0), 0);
@@ -62,7 +66,7 @@ export default function MonthlyEvolutionChart({ store }: { store: Store }) {
                 ';margin-right:6px"></span>' +
                 s.label +
                 "&nbsp;: <b>" +
-                engine.fmt(data[s.key][i]) +
+                view.fmt(data[s.key][i]) +
                 "</b>",
             );
           if (d !== null)
@@ -73,7 +77,7 @@ export default function MonthlyEvolutionChart({ store }: { store: Store }) {
                 (d >= 0 ? "+" : "−") +
                 Math.abs(d).toFixed(1).replace(".", ",") +
                 " % vs " +
-                (state.year - 1) +
+                (year - 1) +
                 "</span>",
             );
           return "<b>" + SHORT[i] + "</b><br/>" + lines.join("<br/>");
@@ -94,7 +98,7 @@ export default function MonthlyEvolutionChart({ store }: { store: Store }) {
           color: "#8a95a1",
           fontSize: 11,
           fontFamily: "Barlow, Helvetica, sans-serif",
-          formatter: (v: number) => engine.fmt(v),
+          formatter: (v: number) => view.fmt(v),
         },
       },
       series: series
@@ -112,7 +116,7 @@ export default function MonthlyEvolutionChart({ store }: { store: Store }) {
         })),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rows, engine, state.year, shown.prev, shown.declare, shown.objectif]);
+  }, [rows, view, year, shown.prev, shown.declare, shown.objectif]);
 
   return (
     <div style={{ ...CARD, display: "flex", flexDirection: "column" }}>
@@ -121,8 +125,9 @@ export default function MonthlyEvolutionChart({ store }: { store: Store }) {
         <span style={{ fontSize: 11.5, color: "#8a95a1" }}>
           {engine.isExploit ? "mon périmètre" : "consolidé"}
         </span>
+        <YearSelect year={year} onChange={setYear} />
         <span style={{ flex: 1 }} />
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#17202a" }}>{engine.fmt(total)}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "#17202a" }}>{view.fmt(total)}</span>
         {evolution !== null && (
           <span
             style={{
@@ -135,7 +140,7 @@ export default function MonthlyEvolutionChart({ store }: { store: Store }) {
             {(evolution >= 0 ? "+" : "−") +
               Math.abs(evolution).toFixed(1).replace(".", ",") +
               " % vs " +
-              (state.year - 1)}
+              (year - 1)}
           </span>
         )}
       </div>

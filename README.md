@@ -74,10 +74,14 @@ Les graphiques sont rendus par **Apache ECharts** (`echarts/core` + `PieChart` /
 - **Avancement — en CA** — l'anneau complet vaut **100 % de l'objectif CDG** : les quatre catégories
   (Forfait / Réel / PAD / TE) sont des parts, et le solde non déclaré ferme l'anneau en gris. Le
   centre porte le pourcentage d'atteinte.
-- **Avancement — en chantiers** — répartition des chantiers suivis par état, pourcentage de budgets
-  terminés au centre ; un clic sur un segment ou sur sa ligne de légende ouvre le tableau filtré.
+- **Avancement — en chantiers** — répartition du portefeuille **par statut du cycle**, pourcentage
+  de budgets terminés au centre ; un clic sur un segment ou sur sa ligne de légende ouvre le tableau
+  avec ce statut coché.
 - **Évolution mensuelle du CA** — trois courbes : budgété N-1, budgété N et objectif CDG N.
   Toujours affichée ; chaque série se filtre par sa puce. L'infobulle donne l'évolution du mois.
+
+Chacun des trois graphiques porte **son propre sélecteur d'exercice** (le plus récent par défaut) :
+c'est là qu'on regarde un exercice passé, sans déplacer le reste de l'accueil.
 
 Le survol utilise l'`emphasis: { focus: "self" }` et le `blur` natifs d'ECharts (la section visée
 s'épaissit, les autres s'atténuent). La synchronisation légende ↔ anneau passe par
@@ -135,27 +139,19 @@ et affiche la raison sur la page d'accueil de tout le monde.
 
 ## L'accueil, situation par situation
 
-C'est une maquette de présentation : l'accueil raconte deux situations. La tête de page porte
-**deux conteneurs, un par exercice** — N-1 clos à gauche, N en campagne à droite. Cliquer sur l'un
-cale le reste de la page dessus : c'est ainsi qu'on passe d'une situation à l'autre en démo.
-
-### Pendant la campagne de déclaration
+L'accueil est l'écran de **la campagne en cours** : il reste calé sur l'exercice budgété, quel que
+soit l'exercice consulté dans le tableau. Pour regarder un exercice passé, on change l'exercice d'un
+graphique, ou on ouvre le tableau prévisionnel.
 
 | Bloc | Rôle |
 | --- | --- |
-| Conteneurs d'exercice | Un par exercice : état, échéance, nombre de chantiers restant à déclarer, barre d'avancement, bouton « Remplir mon budget » ou « Consulter ». |
+| Bandeau campagne | Exercice budgété, échéance, nombre de chantiers restant à déclarer, barre d'avancement, bouton « Remplir mon budget ». |
 | Deux anneaux | Le même avancement mesuré de deux façons : **en valeur de CA** et **en nombre de chantiers**, pourcentage au centre. |
 | À traiter en priorité | Les urgences du rôle connecté, les plus gros CA d'abord, cliquables vers le chantier. |
 
 Le REX ne voit que ses chantiers ; le contrôle de gestion voit le portefeuille consolidé et gagne
 deux listes — **Budgets à valider** et **Chantiers non traités** — puis la **vue consolidée des
 REX** classée du moins avancé au plus avancé.
-
-### Hors campagne
-
-L'avancement de la saisie n'a plus d'objet : l'**évolution mensuelle du CA** passe au premier plan
-et les deux anneaux se réduisent en colonne sur la droite. Les listes de chantiers à traiter
-disparaissent, l'exercice étant clos.
 
 ## Rôles
 

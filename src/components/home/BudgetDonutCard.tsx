@@ -1,13 +1,16 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { EChartsOption } from "echarts";
-import { STATUT_OPTS, type Statut } from "../../data/constants";
+import { CONFIG } from "../../config";
+import { ST, STATUT_OPTS, type Statut } from "../../data/constants";
 import type { Chantier } from "../../data/chantiers";
+import type { Engine } from "../../lib/engine";
 import type { Store } from "../../state/store";
 import EChart, { type EChartsInstance } from "../EChart";
 import { CARD } from "./cardStyles";
+import YearSelect from "./YearSelect";
 
-export interface BudgetSegment {
-  key: string;
+export interface StatutSegment {
+  key: Statut;
   label: string;
   color: string;
   hint: string;
@@ -15,64 +18,53 @@ export interface BudgetSegment {
   pick: () => void;
 }
 
-/** Les quatre états de budget suivis par l'anneau, et le filtre que chacun applique au tableau. */
-export function budgetSegments(store: Store): BudgetSegment[] {
-  const { engine, set } = store;
-  const g = engine.budgetGroups();
-  const go = (fStatuts: Statut[], onlyTodo: boolean) => () =>
-    set({
-      tab: "Tableau prévisionnel",
-      fStatuts,
-      onlyTodo,
-      fSearch: "",
-      searchDraft: "",
-      hoverSeg: null,
-    });
-  return [
-    {
-      key: "remplir",
-      label: "À remplir",
-      color: "#dc2626",
-      hint: "mois ouverts non saisis",
-      list: g.remplir,
-      pick: go([...STATUT_OPTS], true),
-    },
-    {
-      key: "cours",
-      label: "En cours",
-      color: "#f59e0b",
-      hint: "saisie faite, en attente de validation",
-      list: g.cours,
-      pick: go(["À valider"], false),
-    },
-    {
-      key: "fini",
-      label: "Terminés",
-      color: "#16a34a",
-      hint: "validés ou clôturés",
-      list: g.fini,
-      pick: go(["Validé", "Clôturé"], false),
-    },
-    {
-      key: "attente",
-      label: "En attente de baseline CG",
-      color: "#94a3b8",
-      hint: "la saisie n'est pas encore ouverte à l'exploitation",
-      list: g.attente,
-      pick: go(["En attente baseline CG"], false),
-    },
-  ].filter((x) => x.list.length || x.key !== "attente");
+const HINTS: Record<Statut, string> = {
+  "En attente baseline CG": "la saisie n'est pas encore ouverte à l'exploitation",
+  "Non budgétisé": "baseline publiée, aucun mois saisi",
+  "En saisie": "saisie commencée, pas encore envoyée",
+  "À valider": "envoyé, en attente du contrôle de gestion",
+  Validé: "cristallisation validée",
+  Clôturé: "exercice clos, consultation seule",
+};
+
+/** Répartition du portefeuille par statut du cycle, dans l'ordre du circuit. */
+export function statutSegments(store: Store, view: Engine): StatutSegment[] {
+  const { set } = store;
+  const list = view.perim();
+  return STATUT_OPTS.map((st) => ({
+    key: st,
+    label: view.statutLabel(st),
+    color: ST[st].accent,
+    hint: HINTS[st],
+    list: list.filter((ch) => view.st(ch) === st),
+    pick: () =>
+      set({
+        tab: "Tableau prévisionnel",
+        year: view.s.year,
+        fStatuts: [st],
+        onlyTodo: false,
+        fSearch: "",
+        searchDraft: "",
+        hoverSeg: null,
+      }),
+  })).filter((x) => x.list.length);
 }
 
 /**
- * Avancement de la déclaration **en nombre de chantiers**.
+ * Avancement de la déclaration **en nombre de chantiers**, ventilé par statut.
  * Le centre porte la part de budgets terminés ; chaque segment renvoie au tableau filtré.
  */
 export default function BudgetDonutCard({ store, compact }: { store: Store; compact?: boolean }) {
   const { state, engine, set } = store;
-  const segs = budgetSegments(store);
+  const [year, setYear] = useState(CONFIG.campaignYear);
+  const view = engine.atYear(year);
+
+  const segs = statutSegments(store, view);
   const tot = segs.reduce((a, x) => a + x.list.length, 0) || 1;
-  const donePct = engine.donePct();
+  const done = segs
+    .filter((x) => x.key === "Validé" || x.key === "Clôturé")
+    .reduce((a, x) => a + x.list.length, 0);
+  const donePct = Math.round((done / tot) * 100);
   const chartRef = useRef<EChartsInstance | null>(null);
 
   const ringPx = compact ? 132 : 176;
@@ -128,11 +120,16 @@ export default function BudgetDonutCard({ store, compact }: { store: Store; comp
 
   return (
     <div style={CARD}>
-      <div style={{ fontSize: 13.5, fontWeight: 700 }}>
-        {engine.isExploit ? "Avancement — en chantiers" : "Avancement — en chantiers (consolidé)"}
-      </div>
-      <div style={{ fontSize: 11.5, color: "#8a95a1", marginTop: 2 }}>
-        {tot} chantiers suivis · exercice {state.year}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 700 }}>
+            {engine.isExploit ? "Avancement — en chantiers" : "Avancement — en chantiers (consolidé)"}
+          </div>
+          <div style={{ fontSize: 11.5, color: "#8a95a1", marginTop: 2 }}>
+            {tot} chantiers suivis · par statut
+          </div>
+        </div>
+        <YearSelect year={year} onChange={setYear} />
       </div>
 
       <div style={{ display: "flex", justifyContent: "center", marginTop: 6 }}>

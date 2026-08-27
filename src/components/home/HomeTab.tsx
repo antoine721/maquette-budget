@@ -1,3 +1,4 @@
+import { CONFIG } from "../../config";
 import { FULL_YEAR, ST, STATUT_OPTS, type Statut } from "../../data/constants";
 import { REX } from "../../data/chantiers";
 import type { Store } from "../../state/store";
@@ -13,19 +14,15 @@ const REX_GRID = "210px 80px 1fr 160px 120px 100px";
 /**
  * Accueil. Deux situations à présenter :
  *
- * - **en campagne** — l'avancement de la déclaration prime : deux anneaux (en CA
- *   et en nombre de chantiers) et les chantiers à traiter ;
- * - **hors campagne** — la saisie n'a plus d'objet : l'évolution mensuelle du CA
- *   passe au premier plan et les anneaux se réduisent sur la droite.
- *
- * Le graphe d'évolution, lui, est présent dans les deux cas.
+ * L'accueil est l'écran de la campagne en cours : il reste calé sur l'exercice
+ * budgété, quel que soit l'exercice consulté dans le tableau. Chaque graphique
+ * porte en revanche son propre sélecteur d'exercice.
  *
  * Le contrôle de gestion voit les mêmes blocs en valeurs globales, plus les
  * budgets à valider, les chantiers non traités et l'avancement par REX.
  */
 export default function HomeTab({ store }: { store: Store }) {
   const { engine } = store;
-  const open = engine.campaignOpen();
 
   return (
     <div
@@ -71,7 +68,7 @@ export default function HomeTab({ store }: { store: Store }) {
         );
       })()}
 
-      {open ? <CampaignLayout store={store} /> : <HistoryLayout store={store} />}
+      <CampaignLayout store={store} />
 
       {engine.isCG && <RexConsolidated store={store} />}
 
@@ -82,12 +79,14 @@ export default function HomeTab({ store }: { store: Store }) {
 /** Pendant la fenêtre de déclaration : avancement et chantiers à traiter. */
 function CampaignLayout({ store }: { store: Store }) {
   const { state, engine, set, openChantier } = store;
+  // Les listes de l'accueil parlent toujours de la campagne, pas de l'exercice du tableau.
+  const view = engine.atYear(CONFIG.campaignYear);
 
   // Chaque rôle a ses propres priorités : mois manquants pour l'exploitation,
   // baselines à publier et marges sous objectif pour le contrôle de gestion.
-  const todoAll = engine
+  const todoAll = view
     .perim()
-    .map((ch) => ({ ch, t: engine.todoFor(ch, FULL_YEAR, state.role) }))
+    .map((ch) => ({ ch, t: view.todoFor(ch, FULL_YEAR, state.role) }))
     .filter((x) => x.t)
     .sort((a, b) => (a.t!.crit ? 0 : 1) - (b.t!.crit ? 0 : 1) || b.ch.ca - a.ch.ca);
 
@@ -109,7 +108,7 @@ function CampaignLayout({ store }: { store: Store }) {
       (crit ? " · " + crit + " critique" + (crit > 1 ? "s" : "") : "")
     : "rien à traiter";
 
-  const aValider: ChantierListRow[] = engine
+  const aValider: ChantierListRow[] = view
     .aValider()
     .slice(0, 6)
     .map((ch) => ({
@@ -121,28 +120,28 @@ function CampaignLayout({ store }: { store: Store }) {
       hint:
         REX[ch.id] +
         " · " +
-        engine.fmt(engine.aggregate([ch], FULL_YEAR, "saisi", "ca", "Total")) +
+        view.fmt(view.aggregate([ch], FULL_YEAR, "saisi", "ca", "Total")) +
         " déclarés — à contrôler",
       hintColor: "#0782b6",
     }));
 
-  const nonTraites: ChantierListRow[] = engine
+  const nonTraites: ChantierListRow[] = view
     .nonTraites()
     .slice(0, 6)
     .map((ch) => {
-      const st = engine.st(ch) as Statut;
-      const miss = engine.missing(ch, FULL_YEAR).length;
+      const st = view.st(ch) as Statut;
+      const miss = view.missing(ch, FULL_YEAR).length;
       const crit = st === "Non budgétisé" || st === "En attente baseline CG";
       return {
         ch,
-        tag: st === "En saisie" ? miss + " mois manquants" : engine.statutLabel(st),
+        tag: st === "En saisie" ? miss + " mois manquants" : view.statutLabel(st),
         tagBg: crit ? "#fee2e2" : "#fef3c7",
         tagFg: crit ? "#991b1b" : "#92400e",
         accent: crit ? "#dc2626" : "#f59e0b",
         hint:
           REX[ch.id] +
           " · " +
-          engine.fmt(ch.ca) +
+          view.fmt(ch.ca) +
           " de CA de référence" +
           (st === "En attente baseline CG" ? " — baseline pas encore publiée" : ""),
         hintColor: crit ? "#b91c1c" : "#92400e",
@@ -150,7 +149,14 @@ function CampaignLayout({ store }: { store: Store }) {
     });
 
   const goTable = (fStatuts: Statut[], onlyTodo: boolean) => () =>
-    set({ tab: "Tableau prévisionnel", fStatuts, onlyTodo, fSearch: "", searchDraft: "" });
+    set({
+      tab: "Tableau prévisionnel",
+      year: CONFIG.campaignYear,
+      fStatuts,
+      onlyTodo,
+      fSearch: "",
+      searchDraft: "",
+    });
 
   return (
     <>
@@ -182,7 +188,7 @@ function CampaignLayout({ store }: { store: Store }) {
             <ChantierListCard
               title="Budgets à valider"
               dot="#0a9bd8"
-              count={engine.aValider().length + " en attente de contrôle"}
+              count={view.aValider().length + " en attente de contrôle"}
               rows={aValider}
               empty="Aucune saisie en attente de contrôle."
               onOpen={openChantier}
@@ -193,7 +199,7 @@ function CampaignLayout({ store }: { store: Store }) {
             <ChantierListCard
               title="Chantiers non traités"
               dot="#f59e0b"
-              count={engine.nonTraites().length + " chantiers"}
+              count={view.nonTraites().length + " chantiers"}
               rows={nonTraites}
               empty="Tous les chantiers sont engagés."
               onOpen={openChantier}
@@ -203,29 +209,6 @@ function CampaignLayout({ store }: { store: Store }) {
         </div>
       )}
     </>
-  );
-}
-
-/** Hors campagne : lecture de l'exercice clos, les anneaux passent au second plan. */
-function HistoryLayout({ store }: { store: Store }) {
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", gap: 14, alignItems: "stretch" }}>
-      <div style={{ flex: "1 1 560px", minWidth: 380 }}>
-        <MonthlyEvolutionChart store={store} />
-      </div>
-      <div
-        style={{
-          flex: "0 1 300px",
-          minWidth: 260,
-          display: "flex",
-          flexDirection: "column",
-          gap: 14,
-        }}
-      >
-        <CaGaugeCard store={store} compact />
-        <BudgetDonutCard store={store} compact />
-      </div>
-    </div>
   );
 }
 

@@ -1,9 +1,11 @@
-import { useMemo, useRef } from "react";
+import { useMemo, useRef, useState } from "react";
 import type { EChartsOption } from "echarts";
+import { CONFIG } from "../../config";
 import { CAT_COLORS, type CatKey } from "../../data/constants";
 import type { Store } from "../../state/store";
 import EChart, { type EChartsInstance } from "../EChart";
 import { CARD } from "./cardStyles";
+import YearSelect from "./YearSelect";
 
 /** Part grise du portefeuille pas encore déclarée — l'anneau complet vaut l'objectif CDG. */
 const RESTE = "reste";
@@ -17,11 +19,13 @@ const RESTE = "reste";
  */
 export default function CaGaugeCard({ store, compact }: { store: Store; compact?: boolean }) {
   const { state, engine, set } = store;
+  const [year, setYear] = useState(CONFIG.campaignYear);
+  const view = engine.atYear(year);
   const isGlobal = !engine.isExploit;
-  const parts = engine.caParts(isGlobal);
-  const baseTotal = engine.caBaseTotal(isGlobal);
+  const parts = view.caParts(isGlobal);
+  const baseTotal = view.caBaseTotal(isGlobal);
   const declared = parts.reduce((a, x) => a + x.value, 0);
-  const pct = engine.caPct(isGlobal);
+  const pct = view.caPct(isGlobal);
   const chartRef = useRef<EChartsInstance | null>(null);
 
   const ringPx = compact ? 132 : 176;
@@ -91,17 +95,20 @@ export default function CaGaugeCard({ store, compact }: { store: Store; compact?
 
   return (
     <div style={CARD}>
-      <div style={{ fontSize: 13.5, fontWeight: 700 }}>
-        {engine.isExploit ? "Avancement — en CA" : "Avancement — en CA (consolidé)"}
-      </div>
-      <div style={{ fontSize: 11.5, color: "#8a95a1", marginTop: 2 }}>
-        {"Exercice " +
-          state.year +
-          (engine.isExploit
-            ? " · mon périmètre"
-            : state.fEntity === "Toutes"
-              ? " · toutes entités"
-              : " · " + state.fEntity)}
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 700 }}>
+            {engine.isExploit ? "Avancement — en CA" : "Avancement — en CA (consolidé)"}
+          </div>
+          <div style={{ fontSize: 11.5, color: "#8a95a1", marginTop: 2 }}>
+            {engine.isExploit
+              ? "mon périmètre"
+              : state.fEntity === "Toutes"
+                ? "toutes entités"
+                : state.fEntity}
+          </div>
+        </div>
+        <YearSelect year={year} onChange={setYear} />
       </div>
 
       <div style={{ display: "flex", justifyContent: "center", marginTop: 6 }}>
@@ -167,8 +174,8 @@ export default function CaGaugeCard({ store, compact }: { store: Store; compact?
           fontVariantNumeric: "tabular-nums",
         }}
       >
-        <strong style={{ fontWeight: 700, color: "#17202a" }}>{engine.fmt(declared)}</strong>
-        <span style={{ color: "#8a95a1" }}> déclarés sur {engine.fmt(baseTotal)}</span>
+        <strong style={{ fontWeight: 700, color: "#17202a" }}>{view.fmt(declared)}</strong>
+        <span style={{ color: "#8a95a1" }}> déclarés sur {view.fmt(baseTotal)}</span>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 8 }}>
@@ -182,9 +189,9 @@ export default function CaGaugeCard({ store, compact }: { store: Store; compact?
               title={
                 x.label +
                 " — déclaré " +
-                engine.fmt(x.value) +
+                view.fmt(x.value) +
                 " · objectif " +
-                engine.fmt(x.base) +
+                view.fmt(x.base) +
                 (x.base ? " (" + Math.round((x.value / x.base) * 100) + " % de l'objectif)" : "")
               }
               style={{
