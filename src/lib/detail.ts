@@ -144,7 +144,7 @@ export function buildDetail(
 
   // ------------------------------------------------------- 1. baseline contrôle de gestion
   detail.push(groupHead("head:base", "1 · Baseline — contrôle de gestion"));
-  const lineN1 = mkLine("n1", "Réalisé N-1 (source Gescof)", { labelColor: "#6b7681" });
+  const lineN1 = mkLine("n1", "Réalisé N-1 (source Gescof) — N-2 de septembre à décembre", { labelColor: "#6b7681" });
   const refLines = s.refs.map((r) => ({
     ref: r,
     line: mkLine("ref:" + r.id, "× " + r.label, {
@@ -286,10 +286,11 @@ export function buildDetail(
         : met.key === "ca" && cat !== "Total"
           ? engine.n1(ch, m, engine.catKey(cat), s.year)
           : engine.n1(ch, m, met.key === "ca" ? "ca" : met.key, s.year);
+    // Sur septembre-décembre, les réalisés de l'année en cours manquent : la
+    // référence remonte à N-2. C'est la seule cellule où l'information a du sens.
     lineN1.cells.push({
       editable: false,
-      text: engine.fmt(n1v, met.kind),
-      // Sur septembre-décembre, la référence est N-2 : la teinte le rappelle.
+      text: engine.fmt(n1v, met.kind) + (n2 ? " ᴺ⁻²" : ""),
       color: n2 ? N2_FG : "#6b7681",
       bg: n2 ? N2_TINT : "transparent",
     });
@@ -351,7 +352,7 @@ export function buildDetail(
           editable: false,
           text: engine.fmt(v, kind),
           color: v === null ? "#94a3b8" : readColor,
-          bg: ed ? "#eff6ff" : n2 ? N2_TINT : "transparent",
+          bg: ed ? "#eff6ff" : "transparent",
         };
       return {
         editable: true,

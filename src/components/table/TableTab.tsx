@@ -1,13 +1,9 @@
 import {
-  N2_TINT,
-  N2_TINT_STRONG,
-  N2_FG,
   PER_MONTHS,
   SAISIE_FIELDS,
   SHORT,
   ST,
   STATUT_OPTS,
-  isN2,
   type Statut,
 } from "../../data/constants";
 import type { Chantier } from "../../data/chantiers";
@@ -88,31 +84,86 @@ export default function TableTab({ store }: { store: Store }) {
                 " · " +
                 (met.key === "ca" ? catLabel : met.label)}
             </div>
+            {/* La légende devient le filtre : on coche les statuts à afficher. */}
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 14,
+                gap: 6,
                 fontSize: 12,
                 color: "#6b7681",
                 flexWrap: "wrap",
               }}
             >
-              {STATUT_OPTS.map((x) => (
-                <div key={x} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  <span
+              {STATUT_OPTS.map((x) => {
+                const on = state.fStatuts.includes(x);
+                return (
+                  <button
+                    key={x}
+                    onClick={() =>
+                      set((p) => ({
+                        fStatuts: p.fStatuts.includes(x)
+                          ? p.fStatuts.filter((y) => y !== x)
+                          : STATUT_OPTS.filter((y) => y === x || p.fStatuts.includes(y)),
+                      }))
+                    }
+                    title={on ? "Masquer « " + x + " »" : "Afficher « " + x + " »"}
                     style={{
-                      width: 12,
-                      height: 12,
-                      borderRadius: 3,
-                      border: "1px solid " + ST[x].border,
-                      background: ST[x].cell,
-                      display: "inline-block",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 7,
+                      padding: "5px 10px",
+                      border: "1px solid " + (on ? ST[x].border : "#e6eaee"),
+                      borderRadius: 8,
+                      background: on ? ST[x].cell : "#fff",
+                      color: on ? ST[x].fg : "#a8b1ba",
+                      fontFamily: "inherit",
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: "pointer",
                     }}
-                  />
-                  {x}
-                </div>
-              ))}
+                  >
+                    <span
+                      style={{
+                        width: 13,
+                        height: 13,
+                        borderRadius: 3,
+                        border: "1px solid " + (on ? ST[x].accent : "#cbd5e1"),
+                        background: on ? ST[x].accent : "#fff",
+                        color: "#fff",
+                        fontSize: 10,
+                        lineHeight: "11px",
+                        textAlign: "center",
+                        flex: "0 0 auto",
+                      }}
+                    >
+                      {on ? "✓" : ""}
+                    </span>
+                    {x}
+                  </button>
+                );
+              })}
+              <button
+                onClick={() =>
+                  set({
+                    fStatuts:
+                      state.fStatuts.length === STATUT_OPTS.length ? [] : [...STATUT_OPTS],
+                  })
+                }
+                style={{
+                  padding: "5px 10px",
+                  border: "1px solid #dde3e8",
+                  borderRadius: 8,
+                  background: "#fff",
+                  fontFamily: "inherit",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "#6b7681",
+                  cursor: "pointer",
+                }}
+              >
+                {state.fStatuts.length === STATUT_OPTS.length ? "Tout décocher" : "Tout cocher"}
+              </button>
             </div>
           </div>
 
@@ -146,30 +197,22 @@ export default function TableTab({ store }: { store: Store }) {
                 </div>
                 {mIdx.map((m) => {
                   const open = state.periods["Saint Ouen"][m];
-                  const n2 = isN2(m);
                   return (
                     <div
                       key={m}
-                      title={n2 ? "Référence N-2" : undefined}
                       style={{
-                        padding: "9px 8px",
+                        padding: "11px 8px",
                         textAlign: "right",
                         fontSize: 11,
                         fontWeight: 700,
                         letterSpacing: "0.5px",
                         textTransform: "uppercase",
-                        color: n2 ? N2_FG : open ? "#0a9bd8" : "#8a95a1",
+                        color: open ? "#0a9bd8" : "#8a95a1",
                         borderRight: "1px solid " + sepColor(m),
-                        background: n2 ? N2_TINT_STRONG : open ? "#f5fbff" : "#fff",
+                        background: open ? "#f5fbff" : "#fff",
                       }}
                     >
-                      <div>{SHORT[m]}</div>
-                      {/* Les réalisés de l'année en cours manquent sur ces mois : la référence est N-2. */}
-                      {n2 && (
-                        <div style={{ fontSize: 9, fontWeight: 700, opacity: 0.8, letterSpacing: 0 }}>
-                          N-2
-                        </div>
-                      )}
+                      {SHORT[m]}
                     </div>
                   );
                 })}
@@ -316,14 +359,13 @@ function Row({
     const touched = SAISIE_FIELDS.some(
       (f) => engine.edited(ch, f, m, false) || engine.edited(ch, f, m, true),
     );
-    const n2 = isN2(m);
     return {
       m,
       text: engine.fmt(v, met.kind),
       color: engine.markerColor(v, b, met.better),
-      bg: v === null ? (periodOpen ? "#fffbeb" : n2 ? N2_TINT : "#fff") : stc.cell,
+      bg: v === null ? (periodOpen ? "#fffbeb" : "#fff") : stc.cell,
       mark: touched ? "#0a9bd8" : "transparent",
-      markTitle: touched ? "Valeur modifiée manuellement" : n2 ? "Référence N-2" : "",
+      markTitle: touched ? "Valeur modifiée manuellement" : "",
     };
   });
 

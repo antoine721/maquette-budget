@@ -36,9 +36,9 @@ Baseline CG  →  Saisie exploitation  →  À valider  →  Validé  →  Clôt
   la baseline par code chantier, publie à l'exploitation, vérifie et clôture. Il pose aussi les
   **tags** de suivi (Sensible, Renégociation, Perte de marge, Nouveau marché).
 - L'**exploitation** saisit les 12 mois — CA par catégorie (Forfait / Réel / PAD / TE), heures et
-  masse salariale — puis envoie en validation. Les cases vides proposent la valeur N-1 en gris ; une
-  valeur reprise reste en pointillés tant qu'elle n'est pas **ressaisie pour confirmation**.
-- L'**admin** ouvre et ferme les périodes de saisie par entité.
+  taux horaire, d'où découle la masse salariale — puis envoie en validation. Les cases vides
+  proposent la valeur N-1 en gris ; une valeur reprise reste en pointillés tant qu'elle n'est pas
+  **ressaisie pour confirmation**.
 
 Les exercices 2024–2026 sont clos et en lecture seule ; la campagne active est 2027.
 
@@ -65,8 +65,8 @@ Les graphiques sont rendus par **Apache ECharts** (`echarts/core` + `PieChart` /
   centre porte le pourcentage d'atteinte.
 - **Avancement — en chantiers** — répartition des chantiers suivis par état, pourcentage de budgets
   terminés au centre ; un clic sur un segment ou sur sa ligne de légende ouvre le tableau filtré.
-- **Évolution mensuelle du CA** (hors campagne) — barres du CA déclaré de l'exercice et courbe du
-  réalisé N-1 ; l'infobulle donne l'évolution du mois en pourcentage.
+- **Évolution mensuelle du CA** — trois courbes : budgété N-1, budgété N et objectif CDG N.
+  Toujours affichée ; chaque série se filtre par sa puce. L'infobulle donne l'évolution du mois.
 
 Le survol utilise l'`emphasis: { focus: "self" }` et le `blur` natifs d'ECharts (la section visée
 s'épaissit, les autres s'atténuent). La synchronisation légende ↔ anneau passe par
@@ -86,9 +86,9 @@ calculés sur **tout** le périmètre filtré. La recherche est débouncée à 2
 - **Tableau prévisionnel** — vue liste 12 mois, colonne chantier figée au scroll horizontal. Le REX
   n'y voit que ses chantiers ; le contrôle de gestion voit tout. Chaque ligne porte le nom du
   marché, son code, son entité, un **pourcentage de complétion** et un **drapeau de signalement**
-  (filtrable par la puce « Signalés »). Les colonnes **septembre à décembre** sont teintées et
-  marquées **N-2** : les réalisés de l'année en cours n'étant pas connus, la référence remonte d'un
-  exercice.
+  (filtrable par la puce « Signalés »). Les statuts affichés se **cochent** dans l'en-tête du
+  tableau. Le marquage **N-2** n'apparaît que là où il a du sens : sur la ligne « Réalisé N-1 » du
+  détail, de septembre à décembre, où les réalisés de l'année en cours ne sont pas encore connus.
 
   Le détail dépliable est découpé en trois groupes : **1 · Baseline** (réalisé N-1 → coefficients →
   baseline CG), **2 · À remplir** (CA par catégorie, nombre d'heures, taux horaire chargé, d'où
@@ -122,16 +122,15 @@ et affiche la raison sur la page d'accueil de tout le monde.
 
 ## L'accueil, situation par situation
 
-C'est une maquette de présentation : l'accueil raconte deux situations, et le **sélecteur
-d'exercice du bandeau** sert à passer de l'une à l'autre pendant une démo (2027 = campagne
-ouverte, 2024-2026 = exercices clos). Changer d'exercice ou de profil rejoue le rappel de campagne.
+C'est une maquette de présentation : l'accueil raconte deux situations. La tête de page porte
+**deux conteneurs, un par exercice** — N-1 clos à gauche, N en campagne à droite. Cliquer sur l'un
+cale le reste de la page dessus : c'est ainsi qu'on passe d'une situation à l'autre en démo.
 
 ### Pendant la campagne de déclaration
 
 | Bloc | Rôle |
 | --- | --- |
-| Rappel modal | S'affiche à l'ouverture : échéance, pourcentage de complétion, décompte par état, accès direct à la saisie. Réouvrable par « Rappel campagne ». |
-| Bandeau | Exercice budgété, échéance, nombre de chantiers restant à déclarer, barre d'avancement, bouton « Remplir mon budget ». |
+| Conteneurs d'exercice | Un par exercice : état, échéance, nombre de chantiers restant à déclarer, barre d'avancement, bouton « Remplir mon budget » ou « Consulter ». |
 | Deux anneaux | Le même avancement mesuré de deux façons : **en valeur de CA** et **en nombre de chantiers**, pourcentage au centre. |
 | À traiter en priorité | Les urgences du rôle connecté, les plus gros CA d'abord, cliquables vers le chantier. |
 
@@ -144,6 +143,11 @@ REX** classée du moins avancé au plus avancé.
 L'avancement de la saisie n'a plus d'objet : l'**évolution mensuelle du CA** passe au premier plan
 et les deux anneaux se réduisent en colonne sur la droite. Les listes de chantiers à traiter
 disparaissent, l'exercice étant clos.
+
+## Rôles
+
+Deux profils : **Exploitation** (le REX, limité à ses chantiers) et **Contrôle de gestion**
+(portefeuille complet, validation des cristallisations, réglages).
 
 ## Bundle de design d'origine
 

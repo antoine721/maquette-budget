@@ -41,6 +41,12 @@ export class Engine {
     return new Engine({ ...this.s, year }, {});
   }
 
+  /** Comme `forYear`, mais conservé dans le cache : à préférer pendant un rendu. */
+  atYear(year: number): Engine {
+    if (year === this.s.year) return this;
+    return this.memo("atYear:" + year, () => this.forYear(year));
+  }
+
   // ---------------------------------------------------------------- référentiel
 
   get metric() {
@@ -378,16 +384,17 @@ export class Engine {
   monthly(isGlobal: boolean) {
     return this.memo("monthly:" + isGlobal, () => {
       const list = this.caList(isGlobal);
+      // Le budget de l'exercice précédent se lit sur un moteur calé sur N-1.
+      const prevEngine = this.atYear(this.s.year - 1);
       return MONTHS.map((_, m) => {
-        let objectif = 0,
-          prev = 0;
-        list.forEach((ch) =>
-          CAT.forEach((c) => {
-            objectif += this.baseField(ch, m, c.k);
-            prev += this.n1(ch, m, c.k, this.s.year - 1);
-          }),
-        );
-        return { m, declare: this.aggregate(list, [m], "saisi", "ca", "Total"), objectif, prev };
+        let objectif = 0;
+        list.forEach((ch) => CAT.forEach((c) => (objectif += this.baseField(ch, m, c.k))));
+        return {
+          m,
+          declare: this.aggregate(list, [m], "saisi", "ca", "Total"),
+          objectif,
+          prev: prevEngine.aggregate(list, [m], "saisi", "ca", "Total"),
+        };
       });
     });
   }
@@ -475,7 +482,7 @@ export class Engine {
         if (s.fEntity !== "Toutes" && c.entite !== s.fEntity) return false;
         if (s.fTag !== "Tous les tags" && !(s.tags[c.id] || []).includes(s.fTag)) return false;
         if (s.fRex !== "Tous" && REX[c.id] !== s.fRex) return false;
-        if (s.fStatut !== "Tous les statuts" && this.st(c) !== s.fStatut) return false;
+        if (!s.fStatuts.includes(this.st(c))) return false;
         if (
           q &&
           !(

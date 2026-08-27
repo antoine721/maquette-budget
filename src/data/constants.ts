@@ -204,5 +204,5 @@ export const STATUT_OPTS: Statut[] = [
 
 export const YEARS = [2024, 2025, 2026, 2027];
 
-export type Role = "Exploitation" | "Contrôle de gestion" | "Admin";
+export type Role = "Exploitation" | "Contrôle de gestion";
 export type Tab = "Accueil" | "Tableau prévisionnel" | "Pilotage CDG";

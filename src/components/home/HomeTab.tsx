@@ -1,9 +1,8 @@
-import { FULL_YEAR, ST, type Statut } from "../../data/constants";
+import { FULL_YEAR, ST, STATUT_OPTS, type Statut } from "../../data/constants";
 import { REX } from "../../data/chantiers";
 import type { Store } from "../../state/store";
 import BudgetDonutCard from "./BudgetDonutCard";
 import CampaignBanner from "./CampaignBanner";
-import CampaignModal from "./CampaignModal";
 import CaGaugeCard from "./CaGaugeCard";
 import ChantierListCard, { type ChantierListRow } from "./ChantierListCard";
 import MonthlyEvolutionChart from "./MonthlyEvolutionChart";
@@ -14,16 +13,18 @@ const REX_GRID = "210px 80px 1fr 160px 120px 100px";
 /**
  * Accueil. Deux situations à présenter :
  *
- * - **en campagne** — l'avancement de la déclaration prime : rappel modal, deux
- *   anneaux (en CA et en nombre de chantiers) et les chantiers à traiter ;
+ * - **en campagne** — l'avancement de la déclaration prime : deux anneaux (en CA
+ *   et en nombre de chantiers) et les chantiers à traiter ;
  * - **hors campagne** — la saisie n'a plus d'objet : l'évolution mensuelle du CA
  *   passe au premier plan et les anneaux se réduisent sur la droite.
+ *
+ * Le graphe d'évolution, lui, est présent dans les deux cas.
  *
  * Le contrôle de gestion voit les mêmes blocs en valeurs globales, plus les
  * budgets à valider, les chantiers non traités et l'avancement par REX.
  */
 export default function HomeTab({ store }: { store: Store }) {
-  const { state, engine } = store;
+  const { engine } = store;
   const open = engine.campaignOpen();
 
   return (
@@ -74,7 +75,6 @@ export default function HomeTab({ store }: { store: Store }) {
 
       {engine.isCG && <RexConsolidated store={store} />}
 
-      {open && state.campaignModal && <CampaignModal store={store} />}
     </div>
   );
 }
@@ -149,8 +149,8 @@ function CampaignLayout({ store }: { store: Store }) {
       };
     });
 
-  const goTable = (fStatut: string, onlyTodo: boolean) => () =>
-    set({ tab: "Tableau prévisionnel", fStatut, onlyTodo, fSearch: "", searchDraft: "" });
+  const goTable = (fStatuts: Statut[], onlyTodo: boolean) => () =>
+    set({ tab: "Tableau prévisionnel", fStatuts, onlyTodo, fSearch: "", searchDraft: "" });
 
   return (
     <>
@@ -169,10 +169,12 @@ function CampaignLayout({ store }: { store: Store }) {
             rows={todo}
             empty="Rien à traiter sur ce périmètre."
             onOpen={openChantier}
-            onSeeAll={goTable("Tous les statuts", true)}
+            onSeeAll={goTable([...STATUT_OPTS], true)}
           />
         </div>
       </div>
+
+      <MonthlyEvolutionChart store={store} />
 
       {engine.isCG && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 14, alignItems: "flex-start" }}>
@@ -184,7 +186,7 @@ function CampaignLayout({ store }: { store: Store }) {
               rows={aValider}
               empty="Aucune saisie en attente de contrôle."
               onOpen={openChantier}
-              onSeeAll={goTable("À valider", false)}
+              onSeeAll={goTable(["À valider"], false)}
             />
           </div>
           <div style={{ flex: "1 1 420px", minWidth: 320 }}>
@@ -195,7 +197,7 @@ function CampaignLayout({ store }: { store: Store }) {
               rows={nonTraites}
               empty="Tous les chantiers sont engagés."
               onOpen={openChantier}
-              onSeeAll={goTable("Tous les statuts", true)}
+              onSeeAll={goTable([...STATUT_OPTS], true)}
             />
           </div>
         </div>

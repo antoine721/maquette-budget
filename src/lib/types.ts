@@ -65,7 +65,8 @@ export interface AppState {
   fVille: string;
   fAgence: string;
   fClient: string;
-  fStatut: string;
+  /** Statuts cochés dans le tableau ; vide = aucun affiché. */
+  fStatuts: Statut[];
   fSearch: string;
   searchDraft: string;
   fPeriode: string;
@@ -103,8 +104,6 @@ export interface AppState {
 
   pageSize: number;
   hoverSeg: string | null;
-  /** Rappel de campagne affiché à l'ouverture tant qu'il n'a pas été écarté. */
-  campaignModal: boolean;
   toast: string;
 }
 

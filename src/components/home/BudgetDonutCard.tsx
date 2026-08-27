@@ -1,5 +1,6 @@
 import { useMemo, useRef } from "react";
 import type { EChartsOption } from "echarts";
+import { STATUT_OPTS, type Statut } from "../../data/constants";
 import type { Chantier } from "../../data/chantiers";
 import type { Store } from "../../state/store";
 import EChart, { type EChartsInstance } from "../EChart";
@@ -18,10 +19,10 @@ export interface BudgetSegment {
 export function budgetSegments(store: Store): BudgetSegment[] {
   const { engine, set } = store;
   const g = engine.budgetGroups();
-  const go = (fStatut: string, onlyTodo: boolean) => () =>
+  const go = (fStatuts: Statut[], onlyTodo: boolean) => () =>
     set({
       tab: "Tableau prévisionnel",
-      fStatut,
+      fStatuts,
       onlyTodo,
       fSearch: "",
       searchDraft: "",
@@ -34,7 +35,7 @@ export function budgetSegments(store: Store): BudgetSegment[] {
       color: "#dc2626",
       hint: "mois ouverts non saisis",
       list: g.remplir,
-      pick: go("Tous les statuts", true),
+      pick: go([...STATUT_OPTS], true),
     },
     {
       key: "cours",
@@ -42,7 +43,7 @@ export function budgetSegments(store: Store): BudgetSegment[] {
       color: "#f59e0b",
       hint: "saisie faite, en attente de validation",
       list: g.cours,
-      pick: go("À valider", false),
+      pick: go(["À valider"], false),
     },
     {
       key: "fini",
@@ -50,7 +51,7 @@ export function budgetSegments(store: Store): BudgetSegment[] {
       color: "#16a34a",
       hint: "validés ou clôturés",
       list: g.fini,
-      pick: go("Validé", false),
+      pick: go(["Validé", "Clôturé"], false),
     },
     {
       key: "attente",
@@ -58,7 +59,7 @@ export function budgetSegments(store: Store): BudgetSegment[] {
       color: "#94a3b8",
       hint: "pas de budget ou saisie pas encore ouverte",
       list: g.attente,
-      pick: go("Non budgétisé", false),
+      pick: go(["Non budgétisé", "Baseline CG"], false),
     },
   ].filter((x) => x.list.length || x.key !== "attente");
 }

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CONFIG } from "../config";
-import { AGENCES, MONTHS, type Statut } from "../data/constants";
+import { AGENCES, MONTHS, STATUT_OPTS, type Statut } from "../data/constants";
 import type { Chantier } from "../data/chantiers";
 import { Engine } from "../lib/engine";
 import type {
@@ -52,7 +52,7 @@ function initialState(): AppState {
     fVille: "Toutes les villes",
     fAgence: "Toutes les agences",
     fClient: "Tous les clients",
-    fStatut: "Tous les statuts",
+    fStatuts: [...STATUT_OPTS],
     fSearch: "",
     searchDraft: "",
     fPeriode: "Année complète",
@@ -108,7 +108,6 @@ function initialState(): AppState {
     ],
     pageSize: 40,
     hoverSeg: null,
-    campaignModal: true,
     toast: "",
   };
 }
@@ -124,7 +123,7 @@ function signature(s: AppState): string {
     s.fVille,
     s.fAgence,
     s.fClient,
-    s.fStatut,
+    s.fStatuts.join(","),
     s.fSearch,
     s.fPeriode,
     s.fSort,

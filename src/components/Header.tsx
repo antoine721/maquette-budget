@@ -1,7 +1,7 @@
 import type { Role } from "../data/constants";
 import type { Store } from "../state/store";
 
-const ROLES: Role[] = ["Exploitation", "Contrôle de gestion", "Admin"];
+const ROLES: Role[] = ["Exploitation", "Contrôle de gestion"];
 
 /**
  * Barre haute : logo, titre, sélecteur de profil, agence, notifications, compte.
@@ -38,8 +38,7 @@ export default function Header({ store }: { store: Store }) {
           return (
             <button
               key={r}
-              // Changer de profil rejoue le rappel de campagne : chaque rôle a le sien.
-              onClick={() => set({ role: r, campaignModal: true, hoverSeg: null })}
+              onClick={() => set({ role: r, hoverSeg: null })}
               style={{
                 border: 0,
                 borderRadius: 7,
