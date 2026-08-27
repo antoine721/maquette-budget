@@ -1,0 +1,2132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; padding: 0; background: #f4f6f8; }
+  * { box-sizing: border-box; }
+  a { color: #0a9bd8; text-decoration: none; }
+  a:hover { color: #0782b6; }
+  input, select { font-family: inherit; }
+  input::placeholder { color: #c7d0d9; font-weight: 500; }
+  ::-webkit-scrollbar { height: 10px; width: 10px; }
+  ::-webkit-scrollbar-thumb { background: #cfd6dd; border-radius: 6px; }
+</style>
+</helmet>
+
+<div style="display: flex; min-height: 100vh; font-family: Barlow, Helvetica, Arial, sans-serif; color: #17202a; background: #f4f6f8">
+
+  <aside style="position: relative; width: {{ sidebarW }}; flex: 0 0 {{ sidebarW }}; background: #fff; border-right: 1px solid #e6eaee; display: flex; flex-direction: column; padding: 22px {{ sidebarPad }}; transition: width 180ms ease, flex-basis 180ms ease">
+    <div style="display: flex; align-items: center; justify-content: center; padding: 2px 4px 26px; overflow: hidden">
+      <img src="assets/logo-challancin.png" alt="Challancin" style="height: {{ logoH }}; width: auto">
+    </div>
+    <sc-if value="{{ navOpen }}" hint-placeholder-val="{{ true }}">
+      <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; letter-spacing: 1.2px; color: #8a95a1; font-weight: 600; padding: 0 8px 12px">
+        <span>SECTIONS</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8a95a1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+    </sc-if>
+    <button onClick="{{ toggleNav }}" title="{{ navTitle }}" style="position: absolute; top: 452px; right: -14px; width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 1px solid #e6eaee; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; z-index: 5; box-shadow: 0 2px 6px rgba(15,23,42,0.08)" style-hover="background: #f4f6f8">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6b7681" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transform: {{ navArrow }}"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </button>
+    <nav style="display: flex; flex-direction: column; gap: 2px">
+      <div style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 9px; color: #4a5661; font-size: 15px; font-weight: 500" style-hover="background: #f4f6f8">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"></path><path d="M5 10v10h14V10"></path></svg><span style="display: {{ navLabel }}">Applications</span></div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 9px; background: #e8f6fd; color: #0a9bd8; font-size: 15px; font-weight: 600">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 4 12 9 18"></polyline><polyline points="15 6 20 12 15 18"></polyline></svg><span style="display: {{ navLabel }}">Workspace</span></div>
+      <div style="display: {{ navSub }}; flex-direction: column; gap: 2px; padding: 4px 0 4px 22px">
+        <div style="padding: 8px 12px; border-radius: 8px; color: #6b7681; font-size: 14px" style-hover="background: #f4f6f8">Écritures comptables Gescof</div>
+        <div style="padding: 8px 12px; border-radius: 8px; color: #6b7681; font-size: 14px" style-hover="background: #f4f6f8">IA Factures Vivaldi</div>
+        <div style="padding: 8px 12px; border-radius: 8px; background: #f1f5f9; color: #17202a; font-size: 14px; font-weight: 600; border-left: 2px solid #0a9bd8">Tableau prévisionnel</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 9px; color: #4a5661; font-size: 15px; font-weight: 500" style-hover="background: #f4f6f8">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"></rect><line x1="8" y1="16" x2="8" y2="12"></line><line x1="12" y1="16" x2="12" y2="8"></line><line x1="16" y1="16" x2="16" y2="11"></line></svg><span style="display: {{ navLabel }}">Reporting</span></div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 9px; color: #4a5661; font-size: 15px; font-weight: 500" style-hover="background: #f4f6f8">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-6.3 7-11a7 7 0 1 0-14 0c0 4.7 7 11 7 11z"></path><circle cx="12" cy="10" r="2.5"></circle></svg><span style="display: {{ navLabel }}">Agences</span></div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 9px; color: #4a5661; font-size: 15px; font-weight: 500" style-hover="background: #f4f6f8">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"></rect><line x1="8" y1="7" x2="8" y2="7"></line><line x1="12" y1="7" x2="12" y2="7"></line><line x1="16" y1="7" x2="16" y2="7"></line><line x1="8" y1="11" x2="8" y2="11"></line><line x1="12" y1="11" x2="12" y2="11"></line><line x1="16" y1="11" x2="16" y2="11"></line><path d="M10 21v-5h4v5"></path></svg><span style="display: {{ navLabel }}">Administration</span></div>
+      <div style="display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 9px; color: #4a5661; font-size: 15px; font-weight: 500" style-hover="background: #f4f6f8">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"></circle><circle cx="5" cy="19" r="2"></circle><circle cx="19" cy="19" r="2"></circle><path d="M12 7v5M5 17v-2a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v2"></path></svg><span style="display: {{ navLabel }}">Tenants</span></div>
+    </nav>
+    <div style="flex: 1"></div>
+    <sc-if value="{{ navOpen }}" hint-placeholder-val="{{ true }}">
+      <button style="width: 100%; padding: 12px; border: 0; border-radius: 9px; background: #0a9bd8; color: #fff; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer" style-hover="background: #0989c0">Demander une application</button>
+      <button style="width: 100%; margin-top: 12px; padding: 12px; border: 1px solid #e6eaee; border-radius: 9px; background: #fff; color: #3b4753; font-size: 15px; font-weight: 600; font-family: inherit; cursor: pointer" style-hover="background: #f8fafb">SOS Informatique</button>
+    </sc-if>
+  </aside>
+
+  <main style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+    <header style="height: 68px; flex: 0 0 68px; background: #fff; border-bottom: 1px solid #e6eaee; display: flex; align-items: center; justify-content: flex-end; gap: 16px; padding: 0 28px">
+      <div style="font-size: 15px; font-weight: 700; letter-spacing: -0.2px; margin-right: auto">Tableau prévisionnel</div>
+      <div style="display: flex; background: #f4f6f8; border-radius: 9px; padding: 3px">
+        <sc-for list="{{ roles }}" as="r" hint-placeholder-count="3">
+          <button onClick="{{ r.pick }}" style="border: 0; border-radius: 7px; padding: 7px 13px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; background: {{ r.bg }}; color: {{ r.fg }}; box-shadow: {{ r.shadow }}">{{ r.label }}</button>
+        </sc-for>
+      </div>
+      <div style="padding: 7px 14px; border-radius: 8px; background: #f4f6f8; font-size: 14px; font-weight: 600; color: #3b4753">Saint Ouen</div>
+      <div style="position: relative; width: 34px; height: 34px; border-radius: 50%; background: #f4f6f8; display: flex; align-items: center; justify-content: center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b4753" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15V10a6 6 0 1 0-12 0v5l-2 3h16z"></path><path d="M10 21h4"></path></svg>
+        <div style="position: absolute; top: -3px; right: -3px; min-width: 18px; height: 18px; border-radius: 9px; background: #e0243a; color: #fff; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center">2</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 6px">
+        <div style="width: 36px; height: 36px; border-radius: 50%; background: #0a9bd8; color: #fff; font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center">AB</div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7681" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+    </header>
+
+    <div style="display: flex; align-items: flex-end; gap: 4px; padding: 0 28px; background: #fff; border-bottom: 1px solid #e6eaee">
+      <sc-for list="{{ tabs }}" as="tb" hint-placeholder-count="2">
+        <button onClick="{{ tb.pick }}" style="padding: 13px 18px; border: 0; border-bottom: 2px solid {{ tb.line }}; background: transparent; font-family: inherit; font-size: 14px; font-weight: {{ tb.weight }}; color: {{ tb.fg }}; cursor: pointer">{{ tb.label }}</button>
+      </sc-for>
+      <span style="flex: 1"></span>
+      <span style="padding: 0 0 12px; font-size: 12.5px; color: #6b7681">{{ campaignChip }}</span>
+    </div>
+
+    <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+      <div style="flex: 1; min-width: 0; padding: 22px 28px 48px; display: flex; flex-direction: column; gap: 16px">
+
+        <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 16px; background: #fff; border: 1px solid #e6eaee; border-radius: 12px">
+          <div style="min-width: 0">
+            <div style="font-size: 15px; font-weight: 700; letter-spacing: -0.2px">{{ campaignTitle }}</div>
+            <div style="font-size: 12px; color: #8a95a1; margin-top: 1px">{{ campaignShort }}</div>
+          </div>
+          <div style="flex: 1"></div>
+          <div style="display: flex; align-items: center; gap: 9px">
+            <div style="width: 130px; height: 6px; border-radius: 6px; background: #eef1f4; overflow: hidden">
+              <div style="height: 6px; width: {{ campaignPct }}; background: #0a9bd8"></div>
+            </div>
+            <div style="font-size: 14px; font-weight: 700; color: #0a9bd8">{{ campaignPct }}</div>
+          </div>
+          <button onClick="{{ goTable }}" style="padding: 8px 13px; border: 0; border-radius: 8px; background: #0a9bd8; color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Ouvrir le tableau</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; align-items: start">
+
+        <div style="max-width: 400px; aspect-ratio: 1 / 1; background: #fff; border: 1px solid #e6eaee; border-radius: 14px; padding: 16px 18px; display: flex; flex-direction: column">
+          <div style="min-width: 0; display: flex; flex-direction: column">
+            <span style="font-size: 12.5px; font-weight: 700">{{ caChartTitle }}</span>
+            <span style="font-size: 11px; color: #6b7681">{{ caChartSub }}</span>
+          </div>
+          <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px">
+            <div onMouseEnter="{{ pieEnter }}" onMouseLeave="{{ pieLeave }}" style="position: relative; width: {{ gaugePx }}; height: {{ gaugePx }}; flex: 0 0 auto; cursor: pointer">
+              <svg viewBox="0 0 42 42" style="width: 100%; height: 100%; transform: rotate(-90deg)">
+                <circle cx="21" cy="21" r="17.2" fill="none" stroke="#eef1f4" stroke-width="4"></circle>
+                <sc-for list="{{ gaugeSegs }}" as="g" hint-placeholder-count="4">
+                  <circle cx="21" cy="21" r="17.2" fill="none" stroke="{{ g.color }}" stroke-width="{{ g.width }}" stroke-dasharray="{{ g.dash }}" stroke-dashoffset="{{ g.offset }}" opacity="{{ g.opacity }}" onMouseEnter="{{ g.enter }}" onMouseLeave="{{ g.leave }}" style="cursor: pointer; transition: stroke-width 140ms ease, opacity 140ms ease"></circle>
+                </sc-for>
+              </svg>
+              <sc-if value="{{ segCard }}" hint-placeholder-val="{{ false }}">
+                <div style="position: absolute; left: 50%; top: -8px; transform: translate(-50%, -100%); z-index: 6; white-space: nowrap; padding: 6px 9px; background: #17202a; color: #fff; border-radius: 8px; box-shadow: 0 8px 18px rgba(15,23,42,0.2); pointer-events: none">
+                  <div style="display: flex; align-items: center; gap: 7px">
+                    <span style="width: 7px; height: 7px; border-radius: 2px; background: {{ segCard.dot }}"></span>
+                    <span style="font-size: 11.5px; font-weight: 600">{{ segCard.label }}</span>
+                    <span style="font-size: 12px; font-weight: 700">{{ segCard.value }}</span>
+                    <span style="font-size: 11.5px; font-weight: 700; color: {{ segCard.deltaColor }}">{{ segCard.rate }}</span>
+                  </div>
+                </div>
+              </sc-if>
+              <div style="position: absolute; inset: {{ gaugeInset }}; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none">
+                <span style="font-size: {{ gaugeValueSize }}; font-weight: 700; letter-spacing: -0.5px; color: #17202a; line-height: 1.1; white-space: nowrap">{{ gaugeValue }}</span>
+                <span style="font-size: 11px; font-weight: 700; color: {{ deltaColor }}; margin-top: 1px; font-variant-numeric: tabular-nums; white-space: nowrap">{{ gaugeDeltaPct }}</span>
+              </div>
+            </div>
+            <sc-if value="{{ showObjectiveBlock }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; align-items: baseline; gap: 8px">
+                <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: #6b7681">Objectif CDG</span>
+                <span style="font-size: 14px; font-weight: 700; color: #475569; font-variant-numeric: tabular-nums">{{ caChartBaseTotal }}</span>
+                <span style="font-size: 11px; color: #94a3b8">complétion {{ fillPct }}</span>
+              </div>
+            </sc-if>
+            <div style="display: flex; align-items: baseline; gap: 8px">
+              <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: #6b7681">Réalisé N-1</span>
+              <span style="font-size: 13px; font-weight: 700; color: #475569; font-variant-numeric: tabular-nums">{{ caN1Value }}</span>
+              <span style="font-size: 12px; font-weight: 700; color: {{ caN1Color }}; font-variant-numeric: tabular-nums">{{ caN1Delta }}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 14px; width: 100%; margin-top: 2px">
+              <sc-for list="{{ caCats }}" as="l" hint-placeholder-count="4">
+                <div onMouseEnter="{{ l.enter }}" onMouseLeave="{{ l.leave }}" title="{{ l.title }}" style="display: flex; align-items: center; gap: 7px; padding: 5px 7px; border-radius: 7px; background: {{ l.hoverBg }}; transition: background 140ms ease">
+                  <span style="flex: 0 0 auto; width: 8px; height: 8px; border-radius: 2px; background: {{ l.dot }}"></span>
+                  <span style="min-width: 0; flex: 1; font-size: 11.5px; font-weight: 600; color: #3b4753; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ l.label }}</span>
+                  <span style="flex: 0 0 auto; font-size: 12px; font-weight: 700; color: #17202a; font-variant-numeric: tabular-nums">{{ l.value }}</span>
+                  <span style="flex: 0 0 auto; font-size: 11px; font-weight: 700; color: {{ l.color }}; font-variant-numeric: tabular-nums">{{ l.delta }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+          <div style="background: #fff; border: 1px solid #e6eaee; border-radius: 14px; padding: 16px 18px">
+            <div style="font-size: 13.5px; font-weight: 700">État des budgets</div>
+            <div style="font-size: 11.5px; color: #8a95a1; margin-top: 2px">{{ donutSub }}</div>
+            <div style="display: flex; justify-content: center; margin-top: 6px">
+              <div style="position: relative; width: 176px; height: 176px">
+                <svg viewBox="0 0 42 42" style="width: 100%; height: 100%; transform: rotate(-90deg)">
+                  <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f1f4f7" stroke-width="4.4"></circle>
+                  <sc-for list="{{ donutArcs }}" as="a" hint-placeholder-count="3">
+                    <circle cx="21" cy="21" r="15.9" fill="none" stroke="{{ a.color }}" stroke-width="{{ a.width }}" stroke-dasharray="{{ a.dash }}" stroke-dashoffset="{{ a.offset }}" stroke-linecap="butt" opacity="{{ a.opacity }}" onMouseEnter="{{ a.enter }}" onMouseLeave="{{ a.leave }}" onClick="{{ a.pick }}" style="cursor: pointer; transition: stroke-width 160ms ease, opacity 160ms ease"></circle>
+                  </sc-for>
+                </svg>
+                <div style="position: absolute; inset: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none">
+                  <span style="font-size: 28px; font-weight: 700; letter-spacing: -0.8px; color: {{ donutCenterColor }}; line-height: 1">{{ donutCenterValue }}</span>
+                  <span style="font-size: 11px; font-weight: 600; color: #8a95a1; margin-top: 4px; text-align: center; line-height: 1.25; text-wrap: pretty">{{ donutCenterLabel }}</span>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 2px; margin-top: 8px">
+              <sc-for list="{{ donutLegend }}" as="l" hint-placeholder-count="3">
+                <button onClick="{{ l.pick }}" onMouseEnter="{{ l.enter }}" onMouseLeave="{{ l.leave }}" title="{{ l.hint }}" style="display: flex; align-items: center; gap: 9px; padding: 7px 9px; border: 0; border-radius: 8px; background: {{ l.bg }}; font-family: inherit; text-align: left; cursor: pointer; transition: background 150ms ease">
+                  <span style="flex: 0 0 auto; width: 9px; height: 9px; border-radius: 3px; background: {{ l.color }}"></span>
+                  <span style="min-width: 0; flex: 1; font-size: 12.5px; font-weight: 600; color: #3b4753; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ l.label }}</span>
+                  <span style="flex: 0 0 auto; font-size: 13px; font-weight: 700; color: {{ l.color }}">{{ l.count }}</span>
+                  <span style="flex: 0 0 auto; font-size: 11px; font-weight: 600; color: #6b7681; width: 40px; text-align: right">{{ l.pct }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="background: #fff; border: 1px solid #e6eaee; border-radius: 14px; padding: 16px 18px">
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #dc2626"></span>
+              <span style="font-size: 14px; font-weight: 700">À traiter en priorité</span>
+              <span style="margin-left: auto; font-size: 12.5px; color: #8a95a1">{{ homeTodoCount }}</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 12px">
+              <sc-for list="{{ homeTodo }}" as="t" hint-placeholder-count="5">
+                <button onClick="{{ t.open }}" title="{{ t.title }}" style="display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 9px 11px; border: 1px solid #f1f4f7; border-left: 3px solid {{ t.accent }}; border-radius: 9px; background: #fff; font-family: inherit; text-align: left; cursor: pointer; width: 100%" style-hover="background: #f8fafb">
+                  <span style="display: flex; align-items: center; gap: 8px; min-width: 0">
+                    <span style="flex: 0 0 auto; white-space: nowrap; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; font-weight: 600; color: #334155; background: #f1f5f9; border-radius: 5px; padding: 2px 6px">{{ t.code }}</span>
+                    <span style="min-width: 0; flex: 1; font-size: 13px; font-weight: 600; color: #17202a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ t.nom }}</span>
+                    <span style="flex: 0 0 auto; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700; background: {{ t.tagBg }}; color: {{ t.tagFg }}; white-space: nowrap">{{ t.tag }}</span>
+                  </span>
+                  <span style="font-size: 11.5px; color: {{ t.hintColor }}; line-height: 1.35; text-wrap: pretty">{{ t.hint }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="grid-column: 1 / -1; background: #fff; border: 1px solid #e6eaee; border-radius: 14px; padding: 16px 18px">
+            <div style="display: flex; align-items: center; gap: 8px">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: #16a34a"></span>
+              <span style="font-size: 14px; font-weight: 700">Budgets terminés</span>
+              <span style="margin-left: auto; font-size: 12.5px; color: #8a95a1">{{ homeDoneCount }}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 8px; margin-top: 12px">
+              <sc-for list="{{ homeDone }}" as="d" hint-placeholder-count="4">
+                <button onClick="{{ d.open }}" title="{{ d.title }}" style="display: flex; flex-direction: column; align-items: stretch; gap: 4px; padding: 9px 11px; border: 1px solid #f1f4f7; border-left: 3px solid {{ d.accent }}; border-radius: 9px; background: #fff; font-family: inherit; text-align: left; cursor: pointer; width: 100%" style-hover="background: #f8fafb">
+                  <span style="display: flex; align-items: center; gap: 8px; min-width: 0">
+                    <span style="flex: 0 0 auto; white-space: nowrap; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; font-weight: 600; color: #334155; background: #f1f5f9; border-radius: 5px; padding: 2px 6px">{{ d.code }}</span>
+                    <span style="min-width: 0; flex: 1; font-size: 13px; font-weight: 600; color: #17202a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ d.nom }}</span>
+                    <span style="flex: 0 0 auto; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700; background: {{ d.tagBg }}; color: {{ d.tagFg }}; white-space: nowrap">{{ d.tag }}</span>
+                  </span>
+                  <span style="font-size: 11.5px; color: #8a95a1; line-height: 1.35; text-wrap: pretty">{{ d.hint }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+
+        </div>
+
+        <sc-if value="{{ showConsolide }}" hint-placeholder-val="{{ false }}">
+          <div style="background: #fff; border: 1px solid #e6eaee; border-radius: 14px; padding: 16px 18px">
+            <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap">
+              <span style="font-size: 14px; font-weight: 700">Vue consolidée — avancement des REX</span>
+              <span style="font-size: 11.5px; color: #8a95a1">{{ rexSub }}</span>
+            </div>
+            <div style="display: grid; grid-template-columns: 210px 80px 1fr 160px 120px 100px; align-items: center; gap: 10px; margin-top: 14px; padding-bottom: 8px; border-bottom: 1px solid #eef1f4">
+              <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #8a95a1">Responsable exploitation</span>
+              <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #8a95a1">Chantiers</span>
+              <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #8a95a1">Avancement</span>
+              <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #8a95a1">Reste à faire</span>
+              <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #8a95a1; text-align: right">CA déclaré</span>
+              <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #8a95a1; text-align: right">Écart obj.</span>
+            </div>
+            <sc-for list="{{ rexRows }}" as="r" hint-placeholder-count="4">
+              <div onClick="{{ r.pick }}" style="display: grid; grid-template-columns: 210px 80px 1fr 160px 120px 100px; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid #f4f6f8; cursor: pointer" style-hover="background: #fafbfc">
+                <span style="display: flex; align-items: center; gap: 9px; min-width: 0">
+                  <span style="flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: #eef2ff; color: #3730a3; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{ r.initials }}</span>
+                  <span style="min-width: 0; display: flex; flex-direction: column">
+                    <span style="font-size: 13px; font-weight: 600; color: #17202a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ r.nom }}</span>
+                    <span style="font-size: 11px; color: #94a3b8">{{ r.agence }}</span>
+                  </span>
+                </span>
+                <span style="font-size: 13px; font-weight: 600; color: #3b4753">{{ r.nb }}</span>
+                <span style="display: flex; align-items: center; gap: 9px">
+                  <span style="flex: 1; height: 7px; border-radius: 6px; background: #eef1f4; overflow: hidden"><span style="display: block; height: 7px; width: {{ r.pct }}; background: {{ r.color }}"></span></span>
+                  <span style="flex: 0 0 auto; width: 40px; font-size: 12px; font-weight: 700; color: {{ r.color }}">{{ r.pct }}</span>
+                </span>
+                <span style="font-size: 12px; color: {{ r.restColor }}; font-weight: 600">{{ r.rest }}</span>
+                <span style="font-size: 13px; font-weight: 600; color: #17202a; text-align: right; font-variant-numeric: tabular-nums">{{ r.ca }}</span>
+                <span style="font-size: 13px; font-weight: 700; color: {{ r.ecartColor }}; text-align: right; font-variant-numeric: tabular-nums">{{ r.ecart }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isPilot }}" hint-placeholder-val="{{ false }}">
+      <div style="flex: 1; min-width: 0; padding: 22px 28px 48px; display: flex; flex-direction: column; gap: 14px">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px">
+          <sc-for list="{{ pilotKpis }}" as="k" hint-placeholder-count="4">
+            <div style="background: #fff; border: 1px solid #e6eaee; border-radius: 14px; padding: 14px 16px">
+              <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: #8a95a1">{{ k.label }}</div>
+              <div style="margin-top: 6px; font-size: 24px; font-weight: 700; letter-spacing: -0.6px; color: {{ k.color }}">{{ k.value }}</div>
+              <div style="margin-top: 2px; font-size: 12px; color: #8a95a1">{{ k.hint }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="background: #fff; border: 1px solid #e6eaee; border-radius: 14px; padding: 16px 18px">
+          <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap">
+            <span style="font-size: 14px; font-weight: 700">Top 20 chantiers — 80 % du CA</span>
+            <span style="font-size: 11.5px; color: #8a95a1">triés par CA de référence · les manquants sont prioritaires</span>
+          </div>
+          <div style="overflow-x: auto; margin-top: 12px">
+            <div style="min-width: 1040px">
+              <div style="display: grid; grid-template-columns: 300px 120px 110px 130px 110px 100px 1fr; align-items: center; gap: 10px; padding-bottom: 8px; border-bottom: 1px solid #eef1f4">
+                <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #8a95a1">Chantier</span>
+                <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #8a95a1">REX</span>
+                <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #8a95a1; text-align: right">CA réf.</span>
+                <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #8a95a1; text-align: right">Déclaré</span>
+                <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #8a95a1; text-align: right">Écart</span>
+                <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #8a95a1; text-align: right">Saisie</span>
+                <span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #8a95a1">Alerte</span>
+              </div>
+              <sc-for list="{{ pilotBig }}" as="p" hint-placeholder-count="8">
+                <div onClick="{{ p.open }}" style="display: grid; grid-template-columns: 300px 120px 110px 130px 110px 100px 1fr; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f4f6f8; border-left: 3px solid {{ p.accent }}; padding-left: 8px; cursor: pointer" style-hover="background: #fafbfc">
+                  <span style="display: flex; align-items: center; gap: 8px; min-width: 0">
+                    <span style="flex: 0 0 auto; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; font-weight: 600; color: #334155; background: #f1f5f9; border-radius: 5px; padding: 2px 6px">{{ p.code }}</span>
+                    <span style="min-width: 0; font-size: 13px; font-weight: 600; color: #17202a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ p.nom }}</span>
+                    <span style="flex: 0 0 auto; padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700; background: {{ p.stBg }}; color: {{ p.stFg }}; white-space: nowrap">{{ p.statut }}</span>
+                  </span>
+                  <span style="font-size: 12.5px; color: #3b4753; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ p.rex }}</span>
+                  <span style="font-size: 13px; font-weight: 700; color: #17202a; text-align: right; font-variant-numeric: tabular-nums">{{ p.ref }}</span>
+                  <span style="font-size: 13px; color: #475569; text-align: right; font-variant-numeric: tabular-nums">{{ p.declare }}</span>
+                  <span style="font-size: 12.5px; font-weight: 700; color: {{ p.ecartColor }}; text-align: right; font-variant-numeric: tabular-nums">{{ p.ecart }}</span>
+                  <span style="font-size: 12.5px; font-weight: 700; color: {{ p.pctColor }}; text-align: right">{{ p.pct }}</span>
+                  <span style="display: flex; align-items: center; gap: 6px; min-width: 0">
+                    <span style="font-size: 12px; font-weight: 600; color: {{ p.riskColor }}; white-space: nowrap">{{ p.risk }}</span>
+                    <sc-for list="{{ p.tags }}" as="tg" hint-placeholder-count="1">
+                      <span style="padding: 2px 7px; border-radius: 20px; font-size: 10px; font-weight: 700; background: #f3f0ff; color: #5b21b6; border: 1px solid #ddd6fe; white-space: nowrap">{{ tg }}</span>
+                    </sc-for>
+                  </span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: #fff; border: 1px solid #e6eaee; border-radius: 14px; padding: 16px 18px">
+          <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap">
+            <span style="font-size: 14px; font-weight: 700">Avancement par REX</span>
+            <span style="font-size: 11.5px; color: #8a95a1">les moins avancés en premier</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 6px 20px; margin-top: 12px">
+            <sc-for list="{{ pilotRex }}" as="r" hint-placeholder-count="8">
+              <div onClick="{{ r.pick }}" style="display: grid; grid-template-columns: 26px 1fr 92px 128px 130px; align-items: center; gap: 10px; padding: 8px 8px; border-radius: 8px; cursor: pointer" style-hover="background: #f8fafb">
+                <span style="width: 26px; height: 26px; border-radius: 50%; background: #eef2ff; color: #3730a3; font-size: 10.5px; font-weight: 700; display: flex; align-items: center; justify-content: center">{{ r.initials }}</span>
+                <span style="min-width: 0; font-size: 13px; font-weight: 600; color: #17202a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ r.nom }}</span>
+                <span style="font-size: 12px; color: #6b7681; text-align: right; font-variant-numeric: tabular-nums">{{ r.nb }} chantiers</span>
+                <span style="font-size: 11.5px; font-weight: 600; color: {{ r.bigsColor }}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ r.bigs }}</span>
+                <span style="display: flex; align-items: center; gap: 8px">
+                  <span style="flex: 1; height: 6px; border-radius: 6px; background: #eef1f4; overflow: hidden"><span style="display: block; height: 6px; width: {{ r.pct }}; background: {{ r.color }}"></span></span>
+                  <span style="flex: 0 0 auto; width: 38px; font-size: 12px; font-weight: 700; color: {{ r.color }}; text-align: right">{{ r.pct }}</span>
+                </span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isTable }}" hint-placeholder-val="{{ false }}">
+    <div style="flex: 1; min-width: 0; padding: 22px 28px 48px">
+      <div style="background: #fff; border: 1px solid #e6eaee; border-radius: 16px; padding: 18px 20px 22px">
+
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+          <input onChange="{{ setSearch }}" value="{{ searchDraft }}" placeholder="Code chantier…" style="flex: 1 1 200px; min-width: 190px; padding: 8px 12px; border: 1px solid #dde3e8; border-radius: 8px; background: #fff; font-size: 13.5px; color: #17202a">
+          <select onChange="{{ setYear }}" value="{{ year }}" title="Exercice budgété" style="padding: 8px 10px; border: 1px solid #dde3e8; border-radius: 8px; background: #fff; font-size: 13px; font-weight: 600; color: #17202a">
+            <sc-for list="{{ years }}" as="y" hint-placeholder-count="4"><option value="{{ y }}">{{ y }}</option></sc-for>
+          </select>
+          <div style="display: flex; gap: 6px">
+            <sc-for list="{{ entityChips }}" as="ec" hint-placeholder-count="4">
+              <button onClick="{{ ec.pick }}" title="{{ ec.title }}" style="padding: 8px 13px; border: 1px solid {{ ec.border }}; border-radius: 999px; background: {{ ec.bg }}; color: {{ ec.fg }}; font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer">{{ ec.label }}</button>
+            </sc-for>
+          </div>
+          <sc-if value="{{ showTagFilter }}" hint-placeholder-val="{{ false }}">
+            <select onChange="{{ setTag }}" value="{{ fTag }}" title="Filtrer par tag de suivi" style="padding: 8px 10px; border: 1px solid #ddd6fe; border-radius: 8px; background: #f8f7ff; font-size: 13px; font-weight: 600; color: #5b21b6">
+              <sc-for list="{{ tagOpts }}" as="tg" hint-placeholder-count="5"><option value="{{ tg }}">{{ tg }}</option></sc-for>
+            </select>
+          </sc-if>
+          <span style="width: 1px; height: 22px; background: #e6eaee"></span>
+          <select onChange="{{ setMetric }}" value="{{ metricLabel }}" title="Indicateur affiché" style="padding: 8px 10px; border: 1px solid #bfe3f6; border-radius: 8px; background: #f5fbff; font-size: 13px; font-weight: 600; color: #0782b6">
+            <sc-for list="{{ metricOpts }}" as="mo" hint-placeholder-count="6"><option value="{{ mo }}">{{ mo }}</option></sc-for>
+          </select>
+          <select onChange="{{ setCat }}" value="{{ cat }}" title="Catégorie de CA" style="padding: 8px 10px; border: 1px solid #dde3e8; border-radius: 8px; background: #fff; font-size: 13px; color: #17202a">
+            <sc-for list="{{ catOpts }}" as="co" hint-placeholder-count="5"><option value="{{ co }}">{{ co }}</option></sc-for>
+          </select>
+          <sc-if value="{{ hasHistory }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ undoLast }}" title="Annuler la dernière action en masse" style="padding: 8px 12px; border: 1px solid #bfe3f6; border-radius: 8px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 600; color: #0782b6; cursor: pointer">Annuler</button>
+          </sc-if>
+          <span style="flex: 1"></span>
+          <button onClick="{{ exportXlsx }}" style="padding: 8px 12px; border: 1px solid #dde3e8; border-radius: 8px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 600; color: #3b4753; cursor: pointer" style-hover="background: #f8fafb">Excel</button>
+          <button onClick="{{ exportCsv }}" style="padding: 8px 12px; border: 1px solid #dde3e8; border-radius: 8px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 600; color: #3b4753; cursor: pointer" style-hover="background: #f8fafb">CSV</button>
+        </div>
+
+
+        <sc-if value="{{ showAdmin }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top: 20px; border: 1px solid #dbeafe; background: #f5faff; border-radius: 12px; padding: 18px 20px">
+            <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+              <div>
+                <div style="font-size: 16px; font-weight: 700">Gestion des périodes de saisie</div>
+                <div style="font-size: 13px; color: #6b7681; margin-top: 3px">Ouvrez ou fermez chaque mois de l'exercice budgété par entité. Un mois fermé bloque la saisie de l'exploitation.</div>
+              </div>
+              <div style="display: flex; gap: 14px; font-size: 12px; color: #6b7681">
+                <div style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #16a34a; display: inline-block"></span>Ouvert</div>
+                <div style="display: flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 3px; background: #cbd5e1; display: inline-block"></span>Fermé</div>
+              </div>
+            </div>
+            <div style="overflow-x: auto; margin-top: 14px">
+              <div style="display: grid; grid-template-columns: 170px repeat(12, 60px); gap: 6px; min-width: 890px">
+                <div></div>
+                <sc-for list="{{ allMonths }}" as="m" hint-placeholder-count="12">
+                  <div style="text-align: center; font-size: 11px; font-weight: 700; color: #8a95a1; letter-spacing: 0.4px">{{ m.short }}</div>
+                </sc-for>
+                <sc-for list="{{ periodRows }}" as="p" hint-placeholder-count="4">
+                  <div style="font-size: 13px; font-weight: 600; color: #3b4753; display: flex; align-items: center">{{ p.entite }}</div>
+                  <sc-for list="{{ p.cells }}" as="c" hint-placeholder-count="12">
+                    <button onClick="{{ c.toggle }}" title="{{ c.title }}" style="height: 30px; border: 1px solid {{ c.border }}; border-radius: 7px; background: {{ c.bg }}; color: {{ c.fg }}; font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer">{{ c.text }}</button>
+                  </sc-for>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showCoefs }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top: 14px; border: 1px solid #e6eaee; border-radius: 12px; padding: 18px 20px; background: #fbfcfd">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+            <div>
+              <div style="font-size: 15px; font-weight: 700">Coefficients de baseline — contrôle de gestion</div>
+              <div style="font-size: 13px; color: #6b7681; margin-top: 3px">{{ refHint }}</div>
+            </div>
+            <button onClick="{{ addRef }}" style="padding: 8px 13px; border: 1px solid #dde3e8; border-radius: 8px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 600; color: #3b4753; cursor: pointer">+ Ajouter un coefficient</button>
+          </div>
+          <div style="overflow-x: auto; margin-top: 14px">
+            <div style="min-width: {{ tableMin }}">
+              <div style="display: grid; grid-template-columns: {{ gridCols }}; align-items: center; border-bottom: 1px solid #eef1f4">
+                <div style="padding: 8px 0; font-size: 11px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; color: #8a95a1">Coefficient</div>
+                <sc-for list="{{ months }}" as="m" hint-placeholder-count="12">
+                  <div style="padding: 8px; text-align: right; font-size: 11px; font-weight: 700; color: #8a95a1">{{ m.short }}</div>
+                </sc-for>
+                <div style="padding: 8px 16px; text-align: right; font-size: 11px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; color: #8a95a1">Moy.</div>
+              </div>
+              <sc-for list="{{ refIndicators }}" as="ri" hint-placeholder-count="2">
+                <div style="display: grid; grid-template-columns: {{ gridCols }}; align-items: center; border-bottom: 1px solid #f1f4f7">
+                  <div style="padding: 9px 0; display: flex; align-items: center; gap: 8px; min-width: 0">
+                    <span style="width: 7px; height: 7px; border-radius: 2px; flex: 0 0 7px; background: {{ ri.dot }}"></span>
+                    <div style="min-width: 0">
+                      <div style="font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ ri.label }}</div>
+                      <div style="font-size: 11.5px; color: #94a3b8">{{ ri.role }}</div>
+                    </div>
+                  </div>
+                  <sc-for list="{{ ri.cells }}" as="c" hint-placeholder-count="12">
+                    <div style="padding: 5px 4px; text-align: right">
+                      <sc-if value="{{ c.editable }}" hint-placeholder-val="{{ false }}">
+                        <input value="{{ c.raw }}" onChange="{{ c.edit }}" style="width: 100%; padding: 5px 6px; text-align: right; border: 1px solid #bfe3f6; border-radius: 6px; background: #fff; font-size: 12.5px; font-variant-numeric: tabular-nums; color: #17202a">
+                      </sc-if>
+                      <sc-if value="{{ c.readonly }}" hint-placeholder-val="{{ true }}">
+                        <span style="font-size: 12.5px; font-variant-numeric: tabular-nums; color: #475569">{{ c.text }}</span>
+                      </sc-if>
+                    </div>
+                  </sc-for>
+                  <div style="padding: 9px 16px; text-align: right; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: #475569">{{ ri.moy }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+        </sc-if>
+
+        <div style="margin-top: 20px; border: 1px solid #e6eaee; border-radius: 12px; overflow: hidden">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 18px; background: #f8fafb; border-bottom: 1px solid #eef1f4; flex-wrap: wrap">
+            <div style="font-size: 13px; font-weight: 600; color: #3b4753">{{ countLabel }}</div>
+            <div style="display: flex; align-items: center; gap: 14px; font-size: 12px; color: #6b7681; flex-wrap: wrap">
+              <sc-for list="{{ legend }}" as="l" hint-placeholder-count="5">
+                <div style="display: flex; align-items: center; gap: 6px"><span style="width: 12px; height: 12px; border-radius: 3px; border: 1px solid {{ l.border }}; background: {{ l.bg }}; display: inline-block"></span>{{ l.label }}</div>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="overflow-x: auto">
+            <div style="min-width: {{ tableMin }}">
+              <div style="display: grid; grid-template-columns: {{ gridCols }}; align-items: center; background: #fff; border-bottom: 1px solid #e6eaee">
+                <div style="padding: 11px 16px; font-size: 11px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; color: #8a95a1; position: sticky; left: 0; background: #fff; z-index: 2">Code chantier / site</div>
+                <sc-for list="{{ months }}" as="m" hint-placeholder-count="12">
+                  <div style="padding: 11px 8px; text-align: right; font-size: 11px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: {{ m.headColor }}; border-right: 1px solid {{ m.sep }}; background: {{ m.headBg }}">{{ m.short }}</div>
+                </sc-for>
+                <div style="padding: 11px 16px; text-align: right; font-size: 11px; font-weight: 700; letter-spacing: 0.7px; text-transform: uppercase; color: #8a95a1">{{ totalHead }}</div>
+              </div>
+
+              <sc-for list="{{ rows }}" as="row" hint-placeholder-count="7">
+                <div style="border-bottom: 1px solid #f1f4f7; background: {{ row.rowBg }}">
+                  <div onClick="{{ row.toggle }}" style="display: grid; grid-template-columns: {{ gridCols }}; align-items: stretch; cursor: pointer; border-left: 3px solid {{ row.accent }}">
+                    <div style="padding: 12px 16px; display: flex; align-items: center; gap: 10px; min-width: 0; position: sticky; left: 0; background: {{ row.rowBg }}; z-index: 1">
+                      <span style="width: 14px; color: #8a95a1; font-size: 11px">{{ row.caret }}</span>
+                      <div style="min-width: 0; flex: 1">
+                        <div style="display: flex; align-items: center; gap: 8px; min-width: 0">
+                          <span title="{{ row.nom }}" style="font-size: 15.5px; font-weight: 700; letter-spacing: -0.2px; color: #17202a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ row.nom }}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-top: 3px; min-width: 0">
+                          <span style="flex: 0 0 auto; font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; font-weight: 600; color: #94a3b8; white-space: nowrap">{{ row.code }}</span>
+                          <span style="flex: 0 0 auto; color: #d5dbe1">·</span>
+                          <span style="font-size: 12px; color: #8a95a1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ row.sub }}</span>
+                          <span title="{{ row.doneTitle }}" style="flex: 0 0 auto; padding: 1px 7px; border-radius: 20px; font-size: 10.5px; font-weight: 700; background: {{ row.doneBg }}; color: {{ row.doneFg }}; white-space: nowrap">{{ row.doneLabel }}</span>
+                        </div>
+                        <sc-if value="{{ row.hasApplied }}" hint-placeholder-val="{{ false }}">
+                          <div title="{{ row.appliedTitle }}" style="font-size: 11px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px">{{ row.appliedLabel }}</div>
+                        </sc-if>
+                      </div>
+                      <span style="flex: 0 0 auto; display: flex; align-items: center; gap: 5px">
+                        <sc-for list="{{ row.tags }}" as="tg" hint-placeholder-count="1">
+                          <span title="Tag de suivi — contrôle de gestion" style="padding: 3px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700; background: #f3f0ff; color: #5b21b6; border: 1px solid #ddd6fe; white-space: nowrap">{{ tg }}</span>
+                        </sc-for>
+                        <span style="padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; background: {{ row.stBg }}; color: {{ row.stFg }}; border: 1px solid {{ row.stBorder }}">{{ row.statut }}</span>
+                      </span>
+                    </div>
+                    <sc-for list="{{ row.cells }}" as="c" hint-placeholder-count="12">
+                      <div title="{{ c.markTitle }}" style="padding: 12px 8px; text-align: right; font-size: 13px; font-variant-numeric: tabular-nums; font-weight: 500; color: {{ c.color }}; background: {{ c.bg }}; border-right: 1px solid {{ c.sep }}; box-shadow: inset 0 -2px 0 {{ c.mark }}">{{ c.text }}</div>
+                    </sc-for>
+                    <div style="padding: 12px 16px; text-align: right; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; background: {{ row.totalBg }}">{{ row.totalText }}</div>
+                  </div>
+
+                  <sc-if value="{{ row.open }}" hint-placeholder-val="{{ false }}">
+                    <div style="padding: 4px 16px 20px 40px; background: #fbfcfd; border-top: 1px dashed #e6eaee">
+                      <div style="display: flex; align-items: center; gap: 10px; padding: 14px 0 6px; flex-wrap: wrap">
+                        <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; color: #8a95a1">Détail du calcul — {{ row.code }}</div>
+                        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #6b7681; background: #fff; border: 1px solid #e6eaee; border-radius: 6px; padding: 4px 9px">{{ row.formula }}</div>
+                        <div style="display: flex; align-items: center; gap: 14px; margin-left: auto; padding: 6px 12px; background: #fff; border: 1px solid #e6eaee; border-radius: 8px">
+                          <span style="display: flex; flex-direction: column"><span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #6b7681">Prévu CG</span><span style="font-size: 14px; font-weight: 700; color: #475569; font-variant-numeric: tabular-nums">{{ row.predBase }}</span></span>
+                          <span style="width: 1px; height: 26px; background: #eef1f4"></span>
+                          <span style="display: flex; flex-direction: column"><span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #6b7681">Déclaré</span><span style="font-size: 14px; font-weight: 700; color: #17202a; font-variant-numeric: tabular-nums">{{ row.predSaisi }}</span></span>
+                          <span style="width: 1px; height: 26px; background: #eef1f4"></span>
+                          <span style="display: flex; flex-direction: column"><span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #6b7681">% objectif</span><span style="font-size: 14px; font-weight: 700; color: {{ row.predRateColor }}; font-variant-numeric: tabular-nums">{{ row.predRate }}</span></span>
+                          <span style="width: 1px; height: 26px; background: #eef1f4"></span>
+                          <span style="display: flex; flex-direction: column"><span style="font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; color: #6b7681">Couverture</span><span style="font-size: 13px; font-weight: 600; color: #6b7681">{{ row.predNote }}</span></span>
+                        </div>
+                      </div>
+                      <sc-for list="{{ row.detail }}" as="d" hint-placeholder-count="12">
+                        <div style="display: grid; grid-template-columns: {{ gridColsDetail }}; align-items: center; border-top: 1px solid {{ d.sepColor }}; background: {{ d.rowBg }}">
+                          <div style="padding: {{ d.pad }}; font-size: {{ d.size }}; font-weight: {{ d.weight }}; color: {{ d.labelColor }}; letter-spacing: {{ d.spacing }}; text-transform: {{ d.transform }}; display: flex; flex-direction: column; gap: 2px">
+                            <span style="display: flex; align-items: center; gap: 8px; min-width: 0">
+                            <span onClick="{{ d.toggleCa }}" title="{{ d.title }}" style="min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: {{ d.cursor }}">{{ d.label }}</span>
+                            <sc-if value="{{ d.hasQuick }}" hint-placeholder-val="{{ false }}">
+                              <span style="margin-left: auto; display: flex; align-items: center; gap: 6px; flex: 0 0 auto">
+                                <span title="{{ d.doneTitle }}" style="padding: 2px 8px; border-radius: 20px; font-size: 10.5px; font-weight: 700; background: {{ d.doneBg }}; color: {{ d.doneFg }}; white-space: nowrap">{{ d.doneLabel }}</span>
+                                <span style="position: relative">
+                                  <button onClick="{{ d.toggleMenu }}" title="Autres actions en masse sur cette ligne" style="width: 24px; height: 24px; border: 1px solid #dde3e8; border-radius: 6px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 700; color: #6b7681; cursor: pointer; padding: 0">⋯</button>
+                                  <sc-if value="{{ d.menuOpen }}" hint-placeholder-val="{{ false }}">
+                                    <span onClick="{{ d.closeMenu }}" style="position: fixed; inset: 0; z-index: 19; display: block"></span>
+                                    <span style="position: absolute; top: 28px; right: 0; z-index: 20; width: 262px; display: flex; flex-direction: column; gap: 3px; padding: 10px; background: #fff; border: 1px solid #e6eaee; border-radius: 10px; box-shadow: 0 14px 32px rgba(15,23,42,0.16)">
+                                      <sc-if value="{{ d.listOpen }}" hint-placeholder-val="{{ true }}">
+                                        <sc-for list="{{ d.menuActions }}" as="ma" hint-placeholder-count="7">
+                                          <button onClick="{{ ma.run }}" style="text-align: left; padding: 8px 10px; border: 0; border-radius: 7px; background: transparent; font-family: inherit; font-size: 12.5px; font-weight: 600; color: {{ ma.color }}; cursor: pointer" style-hover="background: #f4f6f8">{{ ma.label }}</button>
+                                        </sc-for>
+                                      </sc-if>
+                                      <sc-if value="{{ d.stepOpen }}" hint-placeholder-val="{{ false }}">
+                                        <span style="display: flex; flex-direction: column; gap: 8px; padding: 2px">
+                                          <span style="font-size: 12.5px; font-weight: 700; color: #17202a">{{ d.stepLabel }}</span>
+                                          <input value="{{ menuValue }}" onChange="{{ setMenuValue }}" placeholder="{{ d.stepPlaceholder }}" style="padding: 8px 10px; border: 1px solid #dde3e8; border-radius: 7px; background: #fff; font-size: 13px; font-variant-numeric: tabular-nums; color: #17202a">
+                                          <span style="display: flex; gap: 6px">
+                                            <button onClick="{{ d.stepApply }}" style="flex: 1; padding: 8px; border: 0; border-radius: 7px; background: #0a9bd8; color: #fff; font-family: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer">Appliquer</button>
+                                            <button onClick="{{ d.stepCancel }}" style="padding: 8px 12px; border: 1px solid #dde3e8; border-radius: 7px; background: #fff; font-family: inherit; font-size: 12.5px; font-weight: 600; color: #6b7681; cursor: pointer">Retour</button>
+                                          </span>
+                                        </span>
+                                      </sc-if>
+                                    </span>
+                                  </sc-if>
+                                </span>
+                              </span>
+                            </sc-if>
+                            </span>
+                            <sc-if value="{{ d.hasApplied }}" hint-placeholder-val="{{ false }}">
+                              <span title="{{ d.appliedTitle }}" style="font-size: 11px; font-weight: 500; color: #94a3b8; letter-spacing: 0; text-transform: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ d.appliedLabel }}</span>
+                            </sc-if>
+                          </div>
+                          <sc-for list="{{ d.cells }}" as="c" hint-placeholder-count="12">
+                            <div style="padding: 5px 4px; text-align: right">
+                              <sc-if value="{{ c.editable }}" hint-placeholder-val="{{ false }}">
+                                <input value="{{ c.raw }}" onChange="{{ c.edit }}" placeholder="{{ c.ghost }}" title="{{ c.ghostTitle }}" style="width: 100%; padding: 6px; text-align: right; border: 1px {{ c.dash }} {{ c.border }}; border-radius: 6px; background: #fff; font-size: 12.5px; font-variant-numeric: tabular-nums; font-weight: 600; color: {{ c.fg }}">
+                              </sc-if>
+                              <sc-if value="{{ c.readonly }}" hint-placeholder-val="{{ true }}">
+                                <span style="display: block; padding: 6px 4px; border-radius: 6px; background: {{ c.bg }}; font-size: 12.5px; font-variant-numeric: tabular-nums; color: {{ c.color }}">{{ c.text }}</span>
+                              </sc-if>
+                            </div>
+                          </sc-for>
+                          <div style="padding: 9px 16px; text-align: right; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: {{ d.totalColor }}">{{ d.total }}</div>
+                        </div>
+                      </sc-for>
+                      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px">
+                        <div style="font-size: 12.5px; color: #6b7681">{{ row.trace }}</div>
+                        <div style="flex: 1"></div>
+                        <sc-if value="{{ row.canPublish }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ row.publish }}" style="padding: 9px 15px; border: 0; border-radius: 8px; background: #475569; color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Publier la baseline à l'exploitation</button>
+                        </sc-if>
+                        <sc-if value="{{ row.canSubmit }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ row.submit }}" style="padding: 9px 15px; border: 0; border-radius: 8px; background: #0a9bd8; color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Envoyer en validation</button>
+                        </sc-if>
+                        <sc-if value="{{ row.canValidate }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ row.validate }}" style="padding: 9px 15px; border: 0; border-radius: 8px; background: #16a34a; color: #fff; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer">Valider le budget</button>
+                        </sc-if>
+                        <sc-if value="{{ row.canClose }}" hint-placeholder-val="{{ false }}">
+                          <button onClick="{{ row.close }}" style="padding: 9px 15px; border: 1px solid #cbd5e1; border-radius: 8px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer">Clôturer l'exercice</button>
+                        </sc-if>
+                        <sc-if value="{{ showTagFilter }}" hint-placeholder-val="{{ false }}">
+                          <span style="display: flex; align-items: center; gap: 6px; padding: 5px 9px; border: 1px solid #ddd6fe; border-radius: 8px; background: #f8f7ff">
+                            <span style="font-size: 11.5px; font-weight: 700; color: #5b21b6">Tags</span>
+                            <sc-for list="{{ row.tagChips }}" as="tc" hint-placeholder-count="4">
+                              <button onClick="{{ tc.toggle }}" style="padding: 4px 9px; border: 1px solid {{ tc.border }}; border-radius: 20px; background: {{ tc.bg }}; color: {{ tc.fg }}; font-family: inherit; font-size: 11px; font-weight: 700; cursor: pointer">{{ tc.label }}</button>
+                            </sc-for>
+                          </span>
+                        </sc-if>
+                        <button onClick="{{ row.exportRow }}" style="padding: 9px 15px; border: 1px solid #dde3e8; border-radius: 8px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 600; color: #3b4753; cursor: pointer">Exporter ce chantier</button>
+                      </div>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-for>
+
+              <sc-if value="{{ hasMore }}" hint-placeholder-val="{{ false }}">
+                <div style="position: sticky; left: 0; display: flex; justify-content: center; padding: 12px">
+                  <button onClick="{{ loadMore }}" style="padding: 9px 18px; border: 1px solid #dde3e8; border-radius: 8px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 600; color: #3b4753; cursor: pointer" style-hover="background: #f4f6f8">{{ moreLabel }}</button>
+                </div>
+              </sc-if>
+
+              <div style="display: grid; grid-template-columns: {{ gridCols }}; align-items: center; background: #f8fafb; border-top: 1px solid #e6eaee">
+                <div style="padding: 14px 16px; font-size: 13px; font-weight: 700; position: sticky; left: 0; background: #f8fafb">Total périmètre filtré</div>
+                <sc-for list="{{ totals }}" as="t" hint-placeholder-count="12">
+                  <div style="padding: 14px 8px; text-align: right; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; color: {{ t.color }}; border-right: 1px solid {{ t.sep }}">{{ t.text }}</div>
+                </sc-for>
+                <div style="padding: 14px 16px; text-align: right; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums">{{ grandTotal }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    </sc-if>
+  </main>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; right: 26px; bottom: 26px; background: #17202a; color: #fff; padding: 13px 18px; border-radius: 10px; font-family: Barlow, Helvetica, sans-serif; font-size: 14px; font-weight: 500; box-shadow: 0 12px 30px rgba(0,0,0,0.18)">{{ toast }}</div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1680,&quot;height&quot;:1160},&quot;campaignYear&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;2024&quot;,&quot;2025&quot;,&quot;2026&quot;,&quot;2027&quot;],&quot;default&quot;:&quot;2027&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Campagne&quot;,&quot;label&quot;:&quot;Exercice budgété par défaut&quot;},&quot;defaultRole&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Exploitation&quot;,&quot;Contrôle de gestion&quot;,&quot;Admin&quot;],&quot;default&quot;:&quot;Exploitation&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Campagne&quot;,&quot;label&quot;:&quot;Rôle affiché au départ&quot;},&quot;startTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Accueil&quot;,&quot;Tableau prévisionnel&quot;],&quot;default&quot;:&quot;Accueil&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Campagne&quot;,&quot;label&quot;:&quot;Onglet d'ouverture&quot;},&quot;gaugeSize&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;min&quot;:120,&quot;max&quot;:230,&quot;step&quot;:4,&quot;default&quot;:176,&quot;unit&quot;:&quot;px&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Diagramme CA&quot;,&quot;label&quot;:&quot;Taille de l'anneau&quot;},&quot;showObjectiveBlock&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Diagramme CA&quot;,&quot;label&quot;:&quot;Afficher objectif CDG + complétion&quot;},&quot;confirmN1&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Saisie&quot;,&quot;label&quot;:&quot;Exiger la reconfirmation des valeurs N-1&quot;},&quot;ghostN1&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Saisie&quot;,&quot;label&quot;:&quot;Proposer la valeur N-1 en gris dans les cases vides&quot;}}">
+const MONTHS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+const SHORT = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Août","Sep","Oct","Nov","Déc"];
+const SEASON = [1.0,0.97,1.05,1.0,1.02,1.06,0.82,0.74,1.08,1.06,1.0,0.9];
+const AGENCES = ["Saint Ouen","Lyon Est","Marseille","Lille"];
+const ENTITIES = [
+  { code:"EGC", name:"Entreprise Générale de Confiance" },
+  { code:"CPS", name:"Challancin Prévention & Sécurité" },
+  { code:"CAS", name:"Challancin Assistance & Services" }
+];
+
+const CAT = [
+  { k:"forfait", label:"Forfait", share:0.62, title:"CA contractuel forfaitaire" },
+  { k:"reel", label:"Réel", share:0.22, title:"CA facturé au réel" },
+  { k:"pad", label:"PAD", share:0.10, title:"PAD — Prestations à la Demande" },
+  { k:"te", label:"TE", share:0.06, title:"TE — Travaux Exceptionnels" }
+];
+
+const CHANTIERS = [];
+const CHANTIERS_SEED = [
+  { id:"C00004-001", entite:"EGC", nom:"Chantier 1", ville:"Courbevoie", client:"Client 1", agence:"Saint Ouen", secteur:"Propreté", ca:78000, taux:24.6, msRate:0.63, statut:"Validé" },
+  { id:"C00011-002", entite:"EGC", nom:"Chantier 2", ville:"Puteaux", client:"Client 2", agence:"Saint Ouen", secteur:"Propreté", ca:132000, taux:25.4, msRate:0.61, statut:"À valider" },
+  { id:"C00027-001", entite:"CAS", nom:"Chantier 3", ville:"Saint-Ouen", client:"Client 3", agence:"Saint Ouen", secteur:"Propreté", ca:96500, taux:26.1, msRate:0.66, statut:"En saisie" },
+  { id:"C00034-003", entite:"CPS", nom:"Chantier 4", ville:"Lyon", client:"Client 4", agence:"Lyon Est", secteur:"Sécurité", ca:61200, taux:23.8, msRate:0.68, statut:"En saisie" },
+  { id:"C00041-001", entite:"CPS", nom:"Chantier 5", ville:"Lyon", client:"Client 5", agence:"Lyon Est", secteur:"Sécurité", ca:44800, taux:23.2, msRate:0.7, statut:"Validé" },
+  { id:"C00052-001", entite:"CPS", nom:"Chantier 6", ville:"Marseille", client:"Client 6", agence:"Marseille", secteur:"Sécurité", ca:53900, taux:24.0, msRate:0.67, statut:"Baseline CG" },
+  { id:"C00058-002", entite:"EGC", nom:"Chantier 7", ville:"Marignane", client:"Client 7", agence:"Marseille", secteur:"Propreté", ca:71400, taux:25.9, msRate:0.62, statut:"À valider" },
+  { id:"C00063-001", entite:"CAS", nom:"Chantier 8", ville:"Lille", client:"Client 8", agence:"Lille", secteur:"Propreté", ca:38600, taux:22.9, msRate:0.64, statut:"Clôturé" },
+  { id:"C00071-004", entite:"CAS", nom:"Chantier 9", ville:"Lesquin", client:"Client 9", agence:"Lille", secteur:"Sécurité", ca:49300, taux:23.5, msRate:0.65, statut:"En saisie" },
+  { id:"C00088-001", entite:"EGC", nom:"Chantier 10", ville:"Bordeaux", client:"Client 10", agence:"Saint Ouen", secteur:"Propreté", ca:57500, taux:24.2, msRate:0.64, statut:"Non budgétisé" }
+];
+
+const ST = {
+  "Baseline CG": { bg:"#f1f5f9", fg:"#475569", border:"#e2e8f0", cell:"#f8fafc", accent:"#94a3b8" },
+  "En saisie":   { bg:"#fef3c7", fg:"#92400e", border:"#fde68a", cell:"#fffdf3", accent:"#f59e0b" },
+  "À valider":   { bg:"#e0f2fe", fg:"#075985", border:"#bae6fd", cell:"#f5fbff", accent:"#0a9bd8" },
+  "Validé":      { bg:"#dcfce7", fg:"#166534", border:"#bbf7d0", cell:"#f4fdf7", accent:"#16a34a" },
+  "Clôturé":     { bg:"#e2e8f0", fg:"#334155", border:"#cbd5e1", cell:"#f6f8fa", accent:"#64748b" },
+  "Non budgétisé": { bg:"#fee2e2", fg:"#991b1b", border:"#fecaca", cell:"#fffafa", accent:"#dc2626" }
+};
+
+const METRICS = [
+  { key:"ca", label:"CA", kind:"money", better:"high", agg:"sum", formula:"CA = Forfait + Réel + PAD + TE" },
+  { key:"heures", label:"Heures", kind:"h", better:"high", agg:"sum", formula:"Heures saisies par l'exploitation" },
+  { key:"masse", label:"Masse salariale", kind:"money", better:"low", agg:"sum", formula:"MS saisie par l'exploitation" },
+  { key:"msRatio", label:"% MS / CA", kind:"pct", better:"low", agg:"ratio", formula:"% MS = MS / CA × 100" },
+  { key:"phv", label:"€/h vendu", kind:"eur2", better:"high", agg:"ratio", formula:"Prix horaire vendu = CA / nombre d'heures" },
+  { key:"marge", label:"% marge après MS", kind:"pct", better:"high", agg:"ratio", formula:"% marge = (CA − MS) / CA × 100" }
+];
+
+const REX_NAMES = ["A. Bernard","M. Legrand","S. Faure","K. Morel","P. Dufour","L. Mercier","N. Roussel","T. Girard","C. Blanchard","J. Perrot","H. Vasseur","E. Caron"];
+const VILLES = ["Courbevoie","Puteaux","Saint-Ouen","Lyon","Marseille","Marignane","Lille","Lesquin","Nanterre","Villeurbanne","Aubagne","Roubaix","Créteil","Vénissieux","Aix-en-Provence","Tourcoing"];
+
+const REX = {};
+const LATE = [];
+
+(function buildChantiers() {
+  const r = rng(20270901);
+  const statuts = ["Baseline CG","En saisie","À valider","Validé"];
+  // 20 gros chantiers ≈ 80 % du CA : 20 × ~1,4 M€ = 28 M€ ; 330 petits × ~21 k€ = 7 M€
+  for (let i = 0; i < 350; i++) {
+    const big = i < 20;
+    const num = String(4 + i * 7).padStart(5, "0");
+    const id = "C" + num + "-" + String(1 + Math.floor(r() * 4)).padStart(3, "0");
+    const entite = ENTITIES[Math.floor(r() * ENTITIES.length)].code;
+    const agence = AGENCES[Math.floor(r() * AGENCES.length)];
+    const rex = REX_NAMES[big ? Math.floor(r() * 4) : Math.floor(r() * REX_NAMES.length)];
+    let statut;
+    if (big) statut = r() < 0.45 ? "En saisie" : r() < 0.5 ? "Baseline CG" : r() < 0.6 ? "À valider" : "Validé";
+    else statut = statuts[Math.floor(r() * statuts.length)];
+    if (i === 3) statut = "Non budgétisé";
+    if (i === 11) statut = "Non budgétisé";
+    CHANTIERS.push({
+      id, entite,
+      nom: (r() < 0.55
+        ? ["Nettoyage siège","Propreté centre commercial","Entretien campus","Propreté hôpital","Nettoyage industriel","Entretien résidences","Propreté gare","Nettoyage data center"][Math.floor(r() * 8)]
+        : ["Gardiennage siège","Sécurité centre commercial","Surveillance campus","Sûreté hôpital","Sécurité site industriel","Contrôle d'accès logistique","Sécurité gare","Rondes data center"][Math.floor(r() * 8)]
+      ) + " — Client " + (1 + Math.floor(r() * 90)),
+      ville: VILLES[Math.floor(r() * VILLES.length)],
+      client: "Client " + (1 + Math.floor(r() * 90)),
+      agence, secteur: r() < 0.55 ? "Propreté" : "Sécurité",
+      ca: big ? Math.round((12800000 + r() * 2400000) / 10000) * 10000 : Math.round((150000 + r() * 260000) / 1000) * 1000,
+      taux: 22 + r() * 5, msRate: 0.58 + r() * 0.14,
+      statut, big
+    });
+    REX[id] = rex;
+    if (statut === "En saisie" && (big ? r() < 0.55 : r() < 0.25)) LATE.push(id);
+  }
+})();
+const TAGS = ["Sensible", "Renégociation", "Perte de marge", "Nouveau marché"];
+const PERIODES = ["Année complète","S1 (jan-juin)","S2 (juil-déc)","T1","T2","T3","T4"];
+const PER_MONTHS = { "Année complète":[0,1,2,3,4,5,6,7,8,9,10,11], "S1 (jan-juin)":[0,1,2,3,4,5], "S2 (juil-déc)":[6,7,8,9,10,11], "T1":[0,1,2], "T2":[3,4,5], "T3":[6,7,8], "T4":[9,10,11] };
+
+function rng(seed) { let t = seed >>> 0; return () => { t += 0x6D2B79F5; let r = Math.imul(t ^ (t >>> 15), 1 | t); r ^= r + Math.imul(r ^ (r >>> 7), 61 | r); return ((r ^ (r >>> 14)) >>> 0) / 4294967296; }; }
+function hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+
+class Component extends DCLogic {
+  state = {
+    year: parseInt(this.props.campaignYear || "2027", 10),
+    role: this.props.defaultRole || "Exploitation",
+    tab: this.props.startTab || "Accueil",
+    metric: "ca", cat: "Total",
+    refs: [
+      { id:"infl", label:"Inflation", role:"Source INSEE — saisie contrôle de gestion", dot:"#0a9bd8", values:[2.4,2.4,2.3,2.3,2.2,2.2,2.1,2.1,2.0,2.0,2.0,1.9] },
+      { id:"reval", label:"Revalorisation contractuelle", role:"Indexation clients au 1er avril", dot:"#16a34a", values:[0,0,0,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8,0.8] }
+    ],
+    fSort: "Priorité à déclarer",
+    fSecteur:"Tous les secteurs", fVille:"Toutes les villes", fAgence:"Toutes les agences",
+    fClient:"Tous les clients", fStatut:"Tous les statuts", fSearch:"", searchDraft:"", fPeriode:"Année complète",
+    openRow: null, toast: "", edits: {}, baseEdits: {}, statutOverride: {},
+    bulkField: "Tout le CA (4 catégories)", bulkAction: "Recopier la baseline sur tous les mois", bulkValue: "", quickPct: "15",
+    openMenu: null, menuValue: "", menuStep: null, history: [], onlyTodo: false,
+    fEntity: "Toutes", openCa: {}, navOpen: true, pageSize: 40,
+    fTag: "Tous les tags", fRex: "Tous", hoverPie: null, hoverSeg: null,
+    tags: { "C00027-001": ["Sensible"], "C00034-003": ["Perte de marge"], "C00088-001": ["Nouveau marché"] }, hoverSeg: null,
+    periods: (() => { const p = {}; AGENCES.forEach(a => { p[a] = MONTHS.map(() => true); }); return p; })()
+  };
+
+  toast(msg) { this.setState({ toast: msg }); clearTimeout(this._t); this._t = setTimeout(() => this.setState({ toast: "" }), 2600); }
+  closed() { return this.state.year <= 2026; }
+
+  st(ch) {
+    if (this.closed()) return "Clôturé";
+    return this.state.statutOverride[ch.id] || ch.statut;
+  }
+  coef(m) { return this.state.refs.reduce((a, r) => a * (1 + (Number(r.values[m]) || 0) / 100), 1); }
+  ek(ch, field, m) { return ch.id + "|" + field + "|" + this.state.year + "|" + m; }
+
+  fmt(v, kind) {
+    if (v === null || v === undefined || isNaN(v)) return "—";
+    if (kind === "pct") return v.toFixed(1).replace(".", ",") + " %";
+    if (kind === "eur2") return v.toFixed(2).replace(".", ",") + " €";
+    if (kind === "h") return Math.round(v).toLocaleString("fr-FR") + " h";
+    if (Math.abs(v) >= 1000000) return (v / 1000000).toFixed(1).replace(".", ",") + " M€";
+    if (Math.abs(v) >= 1000) return Math.round(v / 1000).toLocaleString("fr-FR") + " k€";
+    return Math.round(v).toLocaleString("fr-FR") + " €";
+  }
+
+  n1(ch, m, field, year) {
+    return this.memo("n1:" + ch.id + ":" + m + ":" + field + ":" + year, () => this.n1Raw(ch, m, field, year));
+  }
+
+  n1Raw(ch, m, field, year) {
+    const r = rng(hash(ch.id + field + year + m));
+    const yf = 1 + (year - 2026) * 0.03;
+    const monthCA = ch.ca / 12 * SEASON[m] * yf * (0.96 + r() * 0.08);
+    const c = CAT.find(x => x.k === field);
+    if (c) return monthCA * c.share * (0.9 + r() * 0.2);
+    if (field === "heures") return monthCA / ch.taux;
+    if (field === "masse") return monthCA * ch.msRate;
+    return monthCA;
+  }
+
+  baseField(ch, m, field) {
+    const e = this.state.baseEdits[this.ek(ch, field, m)];
+    if (e !== undefined && e !== null) return e;
+    const raw = this.n1(ch, m, field, this.state.year);
+    return field === "heures" ? raw : raw * this.coef(m);
+  }
+
+  saisiField(ch, m, field) {
+    const k = this.ek(ch, field, m);
+    if (this.state.edits[k] !== undefined) return this.state.edits[k];
+    const st = this.st(ch);
+    if (this.closed()) {
+      const r0 = rng(hash(ch.id + field + "c" + this.state.year + m));
+      return this.baseField(ch, m, field) * (0.95 + r0() * 0.1);
+    }
+    if (st === "Baseline CG" || st === "Non budgétisé") return null;
+    if (st === "En saisie") {
+      const late = LATE.indexOf(ch.id);
+      if (late === 0) { if (m >= 8) return null; }
+      else if (late === 1) { if (m >= 6) return null; }
+      else if (m >= 9) return null;
+    }
+    const r = rng(hash(ch.id + field + "s" + this.state.year + m));
+    return this.baseField(ch, m, field) * (0.93 + r() * 0.14);
+  }
+
+  prims(ch, m, mode) {
+    return this.memo("prims:" + ch.id + ":" + m + ":" + mode, () => this.primsRaw(ch, m, mode));
+  }
+
+  primsRaw(ch, m, mode) {
+    const f = field => mode === "base" ? this.baseField(ch, m, field) : this.saisiField(ch, m, field);
+    const cats = {}; let ca = 0;
+    for (const c of CAT) { const v = f(c.k); if (v === null) return null; cats[c.k] = v; ca += v; }
+    const heures = f("heures"), masse = f("masse");
+    if (heures === null || masse === null) return null;
+    return { cats, ca, heures, masse };
+  }
+
+  metricFrom(p, metric, cat) {
+    if (!p) return null;
+    if (metric === "ca") return cat && cat !== "Total" ? p.cats[CAT.find(c => c.label === cat).k] : p.ca;
+    if (metric === "heures") return p.heures;
+    if (metric === "masse") return p.masse;
+    if (metric === "msRatio") return p.ca ? p.masse / p.ca * 100 : null;
+    if (metric === "phv") return p.heures ? p.ca / p.heures : null;
+    return p.ca ? (p.ca - p.masse) / p.ca * 100 : null;
+  }
+
+  aggregate(chList, mList, mode, metric, cat, comparable) {
+    let ca = 0, heures = 0, masse = 0, catSum = 0, n = 0;
+    chList.forEach(ch => mList.forEach(m => {
+      if (comparable && !this.prims(ch, m, "saisi")) return;
+      const p = this.prims(ch, m, mode);
+      if (!p) return;
+      n++; ca += p.ca; heures += p.heures; masse += p.masse;
+      if (cat && cat !== "Total") catSum += p.cats[CAT.find(c => c.label === cat).k];
+    }));
+    if (!n) return null;
+    if (metric === "ca") return cat && cat !== "Total" ? catSum : ca;
+    if (metric === "heures") return heures;
+    if (metric === "masse") return masse;
+    if (metric === "msRatio") return ca ? masse / ca * 100 : null;
+    if (metric === "phv") return heures ? ca / heures : null;
+    return ca ? (ca - masse) / ca * 100 : null;
+  }
+
+  markerColor(v, b, better) {
+    if (v === null || v === undefined || b === null || !b) return "#94a3b8";
+    let d = (v - b) / Math.abs(b);
+    if (better === "low") d = -d;
+    if (d >= 0) return "#15803d";
+    if (d > -0.03) return "#b45309";
+    return "#dc2626";
+  }
+
+  memo(key, fn) {
+    const c = this._m || (this._m = {});
+    if (!(key in c)) c[key] = fn();
+    return c[key];
+  }
+
+  caList(isCG) {
+    return this.memo("caList:" + isCG, () => isCG ? this.scope() : this.scope().filter(ch => REX[ch.id] === "A. Bernard"));
+  }
+
+  caParts(isCG) {
+    return this.memo("caParts:" + isCG, () => this.caPartsRaw(isCG));
+  }
+
+  caPartsRaw(isCG) {
+    const full = [0,1,2,3,4,5,6,7,8,9,10,11];
+    const list = this.caList(isCG);
+    const colors = { forfait: "#0a9bd8", reel: "#1b4f9c", pad: "#8b5cf6", te: "#f59e0b" };
+    return CAT.map(c => {
+      let value = 0, base = 0;
+      list.forEach(ch => full.forEach(m => {
+        base += this.baseField(ch, m, c.k);
+        const v = this.saisiField(ch, m, c.k);
+        if (v !== null) value += v;
+      }));
+      return { key: c.k, label: "CA " + c.label, color: colors[c.k], value, base };
+    });
+  }
+
+  caBaseTotal(isCG) {
+    return this.memo("caBase:" + isCG, () => this.caParts(isCG).reduce((a, x) => a + x.base, 0));
+  }
+
+  scope() {
+    const e = this.state.fEntity;
+    return this.memo("scope:" + e, () => CHANTIERS.filter(ch => e === "Toutes" || ch.entite === e));
+  }
+
+  perim() {
+    return this.caList(this.state.role !== "Exploitation");
+  }
+
+  budgetGroups() {
+    return this.memo("budgetGroups", () => this.budgetGroupsRaw());
+  }
+
+  budgetGroupsRaw() {
+    const full = [0,1,2,3,4,5,6,7,8,9,10,11];
+    const remplir = [], cours = [], fini = [], attente = [];
+    this.perim().forEach(ch => {
+      const st = this.st(ch);
+      if (st === "Validé" || st === "Clôturé") return fini.push(ch);
+      if (st === "Baseline CG" || st === "Non budgétisé") return attente.push(ch);
+      if (this.missing(ch, full).length) return remplir.push(ch);
+      cours.push(ch);
+    });
+    return { remplir, cours, fini, attente };
+  }
+
+  budgetSegments() {
+    const g = this.budgetGroups();
+    const go = (statut, onlyTodo) => () => this.setState({ tab: "Tableau prévisionnel", fStatut: statut, onlyTodo, fSearch: "", searchDraft: "", hoverSeg: null });
+    return [
+      { key: "remplir", label: "À remplir", color: "#dc2626", hint: "mois ouverts non saisis", list: g.remplir, pick: go("Tous les statuts", true) },
+      { key: "cours", label: "En cours", color: "#f59e0b", hint: "saisie faite, en attente de validation", list: g.cours, pick: go("À valider", false) },
+      { key: "fini", label: "Terminés", color: "#16a34a", hint: "validés ou clôturés", list: g.fini, pick: go("Validé", false) },
+      { key: "attente", label: "Non budgétisés / baseline non publiée", color: "#94a3b8", hint: "pas de budget ou saisie pas encore ouverte", list: g.attente, pick: go("Non budgétisé", false) }
+    ].filter(x => x.list.length || x.key !== "attente");
+  }
+
+  nextDue() { return 0; }
+
+  missing(ch, mIdx) {
+    if (this.closed()) return [];
+    const st = this.st(ch);
+    if (st === "Validé" || st === "Clôturé") return [];
+    return mIdx.filter(m => this.state.periods[ch.agence][m] && !this.prims(ch, m, "saisi"));
+  }
+
+  todoFor(ch, mIdx, role) {
+    if (this.closed()) return null;
+    const st = this.st(ch);
+    const due = this.nextDue();
+    if (st === "Non budgétisé") return { tag: "Non budgétisé", crit: true, hint: "aucun budget " + this.state.year + " sur ce chantier — à initialiser" };
+    if (role === "Contrôle de gestion") {
+      if (st === "Baseline CG") return { tag: "Baseline à publier", crit: true, hint: "baseline posée, pas encore ouverte à l'exploitation" };
+      if (st === "À valider") return { tag: "À vérifier", crit: false, hint: "saisie exploitation en attente de contrôle" };
+      const ec = (() => {
+        const v = this.aggregate([ch], mIdx, "saisi", "marge"), b = this.aggregate([ch], mIdx, "base", "marge", null, true);
+        return v !== null && b !== null ? v - b : null;
+      })();
+      if (ec !== null && ec < -1.5) return { tag: "Marge sous objectif", crit: true, hint: (ec).toFixed(1).replace(".", ",") + " pt de marge vs baseline" };
+      return null;
+    }
+    if (st === "Baseline CG") return null;
+    const miss = this.missing(ch, mIdx);
+    if (!miss.length) return st === "En saisie" ? { tag: "À envoyer", crit: false, hint: "tous les mois ouverts sont saisis" } : null;
+    if (miss.includes(due)) return { tag: "Critique", crit: true, hint: MONTHS[due] + " " + this.state.year + " non budgété — échéance dépassée" };
+    return { tag: "À déclarer", crit: false, hint: miss.length + " mois ouvert" + (miss.length > 1 ? "s" : "") + " non saisi" + (miss.length > 1 ? "s" : "") + " (" + miss.map(m => SHORT[m]).join(", ") + ")" };
+  }
+
+  filtered() {
+    return this.memo("filtered", () => this.filteredRaw());
+  }
+
+  filteredRaw() {
+    const s = this.state;
+    const q = s.fSearch.trim().toLowerCase();
+    return CHANTIERS.filter(c => {
+      if (s.fSecteur !== "Tous les secteurs" && c.secteur !== s.fSecteur) return false;
+      if (s.fVille !== "Toutes les villes" && c.ville !== s.fVille) return false;
+      if (s.fAgence !== "Toutes les agences" && c.agence !== s.fAgence) return false;
+      if (s.fClient !== "Tous les clients" && c.client !== s.fClient) return false;
+      if (s.fEntity !== "Toutes" && c.entite !== s.fEntity) return false;
+      if (s.fTag !== "Tous les tags" && !(s.tags[c.id] || []).includes(s.fTag)) return false;
+      if (s.fRex !== "Tous" && REX[c.id] !== s.fRex) return false;
+      if (s.fStatut !== "Tous les statuts" && this.st(c) !== s.fStatut) return false;
+      if (q && !(c.nom.toLowerCase().includes(q) || c.id.toLowerCase().includes(q) || c.ville.toLowerCase().includes(q))) return false;
+      if (s.onlyTodo && !this.todoFor(c, PER_MONTHS[s.fPeriode], s.role)) return false;
+      return true;
+    });
+  }
+
+  sorted(list, mIdx) {
+    const s = this.state, sort = s.fSort;
+    const key = s.metric, cat = s.cat;
+    const arr = list.slice();
+    const num = ch => this.aggregate([ch], mIdx, "saisi", key, cat) || 0;
+    const rank = ch => { const t = this.todoFor(ch, mIdx, s.role); return t ? (t.crit ? 0 : 1) : 2; };
+    if (sort === "Priorité à déclarer") arr.sort((a, b) => rank(a) - rank(b) || b.ca - a.ca || a.id.localeCompare(b.id));
+    else if (sort === "Code chantier") arr.sort((a, b) => a.id.localeCompare(b.id));
+    else if (sort === "Nom du site") arr.sort((a, b) => a.nom.localeCompare(b.nom));
+    else if (sort === "Ville") arr.sort((a, b) => a.ville.localeCompare(b.ville) || a.id.localeCompare(b.id));
+    else if (sort === "Montant décroissant") arr.sort((a, b) => num(b) - num(a));
+    else if (sort === "Montant croissant") arr.sort((a, b) => num(a) - num(b));
+    else if (sort === "Écart vs baseline") arr.sort((a, b) => {
+      const e = ch => { const v = this.aggregate([ch], mIdx, "saisi", key, cat), bb = this.aggregate([ch], mIdx, "base", key, cat, true); return v === null || bb === null || !bb ? 0 : (v - bb) / Math.abs(bb); };
+      return e(a) - e(b);
+    });
+    else if (sort === "Remplissage croissant") arr.sort((a, b) => {
+      const f = ch => mIdx.filter(m => this.prims(ch, m, "saisi")).length;
+      return f(a) - f(b);
+    });
+    else if (sort === "Statut") {
+      const order = ["Non budgétisé","Baseline CG","En saisie","À valider","Validé","Clôturé"];
+      arr.sort((a, b) => order.indexOf(this.st(a)) - order.indexOf(this.st(b)));
+    }
+    return arr;
+  }
+
+  fieldNames(fields) {
+    const map = { heures: "Nombre d'heures", masse: "Masse salariale" };
+    CAT.forEach(c => { map[c.k] = "CA " + c.label; });
+    const names = fields.map(f => map[f] || f);
+    return names.length === 6 ? "tous les postes" : names.length === 4 && fields.every(f => CAT.some(c => c.k === f)) ? "tout le CA" : names.join(", ");
+  }
+
+  commit(store, next, label, count, ch, fields, short) {
+    const entry = { label, short: short || label, count, cible: ch.id, store, fields: fields || [], prev: this.state[store], ts: new Date() };
+    this.setState({ [store]: next, history: this.state.history.concat([entry]).slice(-12) });
+    this.toast(label + " · " + count + " cellules — " + ch.id);
+  }
+
+  undoLast() {
+    const h = this.state.history;
+    if (!h.length) return;
+    const last = h[h.length - 1];
+    this.setState({ [last.store]: last.prev, history: h.slice(0, -1) });
+    this.toast("Annulé : " + last.label + " (" + last.cible + ")");
+  }
+
+  edited(ch, field, m, onBaseline) {
+    const v = this.state[onBaseline ? "baseEdits" : "edits"][this.ek(ch, field, m)];
+    return v !== undefined;
+  }
+
+  applyPct(ch, fields, mList, pct, onBaseline) {
+    if (isNaN(pct) || !mList.length) { this.toast(!mList.length ? "Aucun mois modifiable ici" : "Pourcentage invalide"); return; }
+    const store = onBaseline ? "baseEdits" : "edits";
+    const next = Object.assign({}, this.state[store]);
+    let n = 0;
+    fields.forEach(f => mList.forEach(m => {
+      const cur = onBaseline ? this.baseField(ch, m, f) : (this.saisiField(ch, m, f) === null ? this.baseField(ch, m, f) : this.saisiField(ch, m, f));
+      next[this.ek(ch, f, m)] = Math.round(cur * (1 + pct / 100)); n++;
+    }));
+    const sh = (pct > 0 ? "+" : "") + String(pct).replace(".", ",") + " %";
+    this.commit(store, next, sh + " sur " + this.fieldNames(fields), n, ch, fields, sh + " appliqué");
+  }
+
+  bulkTargets(field) {
+    if (field === "Tout le CA (4 catégories)") return CAT.map(c => c.k);
+    if (field === "Tous les postes") return CAT.map(c => c.k).concat(["heures", "masse"]);
+    if (field === "Nombre d'heures") return ["heures"];
+    if (field === "Masse salariale") return ["masse"];
+    const c = CAT.find(x => "CA " + x.label === field);
+    return c ? [c.k] : [];
+  }
+
+  runBulk(ch, mList, onBaseline) {
+    this.applyAction(ch, this.bulkTargets(this.state.bulkField), mList, this.state.bulkAction, this.state.bulkValue, onBaseline);
+  }
+
+  applyAction(ch, fields, mList, action, valRaw, onBaseline) {
+    const val = parseFloat(String(valRaw).replace(",", ".").replace(/[^\d.-]/g, ""));
+    const store = onBaseline ? "baseEdits" : "edits";
+    const next = Object.assign({}, this.state[store]);
+    let touched = 0;
+    if (!mList.length) return this.toast("Aucun mois modifiable dans le périmètre");
+
+    if (action.indexOf("Reprendre les valeurs ") === 0) {
+      const src = parseInt(action.replace(/\D/g, ""), 10);
+      const cur = this.state.year;
+      fields.forEach(f => mList.forEach(m => {
+        this.state.year = src;
+        const v = this.saisiField(ch, m, f);
+        const b = this.baseField(ch, m, f);
+        this.state.year = cur;
+        next[this.ek(ch, f, m)] = Math.round(v === null ? b : v); touched++;
+      }));
+    } else if (action === "Arrondir à la centaine") {
+      fields.forEach(f => mList.forEach(m => {
+        const cur = onBaseline ? this.baseField(ch, m, f) : (this.saisiField(ch, m, f) === null ? this.baseField(ch, m, f) : this.saisiField(ch, m, f));
+        next[this.ek(ch, f, m)] = Math.round(cur / 100) * 100; touched++;
+      }));
+    } else if (action === "Vider la saisie" || action === "Vider la ligne") {
+      fields.forEach(f => mList.forEach(m => { next[this.ek(ch, f, m)] = null; touched++; }));
+    } else if (action === "Recopier la baseline sur tous les mois") {
+      fields.forEach(f => mList.forEach(m => { next[this.ek(ch, f, m)] = Math.round(this.baseField(ch, m, f)); touched++; }));
+    } else if (action === "Recopier le 1er mois saisi sur tous les mois") {
+      fields.forEach(f => {
+        const src = mList.find(m => this.saisiField(ch, m, f) !== null);
+        if (src === undefined) return;
+        const v = Math.round(onBaseline ? this.baseField(ch, src, f) : this.saisiField(ch, src, f));
+        mList.forEach(m => { next[this.ek(ch, f, m)] = v; touched++; });
+      });
+    } else if (action === "Appliquer un % d'évolution") {
+      if (isNaN(val)) return this.toast("Saisissez un pourcentage, ex. 2,5");
+      fields.forEach(f => mList.forEach(m => {
+        const cur = onBaseline ? this.baseField(ch, m, f) : (this.saisiField(ch, m, f) === null ? this.baseField(ch, m, f) : this.saisiField(ch, m, f));
+        next[this.ek(ch, f, m)] = Math.round(cur * (1 + val / 100)); touched++;
+      }));
+    } else if (action === "Saisir une valeur fixe par mois") {
+      if (isNaN(val)) return this.toast("Saisissez un montant");
+      fields.forEach(f => mList.forEach(m => { next[this.ek(ch, f, m)] = Math.round(val); touched++; }));
+    } else if (action === "Répartir un total sur la période") {
+      if (isNaN(val)) return this.toast("Saisissez le total à répartir");
+      let sum = 0;
+      fields.forEach(f => mList.forEach(m => { sum += this.baseField(ch, m, f); }));
+      if (!sum) return this.toast("Répartition impossible : baseline vide");
+      fields.forEach(f => mList.forEach(m => { next[this.ek(ch, f, m)] = Math.round(val * this.baseField(ch, m, f) / sum); touched++; }));
+    }
+
+    if (!touched) return this.toast("Aucune cellule modifiable dans le périmètre");
+    const shorts = {
+      "Recopier la baseline sur tous les mois": "objectif CG repris",
+      "Recopier le 1er mois saisi sur tous les mois": "1er mois recopié",
+      "Appliquer un % d'évolution": ((val > 0 ? "+" : "") + String(val).replace(".", ",") + " % appliqué"),
+      "Saisir une valeur fixe par mois": "valeur fixe " + this.fmt(val, "money") + "/mois",
+      "Répartir un total sur la période": "total " + this.fmt(val, "money") + " réparti",
+      "Arrondir à la centaine": "arrondi à la centaine",
+      "Vider la ligne": "ligne vidée",
+      "Vider la saisie": "saisie vidée"
+    };
+    if (action.indexOf("Reprendre les valeurs ") === 0) shorts[action] = "valeurs " + action.replace(/\D/g, "") + " reprises";
+    this.commit(store, next, action + " · " + this.fieldNames(fields), touched, ch, fields, shorts[action] || action);
+  }
+
+  clearRow(ch, onBaseline) {
+    const store = onBaseline ? "baseEdits" : "edits";
+    const next = {};
+    Object.keys(this.state[store]).forEach(k => { if (!k.startsWith(ch.id + "|")) next[k] = this.state[store][k]; });
+    this.setState({ [store]: next });
+    this.toast("Saisies manuelles annulées sur " + ch.id);
+  }
+
+  setStatutFlow(ch, st, msg) { this.setState(p => ({ statutOverride: Object.assign({}, p.statutOverride, { [ch.id]: st }) })); this.toast(msg); }
+
+  renderVals() {
+    const s = this.state;
+    const sig = [s.year, s.role, s.tab, s.fEntity, s.fSecteur, s.fVille, s.fAgence, s.fClient,
+      s.fStatut, s.fSearch, s.fPeriode, s.fSort, s.fTag, s.fRex, s.onlyTodo, s.metric, s.cat,
+      JSON.stringify(s.edits), JSON.stringify(s.baseEdits), JSON.stringify(s.statutOverride),
+      JSON.stringify(s.periods), JSON.stringify(s.tags), s.history.length].join("|");
+    if (this._sig !== sig) { this._sig = sig; this._m = {}; }
+    if (!this._m) this._m = {};
+    const met = METRICS.find(m => m.key === s.metric);
+    const cat = s.cat;
+    const isExploit = s.role === "Exploitation";
+    const isCG = s.role === "Contrôle de gestion";
+    const mIdx = PER_MONTHS[s.fPeriode];
+    const list = this.sorted(this.filtered(), mIdx);
+    const colW = mIdx.length <= 3 ? 160 : mIdx.length <= 6 ? 110 : 82;
+    const gridCols = "460px repeat(" + mIdx.length + ", " + colW + "px) 120px";
+    const tableMin = (460 + mIdx.length * colW + 120) + "px";
+    const sep = m => (m === 2 || m === 5 || m === 8) ? "#e6eaee" : "transparent";
+    const catLabel = cat === "Total" ? "CA total" : "CA " + cat;
+
+    const shown = list.slice(0, s.pageSize);
+    const rows = shown.map(ch => {
+      const st = this.st(ch), stc = ST[st], open = s.openRow === ch.id;
+      const cells = mIdx.map(m => {
+        const v = this.metricFrom(this.prims(ch, m, "saisi"), met.key, cat);
+        const b = this.metricFrom(this.prims(ch, m, "base"), met.key, cat);
+        const periodOpen = s.periods[ch.agence][m];
+        const touched = CAT.map(c => c.k).concat(["heures", "masse"]).some(f => this.edited(ch, f, m, false) || this.edited(ch, f, m, true));
+        return {
+          text: this.fmt(v, met.kind), color: this.markerColor(v, b, met.better),
+          bg: v === null ? (periodOpen ? "#fffbeb" : "#fff") : stc.cell, sep: sep(m),
+          mark: touched ? "#0a9bd8" : "transparent",
+          markTitle: touched ? "Valeur modifiée manuellement" : ""
+        };
+      });
+      const rowSaisi = this.aggregate([ch], mIdx, "saisi", met.key, cat);
+      const rowBase = this.aggregate([ch], mIdx, "base", met.key, cat, true);
+      const filledM = mIdx.filter(m => this.prims(ch, m, "saisi"));
+
+      const mkLine = (label, o) => Object.assign({
+        label, title: label, cursor: "default", cells: [], total: "", totalColor: "#475569", rowBg: "transparent", sepColor: "#f1f4f7",
+        weight: 500, labelColor: "#475569", size: "13px", pad: "9px 12px 9px 0", spacing: "0", transform: "none"
+      }, o || {});
+      const head = label => mkLine(label, { weight: 700, labelColor: "#8a95a1", size: "11px", spacing: "0.7px", transform: "uppercase", pad: "16px 0 6px", sepColor: "transparent" });
+
+      const detail = [];
+      const lineN1 = mkLine("Réalisé N-1 (source Gescof)", { labelColor: "#6b7681" });
+      const refLines = s.refs.map(r => ({ ref: r, line: mkLine("× " + r.label) }));
+      const lineBase = mkLine("= Baseline contrôle de gestion", { weight: 700, labelColor: "#334155", rowBg: "#f8fafc", sepColor: "#e2e8f0" });
+      detail.push(lineN1);
+      refLines.forEach(r => detail.push(r.line));
+      detail.push(lineBase);
+
+      const catLines = CAT.map(c => ({ c, line: mkLine("CA " + c.label, { title: "CA " + c.label + " — " + c.title, rowBg: stc.cell, sepColor: stc.border }) }));
+      const caOpen = s.openCa[ch.id] !== false;
+      const lineCaTot = mkLine((caOpen ? "▾ " : "▸ ") + "CA total budgété", {
+        weight: 700, labelColor: stc.fg, rowBg: stc.cell, sepColor: stc.border, cursor: "pointer",
+        title: "Forfait + Réel + PAD + TE — cliquer pour " + (caOpen ? "replier" : "déplier"),
+        toggleCa: e => { e.stopPropagation(); this.setState(p => ({ openCa: Object.assign({}, p.openCa, { [ch.id]: !caOpen }) })); }
+      });
+      detail.push(lineCaTot);
+      if (caOpen) catLines.forEach(c => detail.push(c.line));
+      const lineHeures = mkLine("Nombre d'heures", { weight: 600, labelColor: "#17202a", rowBg: stc.cell, sepColor: stc.border });
+      const lineMasse = mkLine("Masse salariale", { weight: 600, labelColor: "#17202a", rowBg: stc.cell, sepColor: stc.border });
+      detail.push(lineHeures, lineMasse);
+
+      detail.push(head("Indicateurs calculés"));
+      const lineMsRatio = mkLine("% masse salariale / CA", { labelColor: "#334155" });
+      const linePhv = mkLine("Prix horaire vendu (CA / heures)", { labelColor: "#334155" });
+      const lineMarge = mkLine("% marge restant après MS", { weight: 700, labelColor: "#334155", rowBg: "#f8fafc", sepColor: "#e2e8f0" });
+      detail.push(lineMsRatio, linePhv, lineMarge);
+
+      const msEdit = isCG ? (st === "Clôturé" ? [] : mIdx) : mIdx.filter(m => s.periods[ch.agence][m] && st !== "Clôturé" && st !== "Validé" && st !== "Baseline CG");
+      if ((isCG || isExploit) && msEdit.length) {
+        const quick = (line, fields, lineId) => {
+          line.hasQuick = true;
+          const saisis = mIdx.filter(m => fields.every(f => this.saisiField(ch, m, f) !== null)).length;
+          const modifs = mIdx.reduce((a, m) => a + fields.filter(f => this.edited(ch, f, m, isCG)).length, 0);
+          line.doneLabel = saisis + "/" + mIdx.length + " saisis" + (modifs ? " · " + modifs + " modif." : "");
+          line.doneBg = modifs ? "#e8f6fd" : "#f4f6f8";
+          line.doneFg = modifs ? "#0782b6" : "#8a95a1";
+          const mine = s.history.filter(h => h.cible === ch.id && h.fields.some(f => fields.includes(f)));
+          const last = mine.length ? mine[mine.length - 1] : null;
+          line.hasApplied = !!last;
+          line.appliedLabel = mine.length ? mine.map(h => h.short).join(" · ") : "";
+          line.appliedTitle = mine.length ? mine.map(h => h.short + " (" + h.count + " cellules)").join("  |  ") : "";
+          line.doneTitle = last ? "Dernière action : " + last.label + " (" + last.count + " cellules)"
+            : modifs ? modifs + " cellule(s) saisie(s) manuellement sur cette ligne" : "Aucune action manuelle sur cette ligne";
+          const pct = () => parseFloat(String(s.quickPct).replace(",", ".").replace(/[^\d.-]/g, ""));
+          line.quickPlus = e => { e.stopPropagation(); this.applyPct(ch, fields, msEdit, pct(), isCG); };
+          line.quickMinus = e => { e.stopPropagation(); this.applyPct(ch, fields, msEdit, -pct(), isCG); };
+          const menuId = ch.id + "|" + lineId;
+          line.menuOpen = s.openMenu === menuId;
+          line.toggleMenu = e => { e.stopPropagation(); this.setState({ openMenu: line.menuOpen ? null : menuId, menuStep: null, menuValue: "" }); };
+          line.closeMenu = e => { e.stopPropagation(); this.setState({ openMenu: null, menuStep: null }); };
+          line.listOpen = line.menuOpen && !s.menuStep;
+          line.stepOpen = line.menuOpen && !!s.menuStep;
+          line.stepLabel = s.menuStep || "";
+          line.stepPlaceholder = s.menuStep === "Appliquer un % d'évolution" ? "ex. 15 (%)" : s.menuStep === "Répartir un total sur la période" ? "total à répartir (€)" : "montant par mois (€)";
+          line.stepCancel = e => { e.stopPropagation(); this.setState({ menuStep: null }); };
+          line.stepApply = e => {
+            e.stopPropagation();
+            if (String(s.menuValue).trim() === "") { this.toast("Renseignez une valeur"); return; }
+            this.applyAction(ch, fields, msEdit, s.menuStep, s.menuValue, isCG);
+            this.setState({ openMenu: null, menuStep: null, menuValue: "" });
+          };
+          line.menuActions = [
+            { label: "Reprendre les valeurs " + (s.year - 1), act: "Reprendre les valeurs " + (s.year - 1), needs: false },
+            { label: "Reprendre les valeurs " + (s.year - 2), act: "Reprendre les valeurs " + (s.year - 2), needs: false },
+            { label: "Reprendre l'objectif du contrôle de gestion", act: "Recopier la baseline sur tous les mois", needs: false },
+            { label: "Recopier le 1er mois saisi sur les autres", act: "Recopier le 1er mois saisi sur tous les mois", needs: false },
+            { label: "Appliquer un % d'évolution", act: "Appliquer un % d'évolution", needs: true },
+            { label: "Valeur fixe par mois", act: "Saisir une valeur fixe par mois", needs: true },
+            { label: "Répartir un total sur la période", act: "Répartir un total sur la période", needs: true },
+            { label: "Arrondir à la centaine", act: "Arrondir à la centaine", needs: false },
+            { label: "Vider la ligne", act: "Vider la ligne", needs: false }
+          ].map(a => ({
+            label: a.label,
+            color: a.act === "Vider la ligne" ? "#b91c1c" : "#334155",
+            hint: a.needs ? "valeur" : "",
+            run: e => {
+              e.stopPropagation();
+              if (a.needs) { this.setState({ menuStep: a.act, menuValue: "" }); return; }
+              this.applyAction(ch, fields, msEdit, a.act, s.menuValue, isCG);
+              this.setState({ openMenu: null, menuStep: null });
+            }
+          }));
+        };
+        catLines.forEach(cl => quick(cl.line, [cl.c.k], cl.c.k));
+        quick(lineCaTot, CAT.map(c => c.k), "catotal");
+        quick(lineHeures, ["heures"], "heures");
+        quick(lineMasse, ["masse"], "masse");
+      }
+
+      mIdx.forEach(m => {
+        const periodOpen = s.periods[ch.agence][m];
+        const cgEdit = isCG && st !== "Clôturé";
+        const exEdit = isExploit && periodOpen && st !== "Clôturé" && st !== "Validé" && st !== "Baseline CG";
+        const pB = this.prims(ch, m, "base"), pS = this.prims(ch, m, "saisi");
+        const bMet = this.metricFrom(pB, met.key, cat);
+
+        const n1v = met.key === "msRatio" || met.key === "phv" || met.key === "marge"
+          ? this.metricFrom({ cats:{}, ca: this.n1(ch, m, "ca", s.year), heures: this.n1(ch, m, "heures", s.year), masse: this.n1(ch, m, "masse", s.year) }, met.key, cat)
+          : met.key === "ca" && cat !== "Total" ? this.n1(ch, m, CAT.find(c => c.label === cat).k, s.year) : this.n1(ch, m, met.key === "ca" ? "ca" : met.key, s.year);
+        lineN1.cells.push({ readonly: true, text: this.fmt(n1v, met.kind), color: "#6b7681", bg: "transparent" });
+        refLines.forEach(rl => {
+          const c = 1 + (Number(rl.ref.values[m]) || 0) / 100;
+          rl.line.cells.push({ readonly: true, text: "× " + c.toFixed(3).replace(".", ","), color: c === 1 ? "#cbd5e1" : "#475569", bg: "transparent" });
+        });
+        const baseEditable = cgEdit && (met.key === "ca" || met.key === "heures" || met.key === "masse");
+        const baseField = met.key === "ca" ? (cat === "Total" ? null : CAT.find(c => c.label === cat).k) : met.key;
+        lineBase.cells.push(baseEditable && baseField
+          ? { editable: true, raw: String(Math.round(this.baseField(ch, m, baseField))), border: "#cbd5e1", edit: e => {
+              const num = parseFloat(String(e.target.value).replace(/[^\d.-]/g, ""));
+              this.setState(prev => ({ baseEdits: Object.assign({}, prev.baseEdits, { [this.ek(ch, baseField, m)]: isNaN(num) ? null : num }) }));
+            } }
+          : { readonly: true, text: this.fmt(bMet, met.kind), color: "#334155", bg: "transparent" });
+
+        catLines.forEach(cl => {
+          const v = this.saisiField(ch, m, cl.c.k);
+          const ed = this.edited(ch, cl.c.k, m, isCG);
+          cl.line.cells.push(exEdit
+            ? { editable: true, raw: v === null ? "" : String(Math.round(v)),
+                ghost: this.props.ghostN1 === false ? "—" : String(Math.round(this.n1(ch, m, cl.c.k, s.year - 1))),
+                ghostTitle: v === null
+                  ? "Valeur " + (s.year - 1) + " proposée — saisissez le montant " + s.year
+                  : ed ? "Montant confirmé" : "Repris de " + (s.year - 1) + " — à confirmer en le ressaisissant",
+                dash: this.props.confirmN1 !== false && v !== null && !ed ? "dashed" : "solid",
+                fg: this.props.confirmN1 === false || v === null || ed ? "#17202a" : "#94a3b8",
+                border: ed ? "#0a9bd8" : stc.border, edit: e => {
+                const num = parseFloat(String(e.target.value).replace(/[^\d.-]/g, ""));
+                this.setState(prev => ({ edits: Object.assign({}, prev.edits, { [this.ek(ch, cl.c.k, m)]: isNaN(num) ? null : num }) }));
+              } }
+            : { readonly: true, text: this.fmt(v, "money"), color: v === null ? "#94a3b8" : "#334155", bg: ed ? "#eff6ff" : "transparent" });
+        });
+        lineCaTot.cells.push({ readonly: true, text: this.fmt(pS ? pS.ca : null, "money"), color: pS ? this.markerColor(pS.ca, pB.ca, "high") : "#94a3b8", bg: "transparent" });
+
+        [["heures", lineHeures, "h"], ["masse", lineMasse, "money"]].forEach(([field, line, kind]) => {
+          const v = this.saisiField(ch, m, field);
+          const ed = this.edited(ch, field, m, isCG);
+          line.cells.push(exEdit
+            ? { editable: true, raw: v === null ? "" : String(Math.round(v)),
+                ghost: this.props.ghostN1 === false ? "—" : String(Math.round(this.n1(ch, m, field, s.year - 1))),
+                ghostTitle: v === null
+                  ? "Valeur " + (s.year - 1) + " proposée — saisissez le montant " + s.year
+                  : ed ? "Montant confirmé" : "Repris de " + (s.year - 1) + " — à confirmer en le ressaisissant",
+                dash: this.props.confirmN1 !== false && v !== null && !ed ? "dashed" : "solid",
+                fg: this.props.confirmN1 === false || v === null || ed ? "#17202a" : "#94a3b8",
+                border: ed ? "#0a9bd8" : stc.border, edit: e => {
+                const num = parseFloat(String(e.target.value).replace(/[^\d.-]/g, ""));
+                this.setState(prev => ({ edits: Object.assign({}, prev.edits, { [this.ek(ch, field, m)]: isNaN(num) ? null : num }) }));
+              } }
+            : { readonly: true, text: this.fmt(v, kind), color: v === null ? "#94a3b8" : "#17202a", bg: ed ? "#eff6ff" : "transparent" });
+        });
+
+        [["msRatio", lineMsRatio, "pct", "low"], ["phv", linePhv, "eur2", "high"], ["marge", lineMarge, "pct", "high"]].forEach(([k, line, kind, better]) => {
+          const v = this.metricFrom(pS, k, cat), b = this.metricFrom(pB, k, cat);
+          line.cells.push({ readonly: true, text: this.fmt(v, kind), color: this.markerColor(v, b, better), bg: "transparent" });
+        });
+      });
+
+      lineN1.total = met.agg === "ratio"
+        ? this.fmt(lineN1.cells.reduce((a, c) => a + (parseFloat(String(c.text).replace(",", ".")) || 0), 0) / (lineN1.cells.length || 1), met.kind)
+        : this.fmt(mIdx.reduce((a, m) => a + (met.key === "ca" && cat !== "Total" ? this.n1(ch, m, CAT.find(c => c.label === cat).k, s.year) : this.n1(ch, m, met.key, s.year)), 0), met.kind);
+      lineBase.total = this.fmt(this.aggregate([ch], mIdx, "base", met.key, cat), met.kind);
+      lineBase.totalColor = "#334155";
+      refLines.forEach(rl => { rl.line.total = "moy. " + (mIdx.reduce((a, m) => a + (Number(rl.ref.values[m]) || 0), 0) / mIdx.length).toFixed(2).replace(".", ",") + " %"; rl.line.totalColor = "#94a3b8"; });
+      catLines.forEach(cl => {
+        const v = mIdx.reduce((a, m) => { const x = this.saisiField(ch, m, cl.c.k); return x === null ? a : a + x; }, 0);
+        cl.line.total = this.fmt(v || null, "money"); cl.line.totalColor = "#334155";
+      });
+      lineCaTot.total = this.fmt(this.aggregate([ch], mIdx, "saisi", "ca", "Total"), "money"); lineCaTot.totalColor = stc.fg;
+      lineHeures.total = this.fmt(this.aggregate([ch], mIdx, "saisi", "heures"), "h");
+      lineMasse.total = this.fmt(this.aggregate([ch], mIdx, "saisi", "masse"), "money");
+      lineMsRatio.total = this.fmt(this.aggregate([ch], mIdx, "saisi", "msRatio"), "pct");
+      linePhv.total = this.fmt(this.aggregate([ch], mIdx, "saisi", "phv"), "eur2");
+      lineMarge.total = this.fmt(this.aggregate([ch], mIdx, "saisi", "marge"), "pct");
+      lineMarge.totalColor = this.markerColor(this.aggregate([ch], mIdx, "saisi", "marge"), this.aggregate([ch], mIdx, "base", "marge", null, true), "high");
+      if (isCG && met.key === "ca" && cat === "Total") lineBase.label = "= Baseline contrôle de gestion — choisissez une catégorie (Forfait / Réel / PAD / TE) pour la saisir";
+
+      return {
+        code: ch.id, nom: ch.nom,
+        tags: s.tags[ch.id] || [],
+        tagChips: TAGS.map(t => {
+          const on = (s.tags[ch.id] || []).includes(t);
+          return {
+            label: t, bg: on ? "#5b21b6" : "#fff", fg: on ? "#fff" : "#6b7681", border: on ? "#5b21b6" : "#ddd6fe",
+            toggle: e => {
+              e.stopPropagation();
+              this.setState(p => {
+                const cur = p.tags[ch.id] || [];
+                return { tags: Object.assign({}, p.tags, { [ch.id]: on ? cur.filter(x => x !== t) : cur.concat([t]) }) };
+              });
+              this.toast(on ? "Tag « " + t + " » retiré de " + ch.id : "Tag « " + t + " » ajouté à " + ch.id);
+            }
+          };
+        }),
+        sub: ch.entite + " · " + ch.ville + " · " + ch.agence + (isCG ? " · " + ch.client : ""),
+        statut: st, stBg: stc.bg, stFg: stc.fg, stBorder: stc.border, accent: stc.accent,
+        caret: open ? "▾" : "▸", rowBg: open ? "#fbfcfd" : "#fff",
+        totalBg: st === "Validé" || st === "Clôturé" ? stc.cell : "transparent",
+        cells, totalText: this.fmt(rowSaisi, met.kind), open,
+        formula: met.formula + "  ·  PAD = Prestations à la Demande  ·  TE = Travaux Exceptionnels",
+        detail,
+        trace: st === "Non budgétisé"
+          ? "Nouveau marché repris en " + s.year + " — aucune baseline ni saisie : le contrôle de gestion doit initialiser le budget."
+          : st === "Baseline CG"
+          ? "Baseline saisie par le contrôle de gestion — non encore publiée à l'exploitation."
+          : "Baseline vérifiée par le contrôle de gestion · " + (filledM.length ? filledM.length + "/" + mIdx.length + " mois saisis" : "aucune saisie") + " · " + (st === "Validé" ? "validé le 04/08/" + s.year : st === "Clôturé" ? "exercice clôturé" : "en attente de validation"),
+        bulkScope: (() => {
+          const ms = isCG ? (st === "Clôturé" ? [] : mIdx) : mIdx.filter(m => s.periods[ch.agence][m] && st !== "Clôturé" && st !== "Validé" && st !== "Baseline CG");
+          return ms.length ? (isCG ? "Baseline · " : "Prévisionnel · ") + ms.length + " mois modifiable" + (ms.length > 1 ? "s" : "") + " (" + ms.map(m => SHORT[m]).join(", ") + ")" : "Aucun mois modifiable avec ce rôle / statut";
+        })(),
+        bulkBtnBg: isCG ? "#475569" : "#0a9bd8",
+        doneLabel: filledM.length + "/" + mIdx.length + " mois saisis" + (() => {
+          const n = mIdx.reduce((a, m) => a + CAT.map(c => c.k).concat(["heures", "masse"]).filter(f => this.edited(ch, f, m, false) || this.edited(ch, f, m, true)).length, 0);
+          return n ? " · " + n + " modif." : "";
+        })(),
+        doneBg: (() => {
+          const n = mIdx.reduce((a, m) => a + CAT.map(c => c.k).concat(["heures", "masse"]).filter(f => this.edited(ch, f, m, false) || this.edited(ch, f, m, true)).length, 0);
+          return n ? "#e8f6fd" : "#f4f6f8";
+        })(),
+        doneFg: (() => {
+          const n = mIdx.reduce((a, m) => a + CAT.map(c => c.k).concat(["heures", "masse"]).filter(f => this.edited(ch, f, m, false) || this.edited(ch, f, m, true)).length, 0);
+          return n ? "#0782b6" : "#8a95a1";
+        })(),
+        hasApplied: s.history.some(h => h.cible === ch.id),
+        appliedLabel: s.history.filter(h => h.cible === ch.id).map(h => h.short).join(" · "),
+        appliedTitle: s.history.filter(h => h.cible === ch.id).map(h => h.label + " (" + h.count + " cellules)").join("  |  "),
+        doneTitle: (() => {
+          const last = s.history.slice().reverse().find(h => h.cible === ch.id);
+          return last ? "Dernière action : " + last.label + " (" + last.count + " cellules)" : "Aucune action manuelle sur ce chantier";
+        })(),
+        applyBulk: e => {
+          e.stopPropagation();
+          const ms = isCG ? (st === "Clôturé" ? [] : mIdx) : mIdx.filter(m => s.periods[ch.agence][m] && st !== "Clôturé" && st !== "Validé" && st !== "Baseline CG");
+          if (!ms.length) { this.toast("Aucun mois modifiable : période fermée ou budget verrouillé"); return; }
+          this.runBulk(ch, ms, isCG);
+        },
+        undoBulk: e => { e.stopPropagation(); this.clearRow(ch, isCG); },
+        predBase: this.fmt(this.aggregate([ch], mIdx, "base", met.key, cat), met.kind),
+        predSaisi: this.fmt(rowSaisi, met.kind),
+        predRate: (() => {
+          const b = this.aggregate([ch], mIdx, "base", met.key, cat);
+          return b && rowSaisi !== null ? Math.round(rowSaisi / b * 100) + " %" : "—";
+        })(),
+        predRateColor: (() => {
+          const b = this.aggregate([ch], mIdx, "base", met.key, cat);
+          if (!b || rowSaisi === null) return "#94a3b8";
+          const r = rowSaisi / b;
+          return r >= 1 ? "#15803d" : r > 0.97 ? "#b45309" : "#dc2626";
+        })(),
+        predNote: filledM.length === mIdx.length ? "12 mois saisis" : filledM.length + "/" + mIdx.length + " mois saisis",
+        canPublish: isCG && st === "Baseline CG",
+        canSubmit: isExploit && st === "En saisie",
+        canValidate: isExploit && st === "À valider",
+        canClose: isCG && st === "Validé",
+        publish: e => { e.stopPropagation(); this.setStatutFlow(ch, "En saisie", "Baseline " + ch.id + " publiée — saisie exploitation ouverte"); },
+        submit: e => { e.stopPropagation(); this.setStatutFlow(ch, "À valider", ch.id + " envoyé en validation"); },
+        validate: e => { e.stopPropagation(); this.setStatutFlow(ch, "Validé", "Budget " + ch.id + " validé"); },
+        close: e => { e.stopPropagation(); this.setStatutFlow(ch, "Clôturé", "Exercice " + s.year + " clôturé sur " + ch.id); },
+        exportRow: e => { e.stopPropagation(); this.toast("Export de " + ch.id + " en cours…"); },
+        toggle: () => this.setState({ openRow: open ? null : ch.id })
+      };
+    });
+
+    const totals = mIdx.map(m => {
+      const v = this.aggregate(list, [m], "saisi", met.key, cat);
+      const b = this.aggregate(list, [m], "base", met.key, cat, true);
+      return { text: this.fmt(v, met.kind), color: this.markerColor(v, b, met.better), sep: sep(m) };
+    });
+    const aggS = this.aggregate(list, mIdx, "saisi", met.key, cat);
+    const aggB = this.aggregate(list, mIdx, "base", met.key, cat, true);
+    let filledCells = 0;
+    list.forEach(ch => mIdx.forEach(m => { if (this.prims(ch, m, "saisi")) filledCells++; }));
+    const cellsTot = list.length * mIdx.length;
+    const nbValid = list.filter(ch => ["Validé","Clôturé"].includes(this.st(ch))).length;
+    const ecart = aggS === null || aggB === null || !aggB ? "—"
+      : met.kind === "pct" ? (aggS - aggB >= 0 ? "+" : "") + (aggS - aggB).toFixed(1).replace(".", ",") + " pt"
+      : ((aggS - aggB) / aggB * 100 >= 0 ? "+" : "") + ((aggS - aggB) / aggB * 100).toFixed(1).replace(".", ",") + " %";
+
+    const flowSteps = [
+      { n:"1", label:"Baseline CG", states:["Baseline CG"] },
+      { n:"2", label:"Saisie exploitation", states:["En saisie"] },
+      { n:"3", label:"Validation", states:["À valider"] },
+      { n:"4", label:"Clôturé", states:["Validé","Clôturé"] }
+    ];
+    const activeStates = new Set(list.map(ch => this.st(ch)));
+
+    return {
+      year: s.year, years: [2024, 2025, 2026, 2027],
+      periodes: PERIODES, fPeriode: s.fPeriode,
+      villes: ["Toutes les villes"].concat(Array.from(new Set(CHANTIERS.map(c => c.ville))).sort()),
+      agences: ["Toutes les agences"].concat(AGENCES),
+      clients: ["Tous les clients"].concat(Array.from(new Set(CHANTIERS.map(c => c.client))).sort()),
+      statuts: ["Tous les statuts","Non budgétisé","Baseline CG","En saisie","À valider","Validé","Clôturé"],
+      fVille: s.fVille, fAgence: s.fAgence, fClient: s.fClient, fStatut: s.fStatut, fSearch: s.fSearch,
+      showClientFilter: !isExploit,
+      setYear: e => this.setState({ year: parseInt(e.target.value, 10) }),
+      setPeriode: e => this.setState({ fPeriode: e.target.value }),
+      setVille: e => this.setState({ fVille: e.target.value }),
+      setAgence: e => this.setState({ fAgence: e.target.value }),
+      setClient: e => this.setState({ fClient: e.target.value }),
+      setStatut: e => this.setState({ fStatut: e.target.value }),
+      searchDraft: s.searchDraft,
+      setSearch: e => {
+        const v = e.target.value;
+        this.setState({ searchDraft: v });
+        clearTimeout(this._sTo);
+        this._sTo = setTimeout(() => this.setState({ fSearch: v }), 220);
+      },
+      reset: () => this.setState({ fTag:"Tous les tags", fRex:"Tous", fSecteur:"Tous les secteurs", fVille:"Toutes les villes", fAgence:"Toutes les agences", fClient:"Tous les clients", fStatut:"Tous les statuts", fSearch:"", searchDraft:"", fPeriode:"Année complète", cat:"Total" }),
+      navOpen: s.navOpen,
+      sidebarW: s.navOpen ? "264px" : "76px",
+      sidebarPad: s.navOpen ? "20px" : "12px",
+      logoH: s.navOpen ? "46px" : "30px",
+      navLabel: s.navOpen ? "inline" : "none",
+      navSub: s.navOpen ? "flex" : "none",
+      navArrow: s.navOpen ? "none" : "rotate(180deg)",
+      navTitle: s.navOpen ? "Replier le menu" : "Déplier le menu",
+      toggleNav: () => this.setState({ navOpen: !s.navOpen }),
+      isPilot: s.tab === "Pilotage CDG",
+      pilotKpis: (() => {
+        const full = [0,1,2,3,4,5,6,7,8,9,10,11];
+        const all = this.scope();
+        const big = all.filter(ch => ch.big);
+        const bigCa = big.reduce((a, ch) => a + ch.ca, 0);
+        const totCa = all.reduce((a, ch) => a + ch.ca, 0);
+        const bigMiss = big.filter(ch => this.st(ch) === "Non budgétisé" || this.missing(ch, full).length);
+        const missCa = bigMiss.reduce((a, ch) => a + ch.ca, 0);
+        return [
+          { label: "Portefeuille suivi", value: String(all.length), hint: this.fmt(totCa, "money") + " de CA de référence", color: "#17202a" },
+          { label: "Top 20 chantiers", value: totCa ? Math.round(bigCa / totCa * 100) + " %" : "—", hint: this.fmt(bigCa, "money") + " concentrés", color: "#0a9bd8" },
+          { label: "Gros chantiers non déclarés", value: String(bigMiss.length) + "/" + big.length, hint: this.fmt(missCa, "money") + " de CA à risque", color: bigMiss.length ? "#dc2626" : "#16a34a" },
+          { label: "Avancement global", value: (() => { let d = 0, t = 0; all.forEach(ch => full.forEach(m => { t++; if (this.prims(ch, m, "saisi")) d++; })); return (t ? Math.round(d / t * 100) : 0) + " %"; })(), hint: "cellules saisies", color: "#475569" }
+        ];
+      })(),
+      pilotBig: (() => {
+        const full = [0,1,2,3,4,5,6,7,8,9,10,11];
+        const arr = this.scope().filter(ch => ch.big);
+        arr.sort((a, b) => b.ca - a.ca);
+        return arr.map(ch => {
+          const st = this.st(ch), miss = this.missing(ch, full);
+          const done = full.filter(m => this.prims(ch, m, "saisi")).length;
+          const v = this.aggregate([ch], full, "saisi", "ca", "Total");
+          const b = this.aggregate([ch], full, "base", "ca", "Total");
+          const ec = v !== null && b ? (v - b) / b * 100 : null;
+          const risk = st === "Non budgétisé" ? "Non budgétisé" : miss.length ? miss.length + " mois manquants" : st === "À valider" ? "À valider" : "Complet";
+          return {
+            code: ch.id, nom: ch.nom, rex: REX[ch.id], entite: ch.entite,
+            ref: this.fmt(ch.ca, "money"),
+            statut: st, stBg: ST[st].bg, stFg: ST[st].fg, accent: ST[st].accent,
+            pct: Math.round(done / 12 * 100) + "%",
+            pctColor: done === 12 ? "#16a34a" : done >= 6 ? "#0a9bd8" : "#dc2626",
+            declare: this.fmt(v, "money"),
+            ecart: ec === null ? "—" : (ec >= 0 ? "+" : "−") + Math.abs(ec).toFixed(1).replace(".", ",") + " %",
+            ecartColor: ec === null ? "#94a3b8" : ec >= 0 ? "#15803d" : ec > -3 ? "#b45309" : "#dc2626",
+            risk, riskColor: st === "Non budgétisé" || miss.length ? "#b91c1c" : "#6b7681",
+            tags: s.tags[ch.id] || [],
+            open: () => this.setState({ tab: "Tableau prévisionnel", fSearch: ch.id, searchDraft: ch.id, openRow: ch.id })
+          };
+        });
+      })(),
+      pilotRex: (() => {
+        const full = [0,1,2,3,4,5,6,7,8,9,10,11];
+        return REX_NAMES.map(nom => {
+          const list2 = this.scope().filter(ch => REX[ch.id] === nom);
+          let done = 0, tot = 0;
+          list2.forEach(ch => full.forEach(m => { tot++; if (this.prims(ch, m, "saisi")) done++; }));
+          const pct = tot ? Math.round(done / tot * 100) : 0;
+          const bigs = list2.filter(ch => ch.big);
+          const bigMiss = bigs.filter(ch => this.st(ch) === "Non budgétisé" || this.missing(ch, full).length);
+          const ref = list2.reduce((a, ch) => a + ch.ca, 0);
+          return {
+            nom, initials: nom.split(/[ .]+/).filter(Boolean).map(x => x[0]).join("").slice(0, 2).toUpperCase(),
+            nb: String(list2.length), bigs: bigs.length ? bigs.length + " gros" + (bigMiss.length ? " · " + bigMiss.length + " en retard" : "") : "—",
+            bigsColor: bigMiss.length ? "#b91c1c" : "#6b7681",
+            ref: this.fmt(ref, "money"),
+            pct: pct + "%", color: pct >= 90 ? "#16a34a" : pct >= 50 ? "#0a9bd8" : "#dc2626",
+            pick: () => this.setState({ tab: "Tableau prévisionnel", fRex: nom, fSearch: "", searchDraft: "" })
+          };
+        }).sort((a, b) => parseInt(a.pct, 10) - parseInt(b.pct, 10));
+      })(),
+      tabs: ["Accueil", "Tableau prévisionnel"].concat(isCG ? ["Pilotage CDG"] : []).map(t => ({
+        label: t, line: s.tab === t ? "#0a9bd8" : "transparent",
+        fg: s.tab === t ? "#0a9bd8" : "#6b7681", weight: s.tab === t ? 700 : 500,
+        pick: () => this.setState({ tab: t })
+      })),
+      isHome: s.tab === "Accueil", isTable: s.tab === "Tableau prévisionnel",
+      goTable: () => this.setState({ tab: "Tableau prévisionnel" }),
+      entityChips: ["Toutes"].concat(ENTITIES.map(e => e.code)).map(code => {
+        const e = ENTITIES.find(x => x.code === code);
+        return {
+          label: code, title: e ? e.name : "Toutes les entités",
+          bg: s.fEntity === code ? "#eef2ff" : "#fff",
+          fg: s.fEntity === code ? "#3730a3" : "#6b7681",
+          border: s.fEntity === code ? "#c7d2fe" : "#dde3e8",
+          pick: () => this.setState({ fEntity: code })
+        };
+      }),
+      campaignChip: this.closed()
+        ? "Exercice " + s.year + " — budget clos, consultation seule"
+        : "Campagne de septembre " + (s.year - 1) + " — validation du budget janvier à décembre " + s.year,
+      campaignTitle: "Budget prévisionnel janvier – décembre " + s.year,
+      campaignSub: this.closed()
+        ? "Exercice budgétisé et clôturé — conservé comme historique de référence pour les campagnes suivantes."
+        : "Campagne ouverte en septembre " + (s.year - 1) + " : les 12 mois de " + s.year + " sont construits sur les réalisés " + (s.year - 1) + ", baseline vérifiée par le contrôle de gestion puis validée par l'exploitation avant la fin du mois.",
+      campaignPct: (() => {
+        const all = this.perim();
+        let done = 0, tot = 0;
+        all.forEach(ch => MONTHS.forEach((_, m) => { tot++; if (this.prims(ch, m, "saisi")) done++; }));
+        return (tot ? Math.round(done / tot * 100) : 0) + "%";
+      })(),
+      showTagFilter: isCG,
+      tagOpts: ["Tous les tags"].concat(TAGS), fTag: s.fTag,
+      setTag: e => this.setState({ fTag: e.target.value }),
+      showConsolide: isCG,
+      rexSub: "Suivi global de la campagne " + s.year + (s.fEntity === "Toutes" ? " · toutes entités" : " · " + s.fEntity) + (s.fTag === "Tous les tags" ? "" : " · tag " + s.fTag),
+      rexRows: (() => {
+        const full = [0,1,2,3,4,5,6,7,8,9,10,11];
+        const names = Array.from(new Set(Object.values(REX)));
+        return names.map(nom => {
+          const list2 = this.scope().filter(ch => REX[ch.id] === nom && (s.fTag === "Tous les tags" || (s.tags[ch.id] || []).includes(s.fTag)));
+          let done = 0, tot = 0;
+          list2.forEach(ch => full.forEach(m => { tot++; if (this.prims(ch, m, "saisi")) done++; }));
+          const pct = tot ? Math.round(done / tot * 100) : 0;
+          const aFaire = list2.filter(ch => this.todoFor(ch, full, "Exploitation")).length;
+          const crit = list2.filter(ch => { const t = this.todoFor(ch, full, "Exploitation"); return t && t.crit; }).length;
+          const ca = this.aggregate(list2, full, "saisi", "ca", "Total");
+          const base = this.aggregate(list2, full, "base", "ca", "Total", true);
+          const ecart = ca === null || base === null || !base ? null : (ca - base) / base * 100;
+          return {
+            nom, initials: nom.split(/[ .]+/).filter(Boolean).map(x => x[0]).join("").slice(0, 2).toUpperCase(),
+            agence: Array.from(new Set(list2.map(ch => ch.agence))).join(", ") || "—",
+            nb: String(list2.length), pct: pct + "%",
+            color: pct >= 90 ? "#16a34a" : pct >= 50 ? "#0a9bd8" : "#dc2626",
+            rest: aFaire ? aFaire + " à traiter" + (crit ? " · " + crit + " critique" + (crit > 1 ? "s" : "") : "") : "à jour",
+            restColor: crit ? "#b91c1c" : aFaire ? "#92400e" : "#16a34a",
+            ca: this.fmt(ca, "money"),
+            ecart: ecart === null ? "—" : (ecart >= 0 ? "+" : "") + ecart.toFixed(1).replace(".", ",") + " %",
+            ecartColor: ecart === null ? "#94a3b8" : ecart >= 0 ? "#15803d" : ecart > -3 ? "#b45309" : "#dc2626",
+            pick: () => this.setState({ tab: "Tableau prévisionnel", fRex: s.fRex === nom ? "Tous" : nom, fSearch: "", searchDraft: "" })
+          };
+        });
+      })(),
+      caChartTitle: isCG ? "CA déclaré consolidé — toutes exploitations" : "CA déclaré sur mon périmètre",
+      caChartSub: isCG
+        ? "Exercice " + s.year + (s.fEntity === "Toutes" ? " · toutes entités" : " · " + s.fEntity)
+        : "Exercice " + s.year + " · chantiers dont vous êtes responsable",
+      pieEnter: () => this.setState({ hoverPie: "all" }),
+      pieLeave: () => this.setState({ hoverPie: null, hoverSeg: null }),
+      pieHint: s.hoverPie === "all" ? "Survolez une section pour son détail" : "Survolez le diagramme pour le détail par catégorie",
+      gaugeSegs: (() => {
+        const C = 108.1;
+        const p = this.caParts(isCG);
+        const b = this.caBaseTotal(isCG) || 1;
+        let acc = 0;
+        return p.map(x => {
+          const len = Math.max(0, Math.min(C, x.value / b * C));
+          const off = -acc / b * C;
+          acc += x.value;
+          const hov = s.hoverSeg === x.key;
+          const colors = { forfait: "#0a9bd8", reel: "#1b4f9c", pad: "#8b5cf6", te: "#f59e0b" };
+          return {
+            color: colors[x.key],
+            dash: len.toFixed(2) + " " + C, offset: off.toFixed(2),
+            width: hov ? 6.4 : 4.6, opacity: s.hoverSeg && !hov ? 0.35 : 1,
+            enter: () => this.setState({ hoverSeg: x.key }),
+            leave: () => this.setState({ hoverSeg: null })
+          };
+        });
+      })(),
+      segCard: (() => {
+        const x = this.caParts(isCG).find(y => y.key === s.hoverSeg);
+        if (!x) return null;
+        const d = x.value - x.base, up = d >= 0;
+        const colors = { forfait: "#0a9bd8", reel: "#1b4f9c", pad: "#8b5cf6", te: "#f59e0b" };
+        return {
+          label: x.label, dot: colors[x.key],
+          value: this.fmt(x.value, "money"), base: this.fmt(x.base, "money"),
+          delta: (up ? "+" : "−") + this.fmt(Math.abs(d), "money"),
+          deltaColor: up ? "#4ade80" : "#fca5a5",
+          rate: x.base ? (d >= 0 ? "+" : "−") + Math.abs(d / x.base * 100).toFixed(1).replace(".", ",") + " % vs objectif" : "objectif non défini"
+        };
+      })(),
+
+      gaugeValue: (() => this.fmt(this.caParts(isCG).reduce((a, x) => a + x.value, 0), "money"))(),
+      gaugeDelta: (() => {
+        const p = this.caParts(isCG);
+        const d = p.reduce((a, x) => a + x.value, 0) - this.caBaseTotal(isCG);
+        return (d >= 0 ? "+" : "−") + this.fmt(Math.abs(d), "money");
+      })(),
+      gaugeDeltaPct: (() => {
+        const p = this.caParts(isCG);
+        const b = this.caBaseTotal(isCG);
+        if (!b) return "";
+        const d = (p.reduce((a, x) => a + x.value, 0) - b) / b * 100;
+        return (d >= 0 ? "+" : "−") + Math.abs(d).toFixed(1).replace(".", ",") + " %";
+      })(),
+      campaignShort: this.closed() ? "Budget clos · lecture seule" : "Saisie ouverte · échéance fin septembre " + (s.year - 1),
+      fillPct: (() => {
+        const list2 = this.caList(isCG);
+        let done = 0, tot = 0;
+        list2.forEach(ch => MONTHS.forEach((_, m) => { tot++; if (this.prims(ch, m, "saisi")) done++; }));
+        return (tot ? Math.round(done / tot * 100) : 0) + "%";
+      })(),
+
+      gaugePx: (this.props.gaugeSize ?? 176) + "px",
+      gaugeInset: Math.round((this.props.gaugeSize ?? 176) * 0.215) + "px",
+      gaugeValueSize: ((this.props.gaugeSize ?? 176) < 130 ? 15 : 20) + "px",
+      showObjectiveBlock: this.props.showObjectiveBlock !== false,
+      deltaColor: (() => {
+        const p = this.caParts(isCG);
+        const b = this.caBaseTotal(isCG);
+        return p.reduce((a, x) => a + x.value, 0) >= b ? "#15803d" : "#dc2626";
+      })(),
+      gaugeWidth: s.hoverPie === "all" ? 5.2 : 4,
+      gaugeDash: (() => {
+        const C = 108.1;
+        const p = this.caParts(isCG);
+        const b = this.caBaseTotal(isCG);
+        const r = b ? Math.min(1, p.reduce((a, x) => a + x.value, 0) / b) : 0;
+        return (r * C).toFixed(2) + " " + C;
+      })(),
+      caCats: (() => {
+        const p = this.caParts(isCG);
+        return p.map(x => {
+          const d = x.value - x.base;
+          const up = d >= 0;
+          const colors = { forfait: "#0a9bd8", reel: "#1b4f9c", pad: "#8b5cf6", te: "#f59e0b" };
+          return {
+            label: x.label, color: up ? "#16a34a" : "#dc2626",
+            dot: colors[x.key],
+            hoverBg: s.hoverSeg === x.key ? "#f4f6f8" : "transparent",
+            enter: () => this.setState({ hoverPie: "all", hoverSeg: x.key }),
+            leave: () => this.setState({ hoverSeg: null }),
+            base: this.fmt(x.base, "money"), value: this.fmt(x.value, "money"),
+            delta: x.base ? (up ? "+" : "−") + Math.abs(d / x.base * 100).toFixed(1).replace(".", ",") + " %" : "—",
+            bg: up ? "#f4fdf7" : "#fff7f7",
+            title: x.label + " — objectif " + this.fmt(x.base, "money") + " · déclaré " + this.fmt(x.value, "money") + (x.base ? " (" + Math.round(x.value / x.base * 100) + " % de l'objectif)" : "")
+          };
+        });
+      })(),
+      caPie: (() => {
+        const p = this.caParts(isCG);
+        const tot = p.reduce((a, x) => a + x.value, 0) || 1;
+        let acc = 0;
+        return p.map(x => {
+          const C = 108.1;
+          const len = x.value / tot * C;
+          const off = -acc / tot * C;
+          acc += x.value;
+          const hov = s.hoverPie === x.key;
+          return {
+            color: x.color, dash: len.toFixed(2) + " " + C, offset: off.toFixed(2),
+            width: hov ? 4.6 : 3.6, opacity: s.hoverPie && !hov ? 0.45 : 1,
+            enter: () => this.setState({ hoverPie: x.key }), leave: () => this.setState({ hoverPie: null })
+          };
+        });
+      })(),
+      caPieLegend: (() => {
+        const p = this.caParts(isCG);
+        const tot = p.reduce((a, x) => a + x.value, 0) || 1;
+        return p.map(x => {
+          const ec = x.base ? (x.value - x.base) / x.base * 100 : null;
+          const hov = s.hoverPie === x.key;
+          return {
+            label: x.label, color: x.color, value: this.fmt(x.value, "money"), base: this.fmt(x.base, "money"),
+            pct: Math.round(x.value / tot * 100) + " %",
+            rate: x.base ? Math.round(x.value / x.base * 100) + " %" : "—",
+            ecart: ec === null ? "—" : (ec >= 0 ? "+" : "") + ec.toFixed(1).replace(".", ",") + " %",
+            ecartColor: ec === null ? "#94a3b8" : ec >= 0 ? "#15803d" : ec > -3 ? "#b45309" : "#dc2626",
+            bg: hov ? "#f4f6f8" : "transparent",
+            title: x.label + " — objectif CG " + this.fmt(x.base, "money") + " · déclaré " + this.fmt(x.value, "money") + (x.base ? " (" + Math.round(x.value / x.base * 100) + " % de l'objectif)" : ""),
+            enter: () => this.setState({ hoverPie: x.key }), leave: () => this.setState({ hoverPie: null })
+          };
+        });
+      })(),
+      caChartRate: (() => {
+        const p = this.caParts(isCG);
+        const v = p.reduce((a, x) => a + x.value, 0);
+        const b = this.caBaseTotal(isCG);
+        return b ? Math.round(v / b * 100) + " %" : "—";
+      })(),
+      caChartRateColor: (() => {
+        const p = this.caParts(isCG);
+        const v = p.reduce((a, x) => a + x.value, 0);
+        const b = this.caBaseTotal(isCG);
+        if (!b) return "#94a3b8";
+        const r = v / b;
+        return r >= 1 ? "#15803d" : r > 0.97 ? "#b45309" : "#dc2626";
+      })(),
+      caN1Value: (() => {
+        const list2 = this.caList(isCG);
+        const cur = this.state.year;
+        this.state.year = cur - 1;
+        let v = 0;
+        list2.forEach(ch => MONTHS.forEach((_, m) => CAT.forEach(c => { v += this.n1(ch, m, c.k, cur - 1); })));
+        this.state.year = cur;
+        return this.fmt(v, "money");
+      })(),
+      caN1Delta: (() => {
+        const list2 = this.caList(isCG);
+        const cur = this.state.year;
+        let prev = 0;
+        list2.forEach(ch => MONTHS.forEach((_, m) => CAT.forEach(c => { prev += this.n1(ch, m, c.k, cur - 1); })));
+        const now = this.caParts(isCG).reduce((a, x) => a + x.value, 0);
+        if (!prev) return "—";
+        const d = (now - prev) / prev * 100;
+        return (d >= 0 ? "+" : "−") + Math.abs(d).toFixed(1).replace(".", ",") + " % vs " + (cur - 1);
+      })(),
+      caN1Color: (() => {
+        const list2 = this.caList(isCG);
+        const cur = this.state.year;
+        let prev = 0;
+        list2.forEach(ch => MONTHS.forEach((_, m) => CAT.forEach(c => { prev += this.n1(ch, m, c.k, cur - 1); })));
+        const now = this.caParts(isCG).reduce((a, x) => a + x.value, 0);
+        return !prev ? "#94a3b8" : now >= prev ? "#15803d" : "#dc2626";
+      })(),
+      caPieCenterValue: (() => {
+        const p = this.caParts(isCG);
+        const hit = p.find(x => x.key === s.hoverPie);
+        return this.fmt(hit ? hit.value : p.reduce((a, x) => a + x.value, 0), "money");
+      })(),
+      caPieCenterLabel: (() => {
+        const hit = this.caParts(isCG).find(x => x.key === s.hoverPie);
+        return hit ? hit.label : "CA déclaré";
+      })(),
+      caPieCenterColor: (() => {
+        const hit = this.caParts(isCG).find(x => x.key === s.hoverPie);
+        return hit ? hit.color : "#17202a";
+      })(),
+      caPieCenterRate: (() => {
+        const p = this.caParts(isCG);
+        const hit = p.find(x => x.key === s.hoverPie);
+        const tot = p.reduce((a, x) => a + x.value, 0) || 1;
+        if (hit) return Math.round(hit.value / tot * 100) + " % du CA déclaré";
+        const b = this.caBaseTotal(isCG);
+        return b ? Math.round(p.reduce((a, x) => a + x.value, 0) / b * 100) + " % de l'objectif CG" : "—";
+      })(),
+      caPieCenterRateColor: (() => {
+        const p = this.caParts(isCG);
+        const hit = p.find(x => x.key === s.hoverPie);
+        if (hit) return hit.color;
+        const b = this.caBaseTotal(isCG);
+        if (!b) return "#94a3b8";
+        const r = p.reduce((a, x) => a + x.value, 0) / b;
+        return r >= 1 ? "#15803d" : r > 0.97 ? "#b45309" : "#dc2626";
+      })(),
+      caPieCenterHint: (() => {
+        const hit = this.caParts(isCG).find(x => x.key === s.hoverPie);
+        if (hit) return hit.base ? "complétion " + Math.round(hit.value / hit.base * 100) + " % de l'objectif" : "objectif non défini";
+        return "objectif " + this.fmt(this.caBaseTotal(isCG), "money");
+      })(),
+      caChartTotal: (() => {
+        const list2 = isCG ? this.scope() : this.scope().filter(ch => REX[ch.id] === "A. Bernard");
+        return this.fmt(this.aggregate(list2, [0,1,2,3,4,5,6,7,8,9,10,11], "saisi", "ca", "Total"), "money");
+      })(),
+      caChartBaseTotal: this.fmt(this.caBaseTotal(isCG), "money"),
+      donutSub: isExploit
+        ? "Exercice " + s.year + " · mon périmètre"
+        : "Exercice " + s.year + (s.fEntity === "Toutes" ? " · toutes entités" : " · " + s.fEntity),
+      donutArcs: (() => {
+        const segs = this.budgetSegments();
+        const tot = segs.reduce((a, x) => a + x.list.length, 0) || 1;
+        const C = 99.9;
+        let acc = 0;
+        return segs.map(x => {
+          const len = x.list.length / tot * C;
+          const offset = -acc;
+          acc += len;
+          const on = s.hoverSeg === x.key;
+          return {
+            color: x.color, dash: len.toFixed(2) + " " + (C - len).toFixed(2),
+            offset: offset.toFixed(2), width: on ? 7.4 : 5.6,
+            opacity: s.hoverSeg && !on ? 0.32 : 1,
+            enter: () => this.setState({ hoverSeg: x.key }),
+            leave: () => this.setState({ hoverSeg: null }),
+            pick: x.pick
+          };
+        });
+      })(),
+      donutCenterValue: (() => {
+        const segs = this.budgetSegments();
+        const hit = segs.find(x => x.key === s.hoverSeg);
+        return hit ? String(hit.list.length) : String(this.perim().length);
+      })(),
+      donutCenterLabel: (() => {
+        const hit = this.budgetSegments().find(x => x.key === s.hoverSeg);
+        return hit ? hit.label : "chantiers suivis";
+      })(),
+      donutCenterSub: (() => {
+        const segs = this.budgetSegments();
+        const tot = segs.reduce((a, x) => a + x.list.length, 0) || 1;
+        const hit = segs.find(x => x.key === s.hoverSeg);
+        return hit ? Math.round(hit.list.length / tot * 100) + " % du portefeuille" : "survolez un segment";
+      })(),
+      donutCenterColor: (() => {
+        const hit = this.budgetSegments().find(x => x.key === s.hoverSeg);
+        return hit ? hit.color : "#17202a";
+      })(),
+      donutLegend: (() => {
+        const segs = this.budgetSegments();
+        const tot = segs.reduce((a, x) => a + x.list.length, 0) || 1;
+        return segs.map(x => {
+          const on = s.hoverSeg === x.key;
+          return {
+            label: x.label, color: x.color, hint: x.hint, count: String(x.list.length),
+            pct: Math.round(x.list.length / tot * 100) + " %",
+            bg: on ? "#f8fafb" : "#fff", border: on ? x.color : "#f1f4f7",
+            lift: on ? "translateX(3px)" : "none",
+            enter: () => this.setState({ hoverSeg: x.key }),
+            leave: () => this.setState({ hoverSeg: null }),
+            pick: x.pick
+          };
+        });
+      })(),
+      chart: (() => {
+        const all = CHANTIERS.filter(ch => s.fEntity === "Toutes" || ch.entite === s.fEntity);
+        const rows2 = MONTHS.map((_, m) => {
+          const v = this.aggregate(all, [m], "saisi", "ca", "Total");
+          const b = all.reduce((a, ch) => a + CAT.reduce((x, c) => x + this.baseField(ch, m, c.k), 0), 0);
+          return { m, v, b };
+        });
+        const max = Math.max.apply(null, rows2.map(r => Math.max(r.v || 0, r.b)));
+        const due = this.nextDue();
+        return rows2.map(r => ({
+          label: SHORT[r.m],
+          labelColor: r.m === due ? "#0a9bd8" : "#94a3b8",
+          h: Math.max(3, Math.round((r.v || 0) / (max || 1) * 118)) + "px",
+          baseH: Math.round(r.b / (max || 1) * 118) + "px",
+          color: r.v === null ? "#e2e8f0" : r.v >= r.b ? "#0a9bd8" : "#f59e0b",
+          title: MONTHS[r.m] + " — saisi " + this.fmt(r.v, "money") + " · baseline " + this.fmt(r.b, "money") + (r.v === null ? " (aucune saisie)" : "")
+        }));
+      })(),
+      chartHasEmpty: MONTHS.some((_, m) => this.aggregate(CHANTIERS.filter(ch => s.fEntity === "Toutes" || ch.entite === s.fEntity), [m], "saisi", "ca", "Total") === null),
+      homeKpis: (() => {
+        const all = CHANTIERS;
+        const full = [0,1,2,3,4,5,6,7,8,9,10,11];
+        const todo = all.filter(ch => this.todoFor(ch, full, "Exploitation"));
+        const crit = all.filter(ch => { const t = this.todoFor(ch, full, "Exploitation"); return t && t.crit; });
+        const done = all.filter(ch => ["Validé","Clôturé"].includes(this.st(ch)));
+        const ca = this.aggregate(all, full, "saisi", "ca", "Total");
+        return [
+          { label: "Chantiers à remplir", value: String(todo.length), hint: crit.length + " critique" + (crit.length > 1 ? "s" : ""), color: crit.length ? "#dc2626" : "#17202a" },
+          { label: "Budgets terminés", value: done.length + "/" + all.length, hint: "validés ou clôturés", color: "#16a34a" },
+          { label: "CA budgété " + s.year, value: this.fmt(ca, "money"), hint: "toutes entités", color: "#17202a" },
+          { label: "% marge moyenne", value: this.fmt(this.aggregate(all, full, "saisi", "marge"), "pct"), hint: "après masse salariale", color: "#0a9bd8" }
+        ];
+      })(),
+      homeTodo: (() => {
+        const full = [0,1,2,3,4,5,6,7,8,9,10,11];
+        const arr = this.perim().map(ch => ({ ch, t: this.todoFor(ch, full, "Exploitation") })).filter(x => x.t);
+        arr.sort((a, b) => (a.t.crit ? 0 : 1) - (b.t.crit ? 0 : 1) || b.ch.ca - a.ch.ca);
+        return arr.slice(0, 6).map(({ ch, t }) => ({
+          code: ch.id, nom: ch.nom, hint: t.hint, tag: t.tag,
+          title: ch.id + " · " + ch.nom + " — " + t.hint,
+          hintColor: t.crit ? "#b91c1c" : "#92400e", accent: t.crit ? "#dc2626" : "#f59e0b",
+          tagBg: t.crit ? "#fee2e2" : "#fef3c7", tagFg: t.crit ? "#991b1b" : "#92400e",
+          open: () => this.setState({ tab: "Tableau prévisionnel", fSearch: ch.id, searchDraft: ch.id, openRow: ch.id })
+        }));
+      })(),
+      homeTodoCount: (() => {
+        const g = this.budgetGroups();
+        const parts = [];
+        if (g.remplir.length) parts.push(g.remplir.length + " à remplir");
+        if (g.attente.length) parts.push(g.attente.length + " non budgétisé" + (g.attente.length > 1 ? "s" : ""));
+        return parts.length ? parts.join(" + ") : "rien à traiter";
+      })(),
+      homeDone: this.perim().filter(ch => ["Validé","Clôturé"].includes(this.st(ch))).slice(0, 12).map(ch => ({
+        code: ch.id, nom: ch.nom, tag: this.st(ch),
+        hint: ch.entite + " · " + this.fmt(this.aggregate([ch], [0,1,2,3,4,5,6,7,8,9,10,11], "saisi", "ca", "Total"), "money") + " budgétés",
+        title: ch.id + " · " + ch.nom + " — " + ch.entite + " · budget " + this.st(ch).toLowerCase(),
+        accent: ST[this.st(ch)].accent, tagBg: ST[this.st(ch)].bg, tagFg: ST[this.st(ch)].fg,
+        open: () => this.setState({ tab: "Tableau prévisionnel", fSearch: ch.id, searchDraft: ch.id, openRow: ch.id })
+      })),
+      homeDoneCount: this.perim().filter(ch => ["Validé","Clôturé"].includes(this.st(ch))).length + " chantiers",
+      homeEntities: ENTITIES.map(e => {
+        const full = [0,1,2,3,4,5,6,7,8,9,10,11];
+        const list2 = CHANTIERS.filter(ch => ch.entite === e.code);
+        const fini = list2.filter(ch => ["Validé","Clôturé"].includes(this.st(ch))).length;
+        const aRemplir = list2.filter(ch => !["Validé","Clôturé"].includes(this.st(ch)) && (this.st(ch) === "Baseline CG" || this.missing(ch, full).length)).length;
+        const cours = list2.length - fini - aRemplir;
+        const pct = list2.length ? Math.round(fini / list2.length * 100) : 0;
+        const parts = [];
+        if (aRemplir) parts.push(aRemplir + " à remplir");
+        if (cours) parts.push(cours + " en cours");
+        parts.push(fini + " terminé" + (fini > 1 ? "s" : ""));
+        return {
+          code: e.code, name: e.name, pct: pct + "%",
+          color: pct >= 90 ? "#16a34a" : pct >= 50 ? "#0a9bd8" : "#dc2626",
+          detail: list2.length + " chantiers · " + parts.join(" · ")
+        };
+      }),
+      sorts: ["Priorité à déclarer","Code chantier","Nom du site","Ville","Statut","Montant décroissant","Montant croissant","Écart vs baseline","Remplissage croissant"],
+      fSort: s.fSort, setSort: e => this.setState({ fSort: e.target.value }),
+      secteurOpts: ["Tous les secteurs","Propreté","Sécurité"], fSecteur: s.fSecteur,
+      setSecteur: e => this.setState({ fSecteur: e.target.value }),
+      metricOpts: METRICS.map(m => m.key === "ca" ? catLabel : m.label), metricLabel: met.key === "ca" ? catLabel : met.label,
+      setMetric: e => { const lbl = e.target.value; const m = METRICS.find(x => (x.key === "ca" ? catLabel : x.label) === lbl); if (m) this.setState({ metric: m.key }); },
+      catOpts: ["Total"].concat(CAT.map(c => c.label)), cat,
+      setCat: e => this.setState({ cat: e.target.value, metric: "ca" }),
+      showCoefs: isCG,
+      todos: (() => {
+        const all = this.filtered().map(ch => ({ ch, t: this.todoFor(ch, mIdx, s.role) })).filter(x => x.t);
+        all.sort((a, b) => (a.t.crit ? 0 : 1) - (b.t.crit ? 0 : 1) || b.ch.ca - a.ch.ca);
+        return all.slice(0, 8).map(({ ch, t }) => ({
+          code: ch.id, nom: ch.nom, hint: t.hint, tag: t.tag,
+          title: ch.id + " · " + ch.nom + " — " + t.hint,
+          hintColor: t.crit ? "#b91c1c" : "#92400e",
+          accent: t.crit ? "#dc2626" : "#f59e0b",
+          border: t.crit ? "#fecaca" : "#fde68a",
+          tagBg: t.crit ? "#fee2e2" : "#fef3c7", tagFg: t.crit ? "#991b1b" : "#92400e",
+          open: () => this.setState({ openRow: ch.id, fSearch: ch.id, searchDraft: ch.id })
+        }));
+      })(),
+      hasTodo: this.filtered().some(ch => this.todoFor(ch, mIdx, s.role)),
+      todoTitle: isCG ? "À traiter — contrôle de gestion" : isExploit ? "À déclarer — exploitation" : "Périodes de saisie",
+      todoSub: (() => {
+        const all = this.filtered().map(ch => this.todoFor(ch, mIdx, s.role)).filter(Boolean);
+        const crit = all.filter(t => t.crit).length;
+        if (!all.length) return "Rien à traiter sur ce périmètre.";
+        return all.length + " chantier" + (all.length > 1 ? "s" : "") + (crit ? " · " + crit + " critique" + (crit > 1 ? "s" : "") : "") + (isExploit ? " · à rendre avant fin septembre " + (s.year - 1) : "");
+      })(),
+      todoBg: this.filtered().some(ch => { const t = this.todoFor(ch, mIdx, s.role); return t && t.crit; }) ? "#fef7f7" : "#fffdf5",
+      todoBorder: this.filtered().some(ch => { const t = this.todoFor(ch, mIdx, s.role); return t && t.crit; }) ? "#fecaca" : "#fde68a",
+      todoFg: this.filtered().some(ch => { const t = this.todoFor(ch, mIdx, s.role); return t && t.crit; }) ? "#b91c1c" : "#92400e",
+      todoFilterLabel: s.onlyTodo ? "Voir tous les chantiers" : "N'afficher que ceux-là",
+      todoFilter: () => this.setState({ onlyTodo: !s.onlyTodo }),
+      secteurs: ["Tous les secteurs","Propreté","Sécurité"].map(x => ({
+        label: x, bg: s.fSecteur === x ? "#e8f6fd" : "#fff", fg: s.fSecteur === x ? "#0782b6" : "#6b7681",
+        border: s.fSecteur === x ? "#bfe3f6" : "#dde3e8", pick: () => this.setState({ fSecteur: x })
+      })),
+      cats: ["Total"].concat(CAT.map(c => c.label)).map(x => {
+        const c = CAT.find(y => y.label === x);
+        return {
+          label: x, title: c ? c.title : "Forfait + Réel + PAD + TE",
+          bg: cat === x ? "#eef2ff" : "#fff", fg: cat === x ? "#3730a3" : "#6b7681",
+          border: cat === x ? "#c7d2fe" : "#dde3e8",
+          pick: () => this.setState({ cat: x, metric: "ca" })
+        };
+      }),
+      roles: ["Exploitation","Contrôle de gestion","Admin"].map(r => ({
+        label: r, bg: s.role === r ? "#fff" : "transparent", fg: s.role === r ? "#17202a" : "#6b7681",
+        shadow: s.role === r ? "0 1px 3px rgba(15,23,42,0.12)" : "none",
+        pick: () => this.setState({ role: r })
+      })),
+      roleHint: this.closed()
+        ? "Exercice " + s.year + " clôturé — lecture seule. Basculez sur " + (new Date().getFullYear() + 1) + " pour la campagne en cours."
+        : isCG
+        ? "Vous posez la baseline " + s.year + " par code chantier : coefficients puis montants mensuels, puis publication à l'exploitation."
+        : isExploit
+          ? "Campagne de septembre " + (s.year - 1) + " : renseignez les 12 mois de " + s.year + " — CA par catégorie (Forfait, Réel, PAD, TE), heures et masse salariale — puis envoyez en validation."
+          : "Ouvrez ou fermez les périodes de saisie par entité ; la lecture du tableau reste disponible.",
+      metrics: METRICS.map(m => ({
+        label: m.key === "ca" ? catLabel : m.label,
+        bg: met.key === m.key ? "#0a9bd8" : "#fff", fg: met.key === m.key ? "#fff" : "#6b7681",
+        border: met.key === m.key ? "#0a9bd8" : "#dde3e8",
+        pick: () => this.setState({ metric: m.key })
+      })),
+      metricFormula: met.formula,
+      showAdmin: s.role === "Admin",
+      allMonths: MONTHS.map((mo, m) => ({ short: SHORT[m] })),
+      months: mIdx.map(m => ({
+        short: SHORT[m], sep: sep(m),
+        headColor: s.periods["Saint Ouen"][m] ? "#0a9bd8" : "#8a95a1",
+        headBg: s.periods["Saint Ouen"][m] ? "#f5fbff" : "#fff"
+      })),
+      gridCols, gridColsDetail: "420px repeat(" + mIdx.length + ", " + colW + "px) 120px", tableMin,
+      totalHead: met.agg === "ratio" ? "Moyenne" : "Total",
+      periodRows: AGENCES.map(a => ({
+        entite: a,
+        cells: MONTHS.map((mo, m) => {
+          const o = s.periods[a][m];
+          return {
+            text: o ? "Ouvert" : "Fermé", title: mo + " — " + a,
+            bg: o ? "#dcfce7" : "#f1f5f9", fg: o ? "#166534" : "#64748b", border: o ? "#bbf7d0" : "#e2e8f0",
+            toggle: () => this.setState(p => { const next = Object.assign({}, p.periods); next[a] = next[a].slice(); next[a][m] = !next[a][m]; return { periods: next }; })
+          };
+        })
+      })),
+      refHint: isCG
+        ? "Éditez les coefficients mensuels : ils recalculent la baseline de tous les chantiers du périmètre."
+        : "Coefficients posés par le contrôle de gestion, appliqués au réalisé N-1 pour produire la baseline.",
+      refIndicators: s.refs.map((r, ri) => ({
+        label: r.label, role: r.role, dot: r.dot,
+        moy: (mIdx.reduce((a, m) => a + (Number(r.values[m]) || 0), 0) / mIdx.length).toFixed(2).replace(".", ",") + " %",
+        cells: mIdx.map(m => (isCG
+          ? { editable: true, raw: String(r.values[m]), edit: e => {
+              const num = parseFloat(String(e.target.value).replace(",", ".").replace(/[^\d.-]/g, ""));
+              this.setState(prev => { const refs = prev.refs.map(x => Object.assign({}, x, { values: x.values.slice() })); refs[ri].values[m] = isNaN(num) ? 0 : num; return { refs }; });
+            } }
+          : { readonly: true, text: (Number(r.values[m]) || 0).toFixed(1).replace(".", ",") + " %" }))
+      })),
+      addRef: () => {
+        if (!isCG) { this.toast("Seul le contrôle de gestion peut ajouter un coefficient"); return; }
+        const n = s.refs.length + 1;
+        this.setState(prev => ({ refs: prev.refs.concat([{ id:"ref" + n, label:"Nouveau coefficient " + n, role:"À qualifier — contrôle de gestion", dot:"#f59e0b", values: MONTHS.map(() => 0) }]) }));
+        this.toast("Coefficient ajouté — renseignez les mois");
+      },
+      hasHistory: s.history.length > 0,
+      historyCount: s.history.length + " action" + (s.history.length > 1 ? "s" : "") + " appliquée" + (s.history.length > 1 ? "s" : "") + " · " + (Object.keys(s.edits).length + Object.keys(s.baseEdits).length) + " cellules modifiées",
+      changeLog: s.history.slice().reverse().slice(0, 6).map(h => ({
+        label: h.label, cible: h.cible, count: h.count + " cellules",
+        scope: h.store === "baseEdits" ? "Baseline" : "Prévisionnel",
+        scopeBg: h.store === "baseEdits" ? "#f1f5f9" : "#e8f6fd",
+        scopeFg: h.store === "baseEdits" ? "#475569" : "#0782b6",
+        time: ""
+      })),
+      undoLast: () => this.undoLast(),
+      resetAll: () => { this.setState({ edits: {}, baseEdits: {}, history: [] }); this.toast("Toutes les modifications manuelles ont été annulées"); },
+      bulkFields: ["Tout le CA (4 catégories)"].concat(CAT.map(c => "CA " + c.label), ["Nombre d'heures", "Masse salariale", "Tous les postes"]),
+      bulkActions: ["Recopier la baseline sur tous les mois", "Recopier le 1er mois saisi sur tous les mois", "Appliquer un % d'évolution", "Saisir une valeur fixe par mois", "Répartir un total sur la période", "Vider la saisie"],
+      bulkField: s.bulkField, bulkAction: s.bulkAction, bulkValue: s.bulkValue,
+      bulkNeedsValue: ["Appliquer un % d'évolution", "Saisir une valeur fixe par mois", "Répartir un total sur la période"].includes(s.bulkAction),
+      bulkPlaceholder: s.bulkAction === "Appliquer un % d'évolution" ? "ex. 2,5 (%)" : s.bulkAction === "Répartir un total sur la période" ? "total €" : "montant €",
+      setBulkField: e => this.setState({ bulkField: e.target.value }),
+      setBulkAction: e => this.setState({ bulkAction: e.target.value }),
+      setBulkValue: e => this.setState({ bulkValue: e.target.value }),
+      quickPct: s.quickPct, setQuickPct: e => this.setState({ quickPct: e.target.value }),
+      menuValue: s.menuValue, setMenuValue: e => this.setState({ menuValue: e.target.value }),
+      rows, totals, grandTotal: this.fmt(aggS, met.kind),
+      hasMore: list.length > shown.length,
+      moreLabel: "Afficher 40 chantiers de plus (" + shown.length + " / " + list.length + ")",
+      loadMore: () => this.setState(p => ({ pageSize: p.pageSize + 40 })),
+      countLabel: list.length + " chantier" + (list.length > 1 ? "s" : "") + " · " + s.year + " · " + s.fPeriode + " · " + (met.key === "ca" ? catLabel : met.label),
+      legend: ["Non budgétisé","Baseline CG","En saisie","À valider","Validé","Clôturé"].map(x => ({ label: x, bg: ST[x].cell, border: ST[x].border })),
+      flow: flowSteps.map((f, i) => {
+        const on = f.states.some(x => activeStates.has(x));
+        return { n: f.n, label: f.label, arrow: i < flowSteps.length - 1 ? "→" : "",
+          bg: on ? "#fff" : "transparent", fg: on ? "#17202a" : "#94a3b8",
+          numBg: on ? ST[f.states[0]].accent : "#e2e8f0", numFg: on ? "#fff" : "#94a3b8" };
+      }),
+      flowNote: nbValid + "/" + list.length + " budgets validés · remplissage " + (cellsTot ? Math.round(filledCells / cellsTot * 100) : 0) + " %",
+      kpis: [
+        { label: met.key === "ca" ? catLabel + " saisi" : met.label + " saisi", value: this.fmt(aggS, met.kind), hint: "mois saisis, périmètre filtré", color: "#17202a" },
+        { label: "Baseline CG", value: this.fmt(aggB, met.kind), hint: "objectif sur les mois saisis", color: "#475569" },
+        { label: "Écart vs baseline", value: ecart, hint: "à périmètre comparable", color: this.markerColor(aggS, aggB, met.better) },
+        { label: "Remplissage", value: (cellsTot ? Math.round(filledCells / cellsTot * 100) : 0) + " %", hint: nbValid + "/" + list.length + " budgets validés", color: "#0a9bd8" }
+      ],
+      exportXlsx: () => this.toast("Export Excel — " + list.length + " chantiers, " + s.fPeriode + " " + s.year),
+      exportCsv: () => this.toast("Export CSV — " + list.length + " chantiers, " + s.fPeriode + " " + s.year),
+      toast: s.toast
+    };
+  }
+}
+
+</script>
+</body>
+</html>
