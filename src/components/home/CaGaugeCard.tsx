@@ -1,13 +1,17 @@
+import { useMemo, useRef } from "react";
+import type { EChartsOption } from "echarts";
 import { CONFIG } from "../../config";
 import { CAT_COLORS, type CatKey } from "../../data/constants";
 import type { Store } from "../../state/store";
+import EChart, { type EChartsInstance } from "../EChart";
 
-/** Circonférence du tracé (r = 17,2). */
-const C = 108.1;
+/** Part grise du portefeuille pas encore déclarée — l'anneau complet vaut l'objectif CDG. */
+const RESTE = "reste";
 
 /**
  * Carré « CA déclaré » : anneau segmenté par catégorie, gradué sur l'objectif CDG.
- * Survoler une section l'épaissit, atténue les autres et ouvre une carte compacte.
+ * Survoler une section l'épaissit, atténue les autres et ouvre une carte compacte ;
+ * la légende sous le graphe est synchronisée dans les deux sens.
  */
 export default function CaGaugeCard({ store }: { store: Store }) {
   const { state, engine, set } = store;
@@ -15,13 +19,14 @@ export default function CaGaugeCard({ store }: { store: Store }) {
   const parts = engine.caParts(isCG);
   const baseTotal = engine.caBaseTotal(isCG);
   const declared = parts.reduce((a, x) => a + x.value, 0);
+  const chartRef = useRef<EChartsInstance | null>(null);
 
   const gaugePx = CONFIG.gaugeSize;
   const gaugeInset = Math.round(gaugePx * 0.215);
   const gaugeValueSize = gaugePx < 130 ? 15 : 20;
 
   const deltaPct = baseTotal
-    ? ((declared - baseTotal) >= 0 ? "+" : "−") +
+    ? (declared - baseTotal >= 0 ? "+" : "−") +
       Math.abs(((declared - baseTotal) / baseTotal) * 100)
         .toFixed(1)
         .replace(".", ",") +
@@ -40,22 +45,58 @@ export default function CaGaugeCard({ store }: { store: Store }) {
       (state.year - 1);
   const n1Color = !prev ? "#94a3b8" : declared >= prev ? "#15803d" : "#dc2626";
 
-  // Sections cumulées sur l'échelle de l'objectif : l'anneau complet = 100 % de l'objectif CDG.
-  let acc = 0;
-  const segs = parts.map((x) => {
-    const len = Math.max(0, Math.min(C, (x.value / (baseTotal || 1)) * C));
-    const off = -acc / (baseTotal || 1) * C;
-    acc += x.value;
-    const hov = state.hoverSeg === x.key;
-    return {
-      key: x.key,
-      color: CAT_COLORS[x.key as CatKey],
-      dash: len.toFixed(2) + " " + C,
-      offset: off.toFixed(2),
-      width: hov ? 6.4 : 4.6,
-      opacity: state.hoverSeg && !hov ? 0.35 : 1,
+  const option = useMemo<EChartsOption>(() => {
+    type Slice = {
+      name: string;
+      value: number;
+      itemStyle: { color: string };
+      emphasis?: { disabled: boolean };
     };
-  });
+    const data: Slice[] = parts.map((x) => ({
+      name: x.key,
+      value: Math.max(0, x.value),
+      itemStyle: { color: CAT_COLORS[x.key as CatKey] },
+    }));
+    // Tant que le déclaré reste sous l'objectif, le solde ferme l'anneau en gris.
+    const reste = Math.max(0, baseTotal - declared);
+    if (reste > 0)
+      data.push({
+        name: RESTE,
+        value: reste,
+        itemStyle: { color: "#eef1f4" },
+        emphasis: { disabled: true },
+      });
+
+    return {
+      animationDuration: 420,
+      series: [
+        {
+          type: "pie",
+          radius: ["71%", "93%"],
+          center: ["50%", "50%"],
+          startAngle: 90,
+          avoidLabelOverlap: false,
+          label: { show: false },
+          labelLine: { show: false },
+          cursor: "pointer",
+          itemStyle: { borderWidth: 0 },
+          emphasis: { focus: "self", scaleSize: 3 },
+          blur: { itemStyle: { opacity: 0.35 } },
+          data,
+        },
+      ],
+    };
+  }, [parts, baseTotal, declared]);
+
+  /** Synchronise la légende vers l'anneau. */
+  const focusSegment = (key: string | null) => {
+    set({ hoverSeg: key });
+    const chart = chartRef.current;
+    if (!chart) return;
+    const index = parts.findIndex((x) => x.key === key);
+    chart.dispatchAction({ type: "downplay", seriesIndex: 0 });
+    if (index >= 0) chart.dispatchAction({ type: "highlight", seriesIndex: 0, dataIndex: index });
+  };
 
   const hovered = parts.find((x) => x.key === state.hoverSeg);
   const segCard = hovered
@@ -115,36 +156,18 @@ export default function CaGaugeCard({ store }: { store: Store }) {
         }}
       >
         <div
-          onMouseEnter={() => set({ hoverPie: "all" })}
-          onMouseLeave={() => set({ hoverPie: null, hoverSeg: null })}
-          style={{
-            position: "relative",
-            width: gaugePx,
-            height: gaugePx,
-            flex: "0 0 auto",
-            cursor: "pointer",
-          }}
+          onMouseLeave={() => set({ hoverSeg: null })}
+          style={{ position: "relative", width: gaugePx, height: gaugePx, flex: "0 0 auto" }}
         >
-          <svg viewBox="0 0 42 42" style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }}>
-            <circle cx="21" cy="21" r="17.2" fill="none" stroke="#eef1f4" strokeWidth="4" />
-            {segs.map((g) => (
-              <circle
-                key={g.key}
-                cx="21"
-                cy="21"
-                r="17.2"
-                fill="none"
-                stroke={g.color}
-                strokeWidth={g.width}
-                strokeDasharray={g.dash}
-                strokeDashoffset={g.offset}
-                opacity={g.opacity}
-                onMouseEnter={() => set({ hoverSeg: g.key })}
-                onMouseLeave={() => set({ hoverSeg: null })}
-                style={{ cursor: "pointer", transition: "stroke-width 140ms ease, opacity 140ms ease" }}
-              />
-            ))}
-          </svg>
+          <EChart
+            option={option}
+            instanceRef={chartRef}
+            events={{
+              mouseover: (p: { name: string }) =>
+                set({ hoverSeg: p.name === RESTE ? null : p.name }),
+              mouseout: () => set({ hoverSeg: null }),
+            }}
+          />
 
           {segCard && (
             <div
@@ -283,8 +306,8 @@ export default function CaGaugeCard({ store }: { store: Store }) {
             return (
               <div
                 key={x.key}
-                onMouseEnter={() => set({ hoverPie: "all", hoverSeg: x.key })}
-                onMouseLeave={() => set({ hoverSeg: null })}
+                onMouseEnter={() => focusSegment(x.key)}
+                onMouseLeave={() => focusSegment(null)}
                 title={
                   x.label +
                   " — objectif " +

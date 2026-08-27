@@ -1,8 +1,8 @@
+import { useMemo, useRef } from "react";
+import type { EChartsOption } from "echarts";
 import type { Chantier } from "../../data/chantiers";
 import type { Store } from "../../state/store";
-
-/** Circonférence du tracé (r = 15,9). */
-const C = 99.9;
+import EChart, { type EChartsInstance } from "../EChart";
 
 export interface BudgetSegment {
   key: string;
@@ -67,23 +67,46 @@ export default function BudgetDonutCard({ store }: { store: Store }) {
   const { state, engine, set } = store;
   const segs = budgetSegments(store);
   const tot = segs.reduce((a, x) => a + x.list.length, 0) || 1;
+  const chartRef = useRef<EChartsInstance | null>(null);
 
-  let acc = 0;
-  const arcs = segs.map((x) => {
-    const len = (x.list.length / tot) * C;
-    const offset = -acc;
-    acc += len;
-    const on = state.hoverSeg === x.key;
-    return {
-      key: x.key,
-      color: x.color,
-      dash: len.toFixed(2) + " " + (C - len).toFixed(2),
-      offset: offset.toFixed(2),
-      width: on ? 7.4 : 5.6,
-      opacity: state.hoverSeg && !on ? 0.32 : 1,
-      pick: x.pick,
-    };
-  });
+  const option = useMemo<EChartsOption>(
+    () => ({
+      animationDuration: 420,
+      series: [
+        {
+          type: "pie",
+          radius: ["62%", "89%"],
+          center: ["50%", "50%"],
+          startAngle: 90,
+          avoidLabelOverlap: false,
+          label: { show: false },
+          labelLine: { show: false },
+          cursor: "pointer",
+          itemStyle: { borderWidth: 0 },
+          emphasis: { focus: "self", scaleSize: 4 },
+          blur: { itemStyle: { opacity: 0.32 } },
+          data: segs.map((x) => ({
+            name: x.key,
+            value: x.list.length,
+            itemStyle: { color: x.color },
+          })),
+        },
+      ],
+    }),
+    // Les segments sont reconstruits à chaque rendu ; seule leur substance compte ici.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [segs.map((x) => x.key + ":" + x.list.length).join("|")],
+  );
+
+  /** Synchronise la légende vers l'anneau. */
+  const focusSegment = (key: string | null) => {
+    set({ hoverSeg: key });
+    const chart = chartRef.current;
+    if (!chart) return;
+    const index = segs.findIndex((x) => x.key === key);
+    chart.dispatchAction({ type: "downplay", seriesIndex: 0 });
+    if (index >= 0) chart.dispatchAction({ type: "highlight", seriesIndex: 0, dataIndex: index });
+  };
 
   const hit = segs.find((x) => x.key === state.hoverSeg);
 
@@ -106,29 +129,19 @@ export default function BudgetDonutCard({ store }: { store: Store }) {
       </div>
 
       <div style={{ display: "flex", justifyContent: "center", marginTop: 6 }}>
-        <div style={{ position: "relative", width: 176, height: 176 }}>
-          <svg viewBox="0 0 42 42" style={{ width: "100%", height: "100%", transform: "rotate(-90deg)" }}>
-            <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f1f4f7" strokeWidth="4.4" />
-            {arcs.map((a) => (
-              <circle
-                key={a.key}
-                cx="21"
-                cy="21"
-                r="15.9"
-                fill="none"
-                stroke={a.color}
-                strokeWidth={a.width}
-                strokeDasharray={a.dash}
-                strokeDashoffset={a.offset}
-                strokeLinecap="butt"
-                opacity={a.opacity}
-                onMouseEnter={() => set({ hoverSeg: a.key })}
-                onMouseLeave={() => set({ hoverSeg: null })}
-                onClick={a.pick}
-                style={{ cursor: "pointer", transition: "stroke-width 160ms ease, opacity 160ms ease" }}
-              />
-            ))}
-          </svg>
+        <div
+          onMouseLeave={() => set({ hoverSeg: null })}
+          style={{ position: "relative", width: 176, height: 176 }}
+        >
+          <EChart
+            option={option}
+            instanceRef={chartRef}
+            events={{
+              mouseover: (p: { name: string }) => set({ hoverSeg: p.name }),
+              mouseout: () => set({ hoverSeg: null }),
+              click: (p: { name: string }) => segs.find((x) => x.key === p.name)?.pick(),
+            }}
+          />
           <div
             style={{
               position: "absolute",
@@ -174,8 +187,8 @@ export default function BudgetDonutCard({ store }: { store: Store }) {
             <button
               key={x.key}
               onClick={x.pick}
-              onMouseEnter={() => set({ hoverSeg: x.key })}
-              onMouseLeave={() => set({ hoverSeg: null })}
+              onMouseEnter={() => focusSegment(x.key)}
+              onMouseLeave={() => focusSegment(null)}
               title={x.hint}
               style={{
                 display: "flex",

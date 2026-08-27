@@ -61,7 +61,6 @@ export interface AppState {
   periods: Record<string, boolean[]>;
 
   pageSize: number;
-  hoverPie: string | null;
   hoverSeg: string | null;
   toast: string;
 }

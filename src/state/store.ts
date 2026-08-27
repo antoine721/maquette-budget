@@ -59,7 +59,6 @@ function initialState(): AppState {
     },
     periods,
     pageSize: 40,
-    hoverPie: null,
     hoverSeg: null,
     toast: "",
   };

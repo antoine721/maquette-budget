@@ -52,7 +52,23 @@ Les exercices 2024–2026 sont clos et en lecture seule ; la campagne active est
 | `src/lib/engine.ts` | Moteur de calcul : réalisé N-1, baseline, saisie, agrégats, filtres, tri, à-faire par rôle |
 | `src/lib/detail.ts` | Construction du détail dépliable d'un chantier et des actions en masse |
 | `src/state/store.ts` | État applicatif et actions (saisie, actions en masse, historique/annulation, tags, périodes) |
+| `src/components/EChart.tsx` | Enveloppe React autour d'Apache ECharts (rendu SVG, redimensionnement, événements) |
 | `src/components/` | Header, onglets, Accueil, Pilotage CDG, Tableau |
+
+### Graphiques
+
+Les deux anneaux de l'accueil sont rendus par **Apache ECharts** (`echarts/core` + `PieChart` +
+`SVGRenderer`, import ciblé, chunk séparé au build).
+
+- **CA déclaré** — l'anneau complet vaut **100 % de l'objectif CDG** : les quatre catégories
+  (Forfait / Réel / PAD / TE) sont des parts, et le solde non déclaré ferme l'anneau en gris.
+- **État des budgets** — répartition des chantiers suivis par état ; un clic sur un segment ou sur
+  sa ligne de légende ouvre le tableau filtré en conséquence.
+
+Le survol utilise l'`emphasis: { focus: "self" }` et le `blur` natifs d'ECharts (la section visée
+s'épaissit, les autres s'atténuent). La synchronisation légende ↔ anneau passe par
+`dispatchAction({ type: "highlight" | "downplay" })`, et le texte central comme la carte de survol
+restent du DOM applicatif pour garder la typographie du design.
 
 ### Performance
 
