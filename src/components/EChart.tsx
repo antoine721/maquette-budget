@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 import * as echarts from "echarts/core";
-import { PieChart } from "echarts/charts";
+import { BarChart, LineChart, PieChart } from "echarts/charts";
+import { GridComponent, TooltipComponent } from "echarts/components";
 import { SVGRenderer } from "echarts/renderers";
 import type { EChartsOption } from "echarts";
 
-// Import ciblé : seuls le camembert et le rendu SVG entrent dans le bundle.
-// Les infobulles sont rendues par l'application, pas par ECharts.
-echarts.use([PieChart, SVGRenderer]);
+// Import ciblé : seuls les types de graphes réellement utilisés entrent dans le bundle.
+echarts.use([PieChart, BarChart, LineChart, GridComponent, TooltipComponent, SVGRenderer]);
 
 export type EChartsInstance = echarts.ECharts;
 

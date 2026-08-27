@@ -62,6 +62,8 @@ export interface AppState {
 
   pageSize: number;
   hoverSeg: string | null;
+  /** Rappel de campagne affiché à l'ouverture tant qu'il n'a pas été écarté. */
+  campaignModal: boolean;
   toast: string;
 }
 

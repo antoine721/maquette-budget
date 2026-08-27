@@ -3,6 +3,7 @@ import type { EChartsOption } from "echarts";
 import type { Chantier } from "../../data/chantiers";
 import type { Store } from "../../state/store";
 import EChart, { type EChartsInstance } from "../EChart";
+import { CARD } from "./cardStyles";
 
 export interface BudgetSegment {
   key: string;
@@ -62,12 +63,19 @@ export function budgetSegments(store: Store): BudgetSegment[] {
   ].filter((x) => x.list.length || x.key !== "attente");
 }
 
-/** Anneau « État des budgets » — chaque segment renvoie au tableau filtré. */
-export default function BudgetDonutCard({ store }: { store: Store }) {
+/**
+ * Avancement de la déclaration **en nombre de chantiers**.
+ * Le centre porte la part de budgets terminés ; chaque segment renvoie au tableau filtré.
+ */
+export default function BudgetDonutCard({ store, compact }: { store: Store; compact?: boolean }) {
   const { state, engine, set } = store;
   const segs = budgetSegments(store);
   const tot = segs.reduce((a, x) => a + x.list.length, 0) || 1;
+  const donePct = engine.donePct();
   const chartRef = useRef<EChartsInstance | null>(null);
+
+  const ringPx = compact ? 132 : 176;
+  const inset = Math.round(ringPx * (compact ? 0.2 : 0.24));
 
   const option = useMemo<EChartsOption>(
     () => ({
@@ -98,7 +106,6 @@ export default function BudgetDonutCard({ store }: { store: Store }) {
     [segs.map((x) => x.key + ":" + x.list.length).join("|")],
   );
 
-  /** Synchronise la légende vers l'anneau. */
   const focusSegment = (key: string | null) => {
     set({ hoverSeg: key });
     const chart = chartRef.current;
@@ -109,29 +116,28 @@ export default function BudgetDonutCard({ store }: { store: Store }) {
   };
 
   const hit = segs.find((x) => x.key === state.hoverSeg);
+  const centerPct = hit ? Math.round((hit.list.length / tot) * 100) : donePct;
+  const centerColor = hit
+    ? hit.color
+    : donePct >= 90
+      ? "#16a34a"
+      : donePct >= 50
+        ? "#0a9bd8"
+        : "#dc2626";
 
   return (
-    <div
-      style={{
-        background: "#fff",
-        border: "1px solid #e6eaee",
-        borderRadius: 14,
-        padding: "16px 18px",
-      }}
-    >
-      <div style={{ fontSize: 13.5, fontWeight: 700 }}>État des budgets</div>
+    <div style={CARD}>
+      <div style={{ fontSize: 13.5, fontWeight: 700 }}>
+        {engine.isExploit ? "Avancement — en chantiers" : "Avancement — en chantiers (consolidé)"}
+      </div>
       <div style={{ fontSize: 11.5, color: "#8a95a1", marginTop: 2 }}>
-        {engine.isExploit
-          ? "Exercice " + state.year + " · mon périmètre"
-          : "Exercice " +
-            state.year +
-            (state.fEntity === "Toutes" ? " · toutes entités" : " · " + state.fEntity)}
+        {tot} chantiers suivis · exercice {state.year}
       </div>
 
       <div style={{ display: "flex", justifyContent: "center", marginTop: 6 }}>
         <div
           onMouseLeave={() => set({ hoverSeg: null })}
-          style={{ position: "relative", width: 176, height: 176 }}
+          style={{ position: "relative", width: ringPx, height: ringPx }}
         >
           <EChart
             option={option}
@@ -145,7 +151,7 @@ export default function BudgetDonutCard({ store }: { store: Store }) {
           <div
             style={{
               position: "absolute",
-              inset: 30,
+              inset,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -155,32 +161,34 @@ export default function BudgetDonutCard({ store }: { store: Store }) {
           >
             <span
               style={{
-                fontSize: 28,
+                fontSize: compact ? 22 : 32,
                 fontWeight: 700,
-                letterSpacing: "-0.8px",
-                color: hit ? hit.color : "#17202a",
+                letterSpacing: "-1px",
+                color: centerColor,
                 lineHeight: 1,
+                whiteSpace: "nowrap",
               }}
             >
-              {hit ? hit.list.length : engine.perim().length}
+              {centerPct} %
             </span>
             <span
               style={{
-                fontSize: 11,
+                fontSize: compact ? 9.5 : 10.5,
                 fontWeight: 600,
                 color: "#8a95a1",
-                marginTop: 4,
+                marginTop: 3,
                 textAlign: "center",
-                lineHeight: 1.25,
+                lineHeight: 1.2,
+                overflow: "hidden",
               }}
             >
-              {hit ? hit.label : "chantiers suivis"}
+              {hit ? hit.label : compact ? "terminés" : "budgets terminés"}
             </span>
           </div>
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 2, marginTop: 8 }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 8 }}>
         {segs.map((x) => {
           const on = state.hoverSeg === x.key;
           return (
@@ -189,15 +197,15 @@ export default function BudgetDonutCard({ store }: { store: Store }) {
               onClick={x.pick}
               onMouseEnter={() => focusSegment(x.key)}
               onMouseLeave={() => focusSegment(null)}
-              title={x.hint}
+              title={x.hint + " — cliquer pour filtrer le tableau"}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 9,
-                padding: "7px 9px",
+                gap: 8,
+                padding: "5px 8px",
                 border: 0,
-                borderRadius: 8,
-                background: on ? "#f8fafb" : "#fff",
+                borderRadius: 7,
+                background: on ? "#f4f6f8" : "#fff",
                 fontFamily: "inherit",
                 textAlign: "left",
                 cursor: "pointer",
@@ -205,13 +213,13 @@ export default function BudgetDonutCard({ store }: { store: Store }) {
               }}
             >
               <span
-                style={{ flex: "0 0 auto", width: 9, height: 9, borderRadius: 3, background: x.color }}
+                style={{ flex: "0 0 auto", width: 8, height: 8, borderRadius: 2, background: x.color }}
               />
               <span
                 style={{
                   minWidth: 0,
                   flex: 1,
-                  fontSize: 12.5,
+                  fontSize: 12,
                   fontWeight: 600,
                   color: "#3b4753",
                   overflow: "hidden",
@@ -221,17 +229,19 @@ export default function BudgetDonutCard({ store }: { store: Store }) {
               >
                 {x.label}
               </span>
-              <span style={{ flex: "0 0 auto", fontSize: 13, fontWeight: 700, color: x.color }}>
+              <span style={{ flex: "0 0 auto", fontSize: 12, fontWeight: 700, color: x.color }}>
                 {x.list.length}
               </span>
               <span
                 style={{
                   flex: "0 0 auto",
-                  fontSize: 11,
-                  fontWeight: 600,
+                  fontSize: 12,
+                  fontWeight: 700,
                   color: "#6b7681",
-                  width: 40,
+                  width: 44,
                   textAlign: "right",
+                  whiteSpace: "nowrap",
+                  fontVariantNumeric: "tabular-nums",
                 }}
               >
                 {Math.round((x.list.length / tot) * 100)} %

@@ -1,49 +1,31 @@
 import { useMemo, useRef } from "react";
 import type { EChartsOption } from "echarts";
-import { CONFIG } from "../../config";
 import { CAT_COLORS, type CatKey } from "../../data/constants";
 import type { Store } from "../../state/store";
 import EChart, { type EChartsInstance } from "../EChart";
+import { CARD } from "./cardStyles";
 
 /** Part grise du portefeuille pas encore déclarée — l'anneau complet vaut l'objectif CDG. */
 const RESTE = "reste";
 
 /**
- * Carré « CA déclaré » : anneau segmenté par catégorie, gradué sur l'objectif CDG.
- * Survoler une section l'épaissit, atténue les autres et ouvre une carte compacte ;
- * la légende sous le graphe est synchronisée dans les deux sens.
+ * Avancement de la déclaration **en valeur de CA**.
+ *
+ * L'anneau complet vaut 100 % de l'objectif CDG ; les quatre catégories sont des
+ * parts du déclaré et le solde ferme l'anneau en gris. Le centre porte le
+ * pourcentage d'atteinte, la légende ne garde que la part de chaque catégorie.
  */
-export default function CaGaugeCard({ store }: { store: Store }) {
+export default function CaGaugeCard({ store, compact }: { store: Store; compact?: boolean }) {
   const { state, engine, set } = store;
-  const isCG = engine.isCG;
-  const parts = engine.caParts(isCG);
-  const baseTotal = engine.caBaseTotal(isCG);
+  const isGlobal = !engine.isExploit;
+  const parts = engine.caParts(isGlobal);
+  const baseTotal = engine.caBaseTotal(isGlobal);
   const declared = parts.reduce((a, x) => a + x.value, 0);
+  const pct = engine.caPct(isGlobal);
   const chartRef = useRef<EChartsInstance | null>(null);
 
-  const gaugePx = CONFIG.gaugeSize;
-  const gaugeInset = Math.round(gaugePx * 0.215);
-  const gaugeValueSize = gaugePx < 130 ? 15 : 20;
-
-  const deltaPct = baseTotal
-    ? (declared - baseTotal >= 0 ? "+" : "−") +
-      Math.abs(((declared - baseTotal) / baseTotal) * 100)
-        .toFixed(1)
-        .replace(".", ",") +
-      " %"
-    : "";
-  const deltaColor = declared >= baseTotal ? "#15803d" : "#dc2626";
-
-  const prev = engine.caPrevTotal(isCG);
-  const n1Delta = !prev
-    ? "—"
-    : (declared >= prev ? "+" : "−") +
-      Math.abs(((declared - prev) / prev) * 100)
-        .toFixed(1)
-        .replace(".", ",") +
-      " % vs " +
-      (state.year - 1);
-  const n1Color = !prev ? "#94a3b8" : declared >= prev ? "#15803d" : "#dc2626";
+  const ringPx = compact ? 132 : 176;
+  const inset = Math.round(ringPx * (compact ? 0.2 : 0.24));
 
   const option = useMemo<EChartsOption>(() => {
     type Slice = {
@@ -57,7 +39,6 @@ export default function CaGaugeCard({ store }: { store: Store }) {
       value: Math.max(0, x.value),
       itemStyle: { color: CAT_COLORS[x.key as CatKey] },
     }));
-    // Tant que le déclaré reste sous l'objectif, le solde ferme l'anneau en gris.
     const reste = Math.max(0, baseTotal - declared);
     if (reste > 0)
       data.push({
@@ -88,7 +69,6 @@ export default function CaGaugeCard({ store }: { store: Store }) {
     };
   }, [parts, baseTotal, declared]);
 
-  /** Synchronise la légende vers l'anneau. */
   const focusSegment = (key: string | null) => {
     set({ hoverSeg: key });
     const chart = chartRef.current;
@@ -99,65 +79,35 @@ export default function CaGaugeCard({ store }: { store: Store }) {
   };
 
   const hovered = parts.find((x) => x.key === state.hoverSeg);
-  const segCard = hovered
-    ? (() => {
-        const d = hovered.value - hovered.base;
-        const up = d >= 0;
-        return {
-          label: hovered.label,
-          dot: CAT_COLORS[hovered.key as CatKey],
-          value: engine.fmt(hovered.value),
-          deltaColor: up ? "#4ade80" : "#fca5a5",
-          rate: hovered.base
-            ? (up ? "+" : "−") +
-              Math.abs((d / hovered.base) * 100)
-                .toFixed(1)
-                .replace(".", ",") +
-              " % vs objectif"
-            : "objectif non défini",
-        };
-      })()
-    : null;
+  const centerPct = hovered && declared ? Math.round((hovered.value / declared) * 100) : pct;
+  const centerLabel = hovered ? hovered.label : "de l'objectif CDG";
+  const centerColor = hovered
+    ? CAT_COLORS[hovered.key as CatKey]
+    : pct >= 100
+      ? "#15803d"
+      : pct >= 70
+        ? "#0a9bd8"
+        : "#dc2626";
 
   return (
-    <div
-      style={{
-        maxWidth: 400,
-        aspectRatio: "1 / 1",
-        background: "#fff",
-        border: "1px solid #e6eaee",
-        borderRadius: 14,
-        padding: "16px 18px",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <div style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
-        <span style={{ fontSize: 12.5, fontWeight: 700 }}>
-          {isCG ? "CA déclaré consolidé — toutes exploitations" : "CA déclaré sur mon périmètre"}
-        </span>
-        <span style={{ fontSize: 11, color: "#6b7681" }}>
-          {isCG
-            ? "Exercice " +
-              state.year +
-              (state.fEntity === "Toutes" ? " · toutes entités" : " · " + state.fEntity)
-            : "Exercice " + state.year + " · chantiers dont vous êtes responsable"}
-        </span>
+    <div style={CARD}>
+      <div style={{ fontSize: 13.5, fontWeight: 700 }}>
+        {engine.isExploit ? "Avancement — en CA" : "Avancement — en CA (consolidé)"}
+      </div>
+      <div style={{ fontSize: 11.5, color: "#8a95a1", marginTop: 2 }}>
+        {"Exercice " +
+          state.year +
+          (engine.isExploit
+            ? " · mon périmètre"
+            : state.fEntity === "Toutes"
+              ? " · toutes entités"
+              : " · " + state.fEntity)}
       </div>
 
-      <div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 10,
-        }}
-      >
+      <div style={{ display: "flex", justifyContent: "center", marginTop: 6 }}>
         <div
           onMouseLeave={() => set({ hoverSeg: null })}
-          style={{ position: "relative", width: gaugePx, height: gaugePx, flex: "0 0 auto" }}
+          style={{ position: "relative", width: ringPx, height: ringPx }}
         >
           <EChart
             option={option}
@@ -168,39 +118,10 @@ export default function CaGaugeCard({ store }: { store: Store }) {
               mouseout: () => set({ hoverSeg: null }),
             }}
           />
-
-          {segCard && (
-            <div
-              style={{
-                position: "absolute",
-                left: "50%",
-                top: -8,
-                transform: "translate(-50%, -100%)",
-                zIndex: 6,
-                whiteSpace: "nowrap",
-                padding: "6px 9px",
-                background: "#17202a",
-                color: "#fff",
-                borderRadius: 8,
-                boxShadow: "0 8px 18px rgba(15,23,42,0.2)",
-                pointerEvents: "none",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-                <span style={{ width: 7, height: 7, borderRadius: 2, background: segCard.dot }} />
-                <span style={{ fontSize: 11.5, fontWeight: 600 }}>{segCard.label}</span>
-                <span style={{ fontSize: 12, fontWeight: 700 }}>{segCard.value}</span>
-                <span style={{ fontSize: 11.5, fontWeight: 700, color: segCard.deltaColor }}>
-                  {segCard.rate}
-                </span>
-              </div>
-            </div>
-          )}
-
           <div
             style={{
               position: "absolute",
-              inset: gaugeInset,
+              inset,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -210,177 +131,110 @@ export default function CaGaugeCard({ store }: { store: Store }) {
           >
             <span
               style={{
-                fontSize: gaugeValueSize,
+                fontSize: compact ? 22 : 32,
                 fontWeight: 700,
-                letterSpacing: "-0.5px",
-                color: "#17202a",
-                lineHeight: 1.1,
+                letterSpacing: "-1px",
+                color: centerColor,
+                lineHeight: 1,
                 whiteSpace: "nowrap",
               }}
             >
-              {engine.fmt(declared)}
+              {centerPct} %
             </span>
             <span
               style={{
-                fontSize: 11,
-                fontWeight: 700,
-                color: deltaColor,
-                marginTop: 1,
-                fontVariantNumeric: "tabular-nums",
-                whiteSpace: "nowrap",
+                fontSize: compact ? 9.5 : 10.5,
+                fontWeight: 600,
+                color: "#8a95a1",
+                marginTop: 3,
+                textAlign: "center",
+                lineHeight: 1.2,
+                overflow: "hidden",
               }}
             >
-              {deltaPct}
+              {hovered ? centerLabel : compact ? "de l'objectif" : centerLabel}
             </span>
           </div>
         </div>
+      </div>
 
-        {CONFIG.showObjectiveBlock && (
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-            <span
+      <div
+        style={{
+          marginTop: 8,
+          textAlign: "center",
+          fontSize: 12.5,
+          color: "#3b4753",
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        <strong style={{ fontWeight: 700, color: "#17202a" }}>{engine.fmt(declared)}</strong>
+        <span style={{ color: "#8a95a1" }}> déclarés sur {engine.fmt(baseTotal)}</span>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 8 }}>
+        {parts.map((x) => {
+          const share = declared ? Math.round((x.value / declared) * 100) : 0;
+          return (
+            <div
+              key={x.key}
+              onMouseEnter={() => focusSegment(x.key)}
+              onMouseLeave={() => focusSegment(null)}
+              title={
+                x.label +
+                " — déclaré " +
+                engine.fmt(x.value) +
+                " · objectif " +
+                engine.fmt(x.base) +
+                (x.base ? " (" + Math.round((x.value / x.base) * 100) + " % de l'objectif)" : "")
+              }
               style={{
-                fontSize: 10.5,
-                fontWeight: 700,
-                letterSpacing: "0.4px",
-                textTransform: "uppercase",
-                color: "#6b7681",
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "5px 8px",
+                borderRadius: 7,
+                background: state.hoverSeg === x.key ? "#f4f6f8" : "transparent",
+                transition: "background 140ms ease",
+                cursor: "default",
               }}
             >
-              Objectif CDG
-            </span>
-            <span
-              style={{
-                fontSize: 14,
-                fontWeight: 700,
-                color: "#475569",
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {engine.fmt(baseTotal)}
-            </span>
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>complétion {engine.fillPct(isCG)}</span>
-          </div>
-        )}
-
-        <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-          <span
-            style={{
-              fontSize: 10.5,
-              fontWeight: 700,
-              letterSpacing: "0.4px",
-              textTransform: "uppercase",
-              color: "#6b7681",
-            }}
-          >
-            Réalisé N-1
-          </span>
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#475569",
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {engine.fmt(prev)}
-          </span>
-          <span
-            style={{ fontSize: 12, fontWeight: 700, color: n1Color, fontVariantNumeric: "tabular-nums" }}
-          >
-            {n1Delta}
-          </span>
-        </div>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            gap: "4px 14px",
-            width: "100%",
-            marginTop: 2,
-          }}
-        >
-          {parts.map((x) => {
-            const d = x.value - x.base;
-            const up = d >= 0;
-            return (
-              <div
-                key={x.key}
-                onMouseEnter={() => focusSegment(x.key)}
-                onMouseLeave={() => focusSegment(null)}
-                title={
-                  x.label +
-                  " — objectif " +
-                  engine.fmt(x.base) +
-                  " · déclaré " +
-                  engine.fmt(x.value) +
-                  (x.base ? " (" + Math.round((x.value / x.base) * 100) + " % de l'objectif)" : "")
-                }
+              <span
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 7,
-                  padding: "5px 7px",
-                  borderRadius: 7,
-                  background: state.hoverSeg === x.key ? "#f4f6f8" : "transparent",
-                  transition: "background 140ms ease",
+                  flex: "0 0 auto",
+                  width: 8,
+                  height: 8,
+                  borderRadius: 2,
+                  background: CAT_COLORS[x.key as CatKey],
+                }}
+              />
+              <span
+                style={{
+                  minWidth: 0,
+                  flex: 1,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: "#3b4753",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
                 }}
               >
-                <span
-                  style={{
-                    flex: "0 0 auto",
-                    width: 8,
-                    height: 8,
-                    borderRadius: 2,
-                    background: CAT_COLORS[x.key as CatKey],
-                  }}
-                />
-                <span
-                  style={{
-                    minWidth: 0,
-                    flex: 1,
-                    fontSize: 11.5,
-                    fontWeight: 600,
-                    color: "#3b4753",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {x.label}
-                </span>
-                <span
-                  style={{
-                    flex: "0 0 auto",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    color: "#17202a",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {engine.fmt(x.value)}
-                </span>
-                <span
-                  style={{
-                    flex: "0 0 auto",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: up ? "#16a34a" : "#dc2626",
-                    fontVariantNumeric: "tabular-nums",
-                  }}
-                >
-                  {x.base
-                    ? (up ? "+" : "−") +
-                      Math.abs((d / x.base) * 100)
-                        .toFixed(1)
-                        .replace(".", ",") +
-                      " %"
-                    : "—"}
-                </span>
-              </div>
-            );
-          })}
-        </div>
+                {x.label}
+              </span>
+              <span
+                style={{
+                  flex: "0 0 auto",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: "#6b7681",
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {share} %
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

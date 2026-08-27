@@ -60,6 +60,7 @@ function initialState(): AppState {
     periods,
     pageSize: 40,
     hoverSeg: null,
+    campaignModal: true,
     toast: "",
   };
 }

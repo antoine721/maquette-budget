@@ -316,6 +316,68 @@ export class Engine {
     return 0;
   }
 
+  /**
+   * Vrai pendant la fenêtre de déclaration ouverte par le contrôle de gestion.
+   * Hors campagne, l'exercice est clos : la page d'accueil bascule sur la lecture
+   * de l'historique plutôt que sur l'avancement de la saisie.
+   */
+  campaignOpen(): boolean {
+    return !this.closed();
+  }
+
+  /** Budgets déclarés par l'exploitation et en attente de contrôle. */
+  aValider(): Chantier[] {
+    return this.memo("aValider", () =>
+      this.perim()
+        .filter((ch) => this.st(ch) === "À valider")
+        .sort((a, b) => b.ca - a.ca),
+    );
+  }
+
+  /** Chantiers sur lesquels l'exploitation n'a pas fini : baseline non publiée, non budgétisé, mois manquants. */
+  nonTraites(): Chantier[] {
+    return this.memo("nonTraites", () => {
+      const g = this.budgetGroups();
+      return g.attente.concat(g.remplir).sort((a, b) => b.ca - a.ca);
+    });
+  }
+
+  /** Part des budgets terminés sur le périmètre, en pourcentage entier. */
+  donePct(): number {
+    const g = this.budgetGroups();
+    const tot = g.remplir.length + g.cours.length + g.fini.length + g.attente.length;
+    return tot ? Math.round((g.fini.length / tot) * 100) : 0;
+  }
+
+  /** Part du CA objectif effectivement déclarée, en pourcentage entier. */
+  caPct(isGlobal: boolean): number {
+    const base = this.caBaseTotal(isGlobal);
+    if (!base) return 0;
+    const declared = this.caParts(isGlobal).reduce((a, x) => a + x.value, 0);
+    return Math.round((declared / base) * 100);
+  }
+
+  /**
+   * Série mensuelle du périmètre : CA déclaré de l'exercice, objectif CDG et réalisé N-1.
+   * Alimente le graphe d'évolution affiché hors campagne.
+   */
+  monthly(isGlobal: boolean) {
+    return this.memo("monthly:" + isGlobal, () => {
+      const list = this.caList(isGlobal);
+      return MONTHS.map((_, m) => {
+        let objectif = 0,
+          prev = 0;
+        list.forEach((ch) =>
+          CAT.forEach((c) => {
+            objectif += this.baseField(ch, m, c.k);
+            prev += this.n1(ch, m, c.k, this.s.year - 1);
+          }),
+        );
+        return { m, declare: this.aggregate(list, [m], "saisi", "ca", "Total"), objectif, prev };
+      });
+    });
+  }
+
   /** Mois ouverts à la saisie et non déclarés. */
   missing(ch: Chantier, mIdx: number[]): number[] {
     if (this.closed()) return [];

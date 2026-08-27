@@ -38,7 +38,8 @@ export default function Header({ store }: { store: Store }) {
           return (
             <button
               key={r}
-              onClick={() => set({ role: r })}
+              // Changer de profil rejoue le rappel de campagne : chaque rôle a le sien.
+              onClick={() => set({ role: r, campaignModal: true, hoverSeg: null })}
               style={{
                 border: 0,
                 borderRadius: 7,
