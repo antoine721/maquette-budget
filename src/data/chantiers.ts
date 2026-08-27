@@ -70,7 +70,13 @@ export const LATE: string[] = [];
 
 (function buildChantiers() {
   const r = rng(20270901);
-  const statuts: Statut[] = ["Baseline CG", "En saisie", "À valider", "Validé"];
+  const statuts: Statut[] = [
+    "En attente baseline CG",
+    "Non budgétisé",
+    "En saisie",
+    "À valider",
+    "Validé",
+  ];
   // 20 gros chantiers ≈ 80 % du CA : 20 × ~13-15 M€ ; 330 petits × ~0,3 M€.
   for (let i = 0; i < 350; i++) {
     const big = i < 20;
@@ -80,10 +86,18 @@ export const LATE: string[] = [];
     const agence = AGENCES[Math.floor(r() * AGENCES.length)];
     const rex = REX_NAMES[big ? Math.floor(r() * 4) : Math.floor(r() * REX_NAMES.length)];
     let statut: Statut;
-    if (big) statut = r() < 0.45 ? "En saisie" : r() < 0.5 ? "Baseline CG" : r() < 0.6 ? "À valider" : "Validé";
+    if (big)
+      statut =
+        r() < 0.4
+          ? "En saisie"
+          : r() < 0.4
+            ? "En attente baseline CG"
+            : r() < 0.4
+              ? "Non budgétisé"
+              : r() < 0.6
+                ? "À valider"
+                : "Validé";
     else statut = statuts[Math.floor(r() * statuts.length)];
-    if (i === 3) statut = "Non budgétisé";
-    if (i === 11) statut = "Non budgétisé";
     CHANTIERS.push({
       id,
       entite,

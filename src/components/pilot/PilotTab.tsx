@@ -315,7 +315,7 @@ function TopChantiers({ store }: { store: Store }) {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  {r.st}
+                  {engine.statutLabel(r.st)}
                 </span>
               </span>
               <span

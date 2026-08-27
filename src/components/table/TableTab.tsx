@@ -107,7 +107,9 @@ export default function TableTab({ store }: { store: Store }) {
                           : STATUT_OPTS.filter((y) => y === x || p.fStatuts.includes(y)),
                       }))
                     }
-                    title={on ? "Masquer « " + x + " »" : "Afficher « " + x + " »"}
+                    title={
+                      (on ? "Masquer « " : "Afficher « ") + engine.statutLabel(x) + " »"
+                    }
                     style={{
                       display: "flex",
                       alignItems: "center",
@@ -139,7 +141,7 @@ export default function TableTab({ store }: { store: Store }) {
                     >
                       {on ? "✓" : ""}
                     </span>
-                    {x}
+                    {engine.statutLabel(x)}
                   </button>
                 );
               })}
@@ -547,7 +549,7 @@ function Row({
                 border: "1px solid " + stc.border,
               }}
             >
-              {st}
+              {engine.statutLabel(st)}
             </span>
           </span>
         </div>

@@ -15,8 +15,17 @@ export default function ChantierDetail({
   mIdx: number[];
   gridColsDetail: string;
 }) {
-  const { state, engine, set, setCell, setChantierRef, toast, setStatutFlow, validateBudget, toggleTag } =
-    store;
+  const {
+    state,
+    engine,
+    set,
+    setCell,
+    setChantierRef,
+    toast,
+    setStatutFlow,
+    validateBudget,
+    toggleTag,
+  } = store;
   const met = engine.metric;
   const cat = state.cat;
   const st = engine.st(ch) as Statut;
@@ -28,6 +37,8 @@ export default function ChantierDetail({
   const rowBase = engine.aggregate([ch], mIdx, "base", met.key, cat);
   const filledM = mIdx.filter((m) => engine.prims(ch, m, "saisi"));
   const cristal = engine.cristal(ch);
+  // Un budget incomplet ne part pas en validation.
+  const reste = engine.remainingToSubmit(ch);
 
   const predRate = rowBase && rowSaisi !== null ? Math.round((rowSaisi / rowBase) * 100) + " %" : "—";
   const predRateColor = (() => {
@@ -38,10 +49,10 @@ export default function ChantierDetail({
 
   const trace =
     st === "Non budgétisé"
-      ? "Nouveau marché repris en " +
+      ? "Baseline publiée : le budget " +
         state.year +
-        " — aucune baseline ni saisie : le contrôle de gestion doit initialiser le budget."
-      : st === "Baseline CG"
+        " reste entièrement à construire sur ce chantier."
+      : st === "En attente baseline CG"
         ? "Baseline saisie par le contrôle de gestion — non encore publiée à l'exploitation."
         : st === "À valider"
           ? "Cristallisation n°" +
@@ -51,8 +62,10 @@ export default function ChantierDetail({
             ? "Cristallisation n°" +
               cristal +
               " validée — toute correction ouvrira une nouvelle cristallisation."
-            : "Baseline vérifiée · " +
-              (filledM.length ? filledM.length + "/" + mIdx.length + " mois saisis" : "aucune saisie");
+            : st === "Clôturé"
+              ? "Exercice clos — le budget n'est plus d'actualité, consultation seule."
+              : "Baseline vérifiée · " +
+                (filledM.length ? filledM.length + "/" + mIdx.length + " mois saisis" : "aucune saisie");
 
   return (
     <div
@@ -185,7 +198,7 @@ export default function ChantierDetail({
                     textAlign: "right",
                     border: "1px " + (c.dash || "solid") + " " + c.border,
                     borderRadius: 6,
-                    background: "#fff",
+                    background: c.bg || "#fff",
                     fontSize: 12.5,
                     fontVariantNumeric: "tabular-nums",
                     fontWeight: 600,
@@ -256,22 +269,47 @@ export default function ChantierDetail({
 
         <span style={{ flex: 1 }} />
 
-        {isCG && st === "Baseline CG" && (
+        {isCG && st === "En attente baseline CG" && (
           <FlowButton
             bg="#475569"
             onClick={(e) => {
               e.stopPropagation();
-              setStatutFlow(ch, "En saisie", "Baseline " + ch.id + " publiée — saisie exploitation ouverte");
+              setStatutFlow(
+                ch,
+                "Non budgétisé",
+                "Baseline " + ch.id + " publiée — saisie exploitation ouverte",
+              );
             }}
           >
             Publier la baseline à l'exploitation
           </FlowButton>
         )}
-        {isExploit && st === "En saisie" && (
+        {isExploit && (st === "En saisie" || st === "Non budgétisé") && (
           <FlowButton
             bg="#0a9bd8"
+            disabled={reste > 0}
+            title={
+              reste > 0
+                ? reste +
+                  " champ" +
+                  (reste > 1 ? "s" : "") +
+                  " encore vide" +
+                  (reste > 1 ? "s" : "") +
+                  " — le budget doit être complet pour partir en validation"
+                : "Envoyer la cristallisation n°" + (cristal + 1) + " au contrôle de gestion"
+            }
             onClick={(e) => {
               e.stopPropagation();
+              if (reste > 0) {
+                toast(
+                  "Budget incomplet — " +
+                    reste +
+                    " champ" +
+                    (reste > 1 ? "s" : "") +
+                    " à renseigner avant l'envoi en validation",
+                );
+                return;
+              }
               setStatutFlow(
                 ch,
                 "À valider",
@@ -279,7 +317,7 @@ export default function ChantierDetail({
               );
             }}
           >
-            Envoyer en validation
+            {reste > 0 ? "Envoyer en validation (" + reste + " à remplir)" : "Envoyer en validation"}
           </FlowButton>
         )}
         {isCG && st === "À valider" && (
@@ -293,28 +331,6 @@ export default function ChantierDetail({
             Valider ce budget
           </FlowButton>
         )}
-        {isCG && st === "Validé" && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setStatutFlow(ch, "Clôturé", "Exercice " + state.year + " clôturé sur " + ch.id);
-            }}
-            style={{
-              padding: "9px 15px",
-              border: "1px solid #cbd5e1",
-              borderRadius: 8,
-              background: "#fff",
-              fontFamily: "inherit",
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#334155",
-              cursor: "pointer",
-            }}
-          >
-            Clôturer l'exercice
-          </button>
-        )}
-
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -660,24 +676,29 @@ function FlowButton({
   bg,
   onClick,
   children,
+  disabled,
+  title,
 }: {
   bg: string;
   onClick: (e: React.MouseEvent) => void;
   children: React.ReactNode;
+  disabled?: boolean;
+  title?: string;
 }) {
   return (
     <button
       onClick={onClick}
+      title={title}
       style={{
         padding: "9px 15px",
-        border: 0,
+        border: disabled ? "1px solid #e2e8f0" : 0,
         borderRadius: 8,
-        background: bg,
-        color: "#fff",
+        background: disabled ? "#f1f5f9" : bg,
+        color: disabled ? "#94a3b8" : "#fff",
         fontFamily: "inherit",
         fontSize: 13,
         fontWeight: 600,
-        cursor: "pointer",
+        cursor: disabled ? "not-allowed" : "pointer",
       }}
     >
       {children}

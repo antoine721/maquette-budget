@@ -71,8 +71,18 @@ export class Engine {
   }
 
   st(ch: Chantier): Statut {
+    // Un exercice passé n'est plus d'actualité : il est clôturé d'office.
     if (this.closed()) return "Clôturé";
     return this.s.statutOverride[ch.id] || ch.statut;
+  }
+
+  /**
+   * Libellé affiché pour un statut : le même état se dit différemment selon le
+   * profil — l'exploitation attend une validation, le contrôle de gestion en doit une.
+   */
+  statutLabel(st: Statut): string {
+    if (st === "À valider" && this.isExploit) return "En attente de validation";
+    return st;
   }
 
   /** Valeur d'un coefficient sur un chantier : commune, ou propre au chantier si particulier. */
@@ -156,7 +166,7 @@ export class Engine {
       const r0 = rng(hash(ch.id + field + "c" + this.s.year + m));
       return this.baseField(ch, m, field) * (0.95 + r0() * 0.1);
     }
-    if (st === "Baseline CG" || st === "Non budgétisé") return null;
+    if (st === "En attente baseline CG" || st === "Non budgétisé") return null;
     if (st === "En saisie") {
       const late = LATE.indexOf(ch.id);
       if (late === 0) {
@@ -323,7 +333,8 @@ export class Engine {
       this.perim().forEach((ch) => {
         const st = this.st(ch);
         if (st === "Validé" || st === "Clôturé") return void fini.push(ch);
-        if (st === "Baseline CG" || st === "Non budgétisé") return void attente.push(ch);
+        if (st === "En attente baseline CG") return void attente.push(ch);
+        if (st === "Non budgétisé") return void remplir.push(ch);
         if (this.missing(ch, FULL_YEAR).length) return void remplir.push(ch);
         cours.push(ch);
       });
@@ -412,21 +423,15 @@ export class Engine {
     if (this.closed()) return null;
     const st = this.st(ch);
     const due = this.nextDue();
-    if (st === "Non budgétisé")
-      return {
-        tag: "Non budgétisé",
-        crit: true,
-        hint: "aucun budget " + this.s.year + " sur ce chantier — à initialiser",
-      };
     if (role === "Contrôle de gestion") {
-      if (st === "Baseline CG")
+      if (st === "En attente baseline CG")
         return {
           tag: "Baseline à publier",
           crit: true,
-          hint: "baseline posée, pas encore ouverte à l'exploitation",
+          hint: "baseline pas encore ouverte à l'exploitation",
         };
       if (st === "À valider")
-        return { tag: "À vérifier", crit: false, hint: "saisie exploitation en attente de contrôle" };
+        return { tag: "À valider", crit: false, hint: "saisie exploitation en attente de contrôle" };
       const v = this.aggregate([ch], mIdx, "saisi", "marge");
       const b = this.aggregate([ch], mIdx, "base", "marge", null, true);
       const ec = v !== null && b !== null ? v - b : null;
@@ -438,7 +443,14 @@ export class Engine {
         };
       return null;
     }
-    if (st === "Baseline CG") return null;
+    // L'exploitation attend le contrôle de gestion : rien à faire de son côté.
+    if (st === "En attente baseline CG" || st === "À valider") return null;
+    if (st === "Non budgétisé")
+      return {
+        tag: "Non budgétisé",
+        crit: true,
+        hint: "baseline publiée, aucun mois saisi — budget à construire",
+      };
     const miss = this.missing(ch, mIdx);
     if (!miss.length)
       return st === "En saisie"
@@ -534,8 +546,8 @@ export class Engine {
       });
     else if (sort === "Statut") {
       const order: Statut[] = [
+        "En attente baseline CG",
         "Non budgétisé",
-        "Baseline CG",
         "En saisie",
         "À valider",
         "Validé",
@@ -558,13 +570,28 @@ export class Engine {
     // Une période explicitement bloquante gèle la saisie de l'exploitation.
     if (this.activeBlock()) return [];
     return mIdx.filter(
-      (m) => this.s.periods[ch.agence][m] && st !== "Clôturé" && st !== "Baseline CG",
+      (m) => this.s.periods[ch.agence][m] && st !== "Clôturé" && st !== "En attente baseline CG",
     );
   }
 
   /** Période de gestion active qui bloque explicitement les modifications, s'il y en a une. */
   activeBlock() {
     return this.s.periodRules.find((r) => r.active && r.blocking) || null;
+  }
+
+  /**
+   * Champs encore vides sur les mois ouverts. L'envoi en validation n'est possible
+   * qu'une fois ce compte à zéro : on ne cristallise pas un budget incomplet.
+   */
+  remainingToSubmit(ch: Chantier): number {
+    let n = 0;
+    FULL_YEAR.forEach((m) => {
+      if (!this.s.periods[ch.agence][m]) return;
+      SAISIE_FIELDS.forEach((f) => {
+        if (this.saisiField(ch, m, f) === null) n++;
+      });
+    });
+    return n;
   }
 
   /** Numéro de la cristallisation en cours sur un chantier. */

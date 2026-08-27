@@ -29,8 +29,19 @@ lectures `n1` / `baseField` / `saisiField` de `src/lib/engine.ts` sont à rempla
 ## Circuit métier
 
 ```
-Baseline CG  →  Saisie exploitation  →  À valider  →  Validé  →  Clôturé
+En attente baseline CG → Non budgétisé → En saisie → À valider → Validé
+                                                                    ↓ (changement d'exercice)
+                                                                 Clôturé
 ```
+
+Un budget **n'est jamais refusé** : tant qu'il n'est pas validé, il reste en attente. Le statut
+`Clôturé` n'est pas une action, il tombe tout seul quand l'exercice n'est plus d'actualité.
+
+Le même état se dit différemment selon le profil : l'exploitation lit **« En attente de
+validation »** là où le contrôle de gestion lit **« À valider »**.
+
+L'envoi en validation n'est possible **qu'une fois tous les champs des mois ouverts renseignés** ;
+le bouton indique sinon combien il en reste.
 
 - Le **contrôle de gestion** pose les coefficients (inflation, revalorisation contractuelle), édite
   la baseline par code chantier, publie à l'exploitation, vérifie et clôture. Il pose aussi les
@@ -89,6 +100,8 @@ calculés sur **tout** le périmètre filtré. La recherche est débouncée à 2
   (filtrable par la puce « Signalés »). Les statuts affichés se **cochent** dans l'en-tête du
   tableau. Le marquage **N-2** n'apparaît que là où il a du sens : sur la ligne « Réalisé N-1 » du
   détail, de septembre à décembre, où les réalisés de l'année en cours ne sont pas encore connus.
+  Dans la saisie, les cases de ces mois-là sont **violettes** tant qu'elles reposent sur la valeur
+  N-2 proposée ; elles passent au bleu dès qu'elles sont reconfirmées.
 
   Le détail dépliable est découpé en trois groupes : **1 · Baseline** (réalisé N-1 → coefficients →
   baseline CG), **2 · À remplir** (CA par catégorie, nombre d'heures, taux horaire chargé, d'où

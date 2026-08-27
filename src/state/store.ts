@@ -252,13 +252,22 @@ export function useApp() {
     [set, state.cristal, toast],
   );
 
-  /**
-   * Corriger un budget déjà validé est permis, mais cela ouvre une nouvelle
+/**
+   * La saisie fait avancer le statut toute seule :
+   * un budget encore vierge passe en saisie, un budget déjà validé rouvre une
    * cristallisation qui doit repasser par le contrôle de gestion.
    */
-  const reopenIfValidated = useCallback(
+  const advanceOnEdit = useCallback(
     (ch: Chantier) => {
-      if (!engine.isExploit || engine.st(ch) !== "Validé") return;
+      if (!engine.isExploit) return;
+      const st = engine.st(ch);
+      if (st === "Non budgétisé") {
+        set((prev) => ({
+          statutOverride: { ...prev.statutOverride, [ch.id]: "En saisie" as Statut },
+        }));
+        return;
+      }
+      if (st !== "Validé") return;
       set((prev) => ({
         statutOverride: { ...prev.statutOverride, [ch.id]: "À valider" as Statut },
       }));
@@ -413,9 +422,9 @@ export function useApp() {
         fields,
         shorts[action] || action,
       );
-      if (!onBaseline) reopenIfValidated(ch);
+      if (!onBaseline) advanceOnEdit(ch);
     },
-    [commit, engine, reopenIfValidated, state, toast],
+    [advanceOnEdit, commit, engine, state, toast],
   );
 
   /** Saisie directe d'une cellule (prévisionnel ou baseline). */
@@ -429,9 +438,9 @@ export function useApp() {
             [store]: { ...prev[store], [engine.ek(ch, field, m)]: isNaN(num) ? null : num },
           }) as Patch,
       );
-      if (!onBaseline) reopenIfValidated(ch);
+      if (!onBaseline) advanceOnEdit(ch);
     },
-    [engine, reopenIfValidated, set],
+    [advanceOnEdit, engine, set],
   );
 
   const setSearch = useCallback(

@@ -55,11 +55,11 @@ export function budgetSegments(store: Store): BudgetSegment[] {
     },
     {
       key: "attente",
-      label: "Non budgétisés / baseline non publiée",
+      label: "En attente de baseline CG",
       color: "#94a3b8",
-      hint: "pas de budget ou saisie pas encore ouverte",
+      hint: "la saisie n'est pas encore ouverte à l'exploitation",
       list: g.attente,
-      pick: go(["Non budgétisé", "Baseline CG"], false),
+      pick: go(["En attente baseline CG"], false),
     },
   ].filter((x) => x.list.length || x.key !== "attente");
 }

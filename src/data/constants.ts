@@ -60,7 +60,7 @@ export const CAT_COLORS: Record<CatKey, string> = {
 };
 
 export type Statut =
-  | "Baseline CG"
+  | "En attente baseline CG"
   | "En saisie"
   | "À valider"
   | "Validé"
@@ -76,7 +76,7 @@ export interface StatutStyle {
 }
 
 export const ST: Record<Statut, StatutStyle> = {
-  "Baseline CG": { bg: "#f1f5f9", fg: "#475569", border: "#e2e8f0", cell: "#f8fafc", accent: "#94a3b8" },
+  "En attente baseline CG": { bg: "#f1f5f9", fg: "#475569", border: "#e2e8f0", cell: "#f8fafc", accent: "#94a3b8" },
   "En saisie": { bg: "#fef3c7", fg: "#92400e", border: "#fde68a", cell: "#fffdf3", accent: "#f59e0b" },
   "À valider": { bg: "#e0f2fe", fg: "#075985", border: "#bae6fd", cell: "#f5fbff", accent: "#0a9bd8" },
   Validé: { bg: "#dcfce7", fg: "#166534", border: "#bbf7d0", cell: "#f4fdf7", accent: "#16a34a" },
@@ -176,10 +176,10 @@ export const SAISIE_FIELDS = CAT.map((c) => c.k as string).concat(["heures", "ta
  */
 export const N2_MONTHS = [8, 9, 10, 11];
 export const isN2 = (m: number) => m >= 8;
-/** Teinte très légère qui signale une colonne adossée à N-2. */
-export const N2_TINT = "#fdf9f2";
-export const N2_TINT_STRONG = "#fbf1e2";
-export const N2_FG = "#a16207";
+/** Le violet signale une valeur adossée à N-2 plutôt qu'à N-1. */
+export const N2_TINT = "#faf8ff";
+export const N2_BORDER = "#ddd6fe";
+export const N2_FG = "#6d28d9";
 
 export const SORTS = [
   "Priorité à déclarer",
@@ -193,9 +193,21 @@ export const SORTS = [
   "Remplissage croissant",
 ];
 
+/**
+ * Cycle de vie d'un budget, dans l'ordre.
+ *
+ * `En attente baseline CG` → le contrôle de gestion n'a pas encore publié la baseline.
+ * `Non budgétisé` → baseline publiée, aucun mois saisi.
+ * `En saisie` → saisie commencée, incomplète ou pas encore envoyée.
+ * `À valider` → envoyé ; côté exploitation, l'écran dit « En attente de validation ».
+ * `Validé` → cristallisation validée par le contrôle de gestion. Un budget n'est
+ *   jamais refusé : tant qu'il n'est pas validé, il reste en attente.
+ * `Clôturé` → posé automatiquement quand l'exercice n'est plus d'actualité,
+ *   c'est-à-dire au passage à l'année suivante.
+ */
 export const STATUT_OPTS: Statut[] = [
+  "En attente baseline CG",
   "Non budgétisé",
-  "Baseline CG",
   "En saisie",
   "À valider",
   "Validé",

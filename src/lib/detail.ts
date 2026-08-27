@@ -1,5 +1,5 @@
 import { CONFIG } from "../config";
-import { CAT, ST, isN2, N2_TINT, N2_FG, type Statut } from "../data/constants";
+import { CAT, ST, isN2, N2_BORDER, N2_TINT, N2_FG, type Statut } from "../data/constants";
 import type { Chantier } from "../data/chantiers";
 import type { Engine } from "./engine";
 import type { AppState } from "./types";
@@ -264,7 +264,11 @@ export function buildDetail(
     const periodOpen = s.periods[ch.agence][m];
     const cgEdit = isCG && st !== "Clôturé";
     const exEdit =
-      isExploit && periodOpen && st !== "Clôturé" && st !== "Baseline CG" && !engine.activeBlock();
+      isExploit &&
+      periodOpen &&
+      st !== "Clôturé" &&
+      st !== "En attente baseline CG" &&
+      !engine.activeBlock();
     const pB = engine.prims(ch, m, "base");
     const pS = engine.prims(ch, m, "saisi");
     const bMet = engine.metricFrom(pB, met.key, cat);
@@ -343,16 +347,22 @@ export function buildDetail(
           },
     );
 
-    /** Case de saisie exploitation, avec la valeur N-1 proposée en gris tant qu'elle n'est pas reconfirmée. */
+    /**
+     * Case de saisie exploitation. La valeur proposée vient de N-1, sauf de septembre
+     * à décembre où elle remonte à N-2 : ces cases-là sont signalées en violet tant
+     * qu'elles ne sont pas reconfirmées.
+     */
     const saisiCell = (field: string, kind: typeof met.kind, readColor: string): DetailCell => {
       const v = engine.saisiField(ch, m, field);
       const ed = engine.edited(ch, field, m, isCG);
+      const refYear = n2 ? s.year - 2 : s.year - 1;
+      const preN2 = n2 && !ed;
       if (!exEdit)
         return {
           editable: false,
           text: engine.fmt(v, kind),
-          color: v === null ? "#94a3b8" : readColor,
-          bg: ed ? "#eff6ff" : "transparent",
+          color: ed ? readColor : v === null ? "#94a3b8" : preN2 ? N2_FG : readColor,
+          bg: ed ? "#eff6ff" : preN2 ? N2_TINT : "transparent",
         };
       return {
         editable: true,
@@ -361,17 +371,23 @@ export function buildDetail(
           CONFIG.ghostN1 === false
             ? "—"
             : field === "taux"
-              ? engine.n1(ch, m, field, s.year - 1).toFixed(2)
-              : String(Math.round(engine.n1(ch, m, field, s.year - 1))),
+              ? engine.n1(ch, m, field, refYear).toFixed(2)
+              : String(Math.round(engine.n1(ch, m, field, refYear))),
         ghostTitle:
           v === null
-            ? "Valeur " + (s.year - 1) + " proposée — saisissez le montant " + s.year
+            ? "Valeur " + refYear + " proposée — saisissez le montant " + s.year
             : ed
               ? "Montant confirmé"
-              : "Repris de " + (s.year - 1) + " — à confirmer en le ressaisissant",
+              : "Repris de " + refYear + " — à confirmer en le ressaisissant",
         dash: CONFIG.confirmN1 !== false && v !== null && !ed ? "dashed" : "solid",
-        fg: CONFIG.confirmN1 === false || v === null || ed ? "#17202a" : "#94a3b8",
-        border: ed ? "#0a9bd8" : stc.border,
+        fg:
+          CONFIG.confirmN1 === false || v === null || ed
+            ? "#17202a"
+            : preN2
+              ? N2_FG
+              : "#94a3b8",
+        border: ed ? "#0a9bd8" : preN2 ? N2_BORDER : stc.border,
+        bg: preN2 ? N2_TINT : "#fff",
         field,
         month: m,
         onBaseline: false,

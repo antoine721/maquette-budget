@@ -132,10 +132,10 @@ function CampaignLayout({ store }: { store: Store }) {
     .map((ch) => {
       const st = engine.st(ch) as Statut;
       const miss = engine.missing(ch, FULL_YEAR).length;
-      const crit = st === "Non budgétisé" || st === "Baseline CG";
+      const crit = st === "Non budgétisé" || st === "En attente baseline CG";
       return {
         ch,
-        tag: st === "En saisie" ? miss + " mois manquants" : st,
+        tag: st === "En saisie" ? miss + " mois manquants" : engine.statutLabel(st),
         tagBg: crit ? "#fee2e2" : "#fef3c7",
         tagFg: crit ? "#991b1b" : "#92400e",
         accent: crit ? "#dc2626" : "#f59e0b",
@@ -144,7 +144,7 @@ function CampaignLayout({ store }: { store: Store }) {
           " · " +
           engine.fmt(ch.ca) +
           " de CA de référence" +
-          (st === "Baseline CG" ? " — baseline pas encore publiée" : ""),
+          (st === "En attente baseline CG" ? " — baseline pas encore publiée" : ""),
         hintColor: crit ? "#b91c1c" : "#92400e",
       };
     });
