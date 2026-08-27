@@ -7,9 +7,6 @@ import CampaignBanner from "./CampaignBanner";
 import CaGaugeCard from "./CaGaugeCard";
 import ChantierListCard, { type ChantierListRow } from "./ChantierListCard";
 import MonthlyEvolutionChart from "./MonthlyEvolutionChart";
-import { CARD, COL_HEAD } from "./cardStyles";
-
-const REX_GRID = "210px 80px 1fr 160px 120px 100px";
 
 /**
  * Accueil. Deux situations à présenter :
@@ -19,7 +16,8 @@ const REX_GRID = "210px 80px 1fr 160px 120px 100px";
  * porte en revanche son propre sélecteur d'exercice.
  *
  * Le contrôle de gestion voit les mêmes blocs en valeurs globales, plus les
- * budgets à valider, les chantiers non traités et l'avancement par REX.
+ * budgets à valider et les chantiers non traités. L'avancement par REX vit
+ * dans Pilotage CDG › Responsables.
  */
 export default function HomeTab({ store }: { store: Store }) {
   const { engine } = store;
@@ -69,9 +67,6 @@ export default function HomeTab({ store }: { store: Store }) {
       })()}
 
       <CampaignLayout store={store} />
-
-      {engine.isCG && <RexConsolidated store={store} />}
-
     </div>
   );
 }
@@ -209,179 +204,5 @@ function CampaignLayout({ store }: { store: Store }) {
         </div>
       )}
     </>
-  );
-}
-
-/** Vue consolidée réservée au contrôle de gestion : une ligne par responsable exploitation. */
-function RexConsolidated({ store }: { store: Store }) {
-  const { state, engine, set } = store;
-  const names = Array.from(new Set(Object.values(REX)));
-
-  const rows = names
-    .map((nom) => {
-      const list = engine.scope().filter((ch) => REX[ch.id] === nom);
-      let done = 0,
-        tot = 0;
-      list.forEach((ch) =>
-        FULL_YEAR.forEach((m) => {
-          tot++;
-          if (engine.prims(ch, m, "saisi")) done++;
-        }),
-      );
-      const pct = tot ? Math.round((done / tot) * 100) : 0;
-      const aFaire = list.filter((ch) => engine.todoFor(ch, FULL_YEAR, "Exploitation")).length;
-      const crit = list.filter((ch) => {
-        const t = engine.todoFor(ch, FULL_YEAR, "Exploitation");
-        return t && t.crit;
-      }).length;
-      const ca = engine.aggregate(list, FULL_YEAR, "saisi", "ca", "Total");
-      const base = engine.aggregate(list, FULL_YEAR, "base", "ca", "Total", true);
-      const ecart = ca === null || base === null || !base ? null : ((ca - base) / base) * 100;
-      return {
-        nom,
-        pctNum: pct,
-        initials: engine.initials(nom),
-        agence: Array.from(new Set(list.map((ch) => ch.agence))).join(", ") || "—",
-        nb: list.length,
-        pct: pct + "%",
-        color: pct >= 90 ? "#16a34a" : pct >= 50 ? "#0a9bd8" : "#dc2626",
-        rest: aFaire
-          ? aFaire + " à traiter" + (crit ? " · " + crit + " critique" + (crit > 1 ? "s" : "") : "")
-          : "à jour",
-        restColor: crit ? "#b91c1c" : aFaire ? "#92400e" : "#16a34a",
-        ca: engine.fmt(ca),
-        ecart:
-          ecart === null ? "—" : (ecart >= 0 ? "+" : "") + ecart.toFixed(1).replace(".", ",") + " %",
-        ecartColor:
-          ecart === null ? "#94a3b8" : ecart >= 0 ? "#15803d" : ecart > -3 ? "#b45309" : "#dc2626",
-        pick: () =>
-          set({
-            tab: "Tableau prévisionnel",
-            fRex: state.fRex === nom ? "Tous" : nom,
-            fSearch: "",
-            searchDraft: "",
-          }),
-      };
-    })
-    // Les REX les moins avancés en premier : c'est là que le contrôle de gestion doit agir.
-    .sort((a, b) => a.pctNum - b.pctNum);
-
-  return (
-    <div style={CARD}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 14, fontWeight: 700 }}>Vue consolidée — avancement des REX</span>
-        <span style={{ fontSize: 11.5, color: "#8a95a1" }}>
-          {"Campagne " +
-            state.year +
-            (state.fEntity === "Toutes" ? " · toutes entités" : " · " + state.fEntity) +
-            " · les moins avancés en premier"}
-        </span>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: REX_GRID,
-          alignItems: "center",
-          gap: 10,
-          marginTop: 14,
-          paddingBottom: 8,
-          borderBottom: "1px solid #eef1f4",
-        }}
-      >
-        <span style={COL_HEAD}>Responsable exploitation</span>
-        <span style={COL_HEAD}>Chantiers</span>
-        <span style={COL_HEAD}>Avancement</span>
-        <span style={COL_HEAD}>Reste à faire</span>
-        <span style={{ ...COL_HEAD, textAlign: "right" }}>CA déclaré</span>
-        <span style={{ ...COL_HEAD, textAlign: "right" }}>Écart obj.</span>
-      </div>
-
-      {rows.map((r) => (
-        <div
-          key={r.nom}
-          className="hov-fa"
-          onClick={r.pick}
-          style={{
-            display: "grid",
-            gridTemplateColumns: REX_GRID,
-            alignItems: "center",
-            gap: 10,
-            padding: "11px 0",
-            borderBottom: "1px solid #f4f6f8",
-            cursor: "pointer",
-          }}
-        >
-          <span style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
-            <span
-              style={{
-                flex: "0 0 auto",
-                width: 26,
-                height: 26,
-                borderRadius: "50%",
-                background: "#eef2ff",
-                color: "#3730a3",
-                fontSize: 10.5,
-                fontWeight: 700,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {r.initials}
-            </span>
-            <span style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 600,
-                  color: "#17202a",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {r.nom}
-              </span>
-              <span style={{ fontSize: 11, color: "#94a3b8" }}>{r.agence}</span>
-            </span>
-          </span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "#3b4753" }}>{r.nb}</span>
-          <span style={{ display: "flex", alignItems: "center", gap: 9 }}>
-            <span
-              style={{ flex: 1, height: 7, borderRadius: 6, background: "#eef1f4", overflow: "hidden" }}
-            >
-              <span style={{ display: "block", height: 7, width: r.pct, background: r.color }} />
-            </span>
-            <span style={{ flex: "0 0 auto", width: 40, fontSize: 12, fontWeight: 700, color: r.color }}>
-              {r.pct}
-            </span>
-          </span>
-          <span style={{ fontSize: 12, color: r.restColor, fontWeight: 600 }}>{r.rest}</span>
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#17202a",
-              textAlign: "right",
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {r.ca}
-          </span>
-          <span
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: r.ecartColor,
-              textAlign: "right",
-              fontVariantNumeric: "tabular-nums",
-            }}
-          >
-            {r.ecart}
-          </span>
-        </div>
-      ))}
-    </div>
   );
 }

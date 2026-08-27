@@ -113,9 +113,11 @@ calculés sur **tout** le périmètre filtré. La recherche est débouncée à 2
   gestes — appliquer un % d'évolution, recopier le 1er mois saisi — avec historique et annulation.
   Le récapitulatif **Prévu CG / Déclaré / % objectif / Couverture** est en bas, contre les boutons
   du circuit.
-- **Pilotage CDG** — quatre onglets internes : **Vue d'ensemble** (indicateurs de portefeuille,
-  évolution mensuelle du CA, anneaux d'avancement), **Chantiers** (Top 20 = 80 % du CA),
-  **Responsables** (avancement de chaque REX) et **Réglages**.
+- **Pilotage CDG** — quatre onglets internes : **Vue d'ensemble** (nombre de chantiers, avancement
+  global, évolution mensuelle du CA, anneaux d'avancement), **Chantiers** (Top 20),
+  **Responsables** (le tableau complet des REX : chantiers, gros chantiers en retard, avancement,
+  reste à faire, CA déclaré, objectif CG, écart, avec le total du portefeuille) et **Réglages**
+  (coefficients et mois ouverts à la saisie).
 
 ## Cristallisations
 

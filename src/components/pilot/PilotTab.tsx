@@ -17,7 +17,7 @@ const COL_HEAD: React.CSSProperties = {
 };
 
 const TOP_GRID = "300px 120px 110px 130px 110px 100px 1fr";
-const REX_GRID = "26px 1fr 92px 128px 130px";
+const REX_GRID = "230px 90px 140px 1fr 150px 120px 120px 90px";
 
 const TABS: PilotTabId[] = ["Vue d'ensemble", "Chantiers", "Responsables", "Réglages"];
 
@@ -330,7 +330,11 @@ function TopChantiers({ store }: { store: Store }) {
   );
 }
 
-/** Avancement de chaque responsable exploitation. */
+/**
+ * Avancement de chaque responsable exploitation — le tableau de référence, qui
+ * remplace l'ancien doublon entre l'accueil et le pilotage. Tous les REX y
+ * figurent, du moins avancé au plus avancé.
+ */
 function RexGrid({ store }: { store: Store }) {
   const { engine, set } = store;
 
@@ -345,117 +349,224 @@ function RexGrid({ store }: { store: Store }) {
       }),
     );
     const pct = tot ? Math.round((done / tot) * 100) : 0;
+
     const bigs = list.filter((ch) => ch.big);
     const bigsMiss = bigs.filter(
       (ch) => engine.st(ch) === "Non budgétisé" || engine.missing(ch, FULL_YEAR).length,
     );
+    const aFaire = list.filter((ch) => engine.todoFor(ch, FULL_YEAR, "Exploitation")).length;
+    const crit = list.filter((ch) => {
+      const t = engine.todoFor(ch, FULL_YEAR, "Exploitation");
+      return t && t.crit;
+    }).length;
+
+    const ca = engine.aggregate(list, FULL_YEAR, "saisi", "ca", "Total");
+    const base = engine.aggregate(list, FULL_YEAR, "base", "ca", "Total", true);
+    const ecart = ca === null || base === null || !base ? null : ((ca - base) / base) * 100;
+
     return {
       nom,
       initials: engine.initials(nom),
+      agences: Array.from(new Set(list.map((ch) => ch.agence))).join(", ") || "—",
       nb: list.length,
-      bigs: bigs.length
-        ? bigs.length + " gros" + (bigsMiss.length ? " · " + bigsMiss.length + " en retard" : "")
-        : "—",
-      bigsColor: bigsMiss.length ? "#b91c1c" : "#6b7681",
-      pct: pct + "%",
+      bigs: bigs.length,
+      bigsMiss: bigsMiss.length,
       pctNum: pct,
+      pct: pct + "%",
       color: pct >= 90 ? "#16a34a" : pct >= 50 ? "#0a9bd8" : "#dc2626",
+      rest: aFaire
+        ? aFaire + " à traiter" + (crit ? " · " + crit + " critique" + (crit > 1 ? "s" : "") : "")
+        : "à jour",
+      restColor: crit ? "#b91c1c" : aFaire ? "#92400e" : "#16a34a",
+      ca: engine.fmt(ca),
+      base: engine.fmt(engine.aggregate(list, FULL_YEAR, "base", "ca", "Total")),
+      ecart:
+        ecart === null ? "—" : (ecart >= 0 ? "+" : "") + ecart.toFixed(1).replace(".", ",") + " %",
+      ecartColor:
+        ecart === null ? "#94a3b8" : ecart >= 0 ? "#15803d" : ecart > -3 ? "#b45309" : "#dc2626",
       pick: () => set({ tab: "Tableau prévisionnel", fRex: nom, fSearch: "", searchDraft: "" }),
     };
   }).sort((a, b) => a.pctNum - b.pctNum);
+
+  const all = engine.scope();
+  const totCa = engine.aggregate(all, FULL_YEAR, "saisi", "ca", "Total");
+  const totBase = engine.aggregate(all, FULL_YEAR, "base", "ca", "Total");
+  let totDone = 0,
+    totCells = 0;
+  all.forEach((ch) =>
+    FULL_YEAR.forEach((m) => {
+      totCells++;
+      if (engine.prims(ch, m, "saisi")) totDone++;
+    }),
+  );
+  const totPct = totCells ? Math.round((totDone / totCells) * 100) : 0;
 
   return (
     <div style={CARD}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
         <span style={{ fontSize: 14, fontWeight: 700 }}>Avancement par REX</span>
-        <span style={{ fontSize: 11.5, color: "#8a95a1" }}>les moins avancés en premier</span>
+        <span style={{ fontSize: 11.5, color: "#8a95a1" }}>
+          {rows.length} responsables · les moins avancés en premier
+        </span>
       </div>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(420px, 1fr))",
-          gap: "6px 20px",
-          marginTop: 12,
-        }}
-      >
-        {rows.map((r) => (
+
+      <div style={{ overflowX: "auto", marginTop: 12 }}>
+        <div style={{ minWidth: 1080 }}>
           <div
-            key={r.nom}
-            className="hov-f8"
-            onClick={r.pick}
             style={{
               display: "grid",
               gridTemplateColumns: REX_GRID,
               alignItems: "center",
               gap: 10,
-              padding: 8,
-              borderRadius: 8,
-              cursor: "pointer",
+              paddingBottom: 8,
+              borderBottom: "1px solid #eef1f4",
             }}
           >
-            <span
+            <span style={COL_HEAD}>Responsable exploitation</span>
+            <span style={{ ...COL_HEAD, textAlign: "right" }}>Chantiers</span>
+            <span style={COL_HEAD}>Gros chantiers</span>
+            <span style={COL_HEAD}>Avancement</span>
+            <span style={COL_HEAD}>Reste à faire</span>
+            <span style={{ ...COL_HEAD, textAlign: "right" }}>CA déclaré</span>
+            <span style={{ ...COL_HEAD, textAlign: "right" }}>Objectif CG</span>
+            <span style={{ ...COL_HEAD, textAlign: "right" }}>Écart</span>
+          </div>
+
+          {rows.map((r) => (
+            <div
+              key={r.nom}
+              className="hov-fa"
+              onClick={r.pick}
+              title={"Filtrer le tableau sur " + r.nom}
               style={{
-                width: 26,
-                height: 26,
-                borderRadius: "50%",
-                background: "#eef2ff",
-                color: "#3730a3",
-                fontSize: 10.5,
-                fontWeight: 700,
-                display: "flex",
+                display: "grid",
+                gridTemplateColumns: REX_GRID,
                 alignItems: "center",
-                justifyContent: "center",
+                gap: 10,
+                padding: "11px 0",
+                borderBottom: "1px solid #f4f6f8",
+                cursor: "pointer",
               }}
             >
-              {r.initials}
-            </span>
-            <span
-              style={{
-                minWidth: 0,
-                fontSize: 13,
-                fontWeight: 600,
-                color: "#17202a",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {r.nom}
-            </span>
-            <span style={{ ...NUM, fontSize: 12, color: "#6b7681" }}>{r.nb} chantiers</span>
-            <span
-              style={{
-                fontSize: 11.5,
-                fontWeight: 600,
-                color: r.bigsColor,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {r.bigs}
-            </span>
-            <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span
-                style={{ flex: 1, height: 6, borderRadius: 6, background: "#eef1f4", overflow: "hidden" }}
-              >
-                <span style={{ display: "block", height: 6, width: r.pct, background: r.color }} />
+              <span style={{ display: "flex", alignItems: "center", gap: 9, minWidth: 0 }}>
+                <span
+                  style={{
+                    flex: "0 0 auto",
+                    width: 26,
+                    height: 26,
+                    borderRadius: "50%",
+                    background: "#eef2ff",
+                    color: "#3730a3",
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {r.initials}
+                </span>
+                <span style={{ minWidth: 0, display: "flex", flexDirection: "column" }}>
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 600,
+                      color: "#17202a",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {r.nom}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 11,
+                      color: "#94a3b8",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {r.agences}
+                  </span>
+                </span>
               </span>
+
+              <span style={{ ...NUM, fontWeight: 600, color: "#3b4753" }}>{r.nb}</span>
+
               <span
                 style={{
-                  flex: "0 0 auto",
-                  width: 38,
                   fontSize: 12,
-                  fontWeight: 700,
-                  color: r.color,
-                  textAlign: "right",
+                  fontWeight: 600,
+                  color: r.bigsMiss ? "#b91c1c" : "#6b7681",
+                  whiteSpace: "nowrap",
                 }}
               >
-                {r.pct}
+                {r.bigs
+                  ? r.bigs + " gros" + (r.bigsMiss ? " · " + r.bigsMiss + " en retard" : "")
+                  : "—"}
+              </span>
+
+              <span style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                <span
+                  style={{ flex: 1, height: 7, borderRadius: 6, background: "#eef1f4", overflow: "hidden" }}
+                >
+                  <span style={{ display: "block", height: 7, width: r.pct, background: r.color }} />
+                </span>
+                <span
+                  style={{ flex: "0 0 auto", width: 40, fontSize: 12, fontWeight: 700, color: r.color }}
+                >
+                  {r.pct}
+                </span>
+              </span>
+
+              <span style={{ fontSize: 12, fontWeight: 600, color: r.restColor, whiteSpace: "nowrap" }}>
+                {r.rest}
+              </span>
+
+              <span style={{ ...NUM, fontWeight: 600, color: "#17202a" }}>{r.ca}</span>
+              <span style={{ ...NUM, color: "#6b7681" }}>{r.base}</span>
+              <span style={{ ...NUM, fontSize: 12.5, fontWeight: 700, color: r.ecartColor }}>
+                {r.ecart}
+              </span>
+            </div>
+          ))}
+
+          {/* Total du portefeuille, pour recouper les lignes du dessus. */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: REX_GRID,
+              alignItems: "center",
+              gap: 10,
+              padding: "12px 0 2px",
+              borderTop: "1px solid #e6eaee",
+            }}
+          >
+            <span style={{ fontSize: 13, fontWeight: 700 }}>Total portefeuille</span>
+            <span style={{ ...NUM, fontWeight: 700 }}>{all.length}</span>
+            <span />
+            <span style={{ display: "flex", alignItems: "center", gap: 9 }}>
+              <span
+                style={{ flex: 1, height: 7, borderRadius: 6, background: "#eef1f4", overflow: "hidden" }}
+              >
+                <span
+                  style={{ display: "block", height: 7, width: totPct + "%", background: "#0a9bd8" }}
+                />
+              </span>
+              <span
+                style={{ flex: "0 0 auto", width: 40, fontSize: 12, fontWeight: 700, color: "#0a9bd8" }}
+              >
+                {totPct}%
               </span>
             </span>
+            <span />
+            <span style={{ ...NUM, fontWeight: 700 }}>{engine.fmt(totCa)}</span>
+            <span style={{ ...NUM, color: "#6b7681" }}>{engine.fmt(totBase)}</span>
+            <span />
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
