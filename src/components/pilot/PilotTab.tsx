@@ -85,32 +85,14 @@ export default function PilotTab({ store }: { store: Store }) {
 function Overview({ store }: { store: Store }) {
   const { engine } = store;
   const all = engine.scope();
-  const big = all.filter((ch) => ch.big);
-  const bigCa = big.reduce((a, ch) => a + ch.ca, 0);
   const totCa = all.reduce((a, ch) => a + ch.ca, 0);
-  const bigMiss = big.filter(
-    (ch) => engine.st(ch) === "Non budgétisé" || engine.missing(ch, FULL_YEAR).length,
-  );
-  const missCa = bigMiss.reduce((a, ch) => a + ch.ca, 0);
 
   const kpis = [
     {
-      label: "Portefeuille suivi",
+      label: "Nombre de chantiers",
       value: String(all.length),
       hint: engine.fmt(totCa) + " de CA de référence",
       color: "#17202a",
-    },
-    {
-      label: "Top 20 chantiers",
-      value: totCa ? Math.round((bigCa / totCa) * 100) + " %" : "—",
-      hint: engine.fmt(bigCa) + " concentrés",
-      color: "#0a9bd8",
-    },
-    {
-      label: "Gros chantiers non déclarés",
-      value: bigMiss.length + "/" + big.length,
-      hint: engine.fmt(missCa) + " de CA à risque",
-      color: bigMiss.length ? "#dc2626" : "#16a34a",
     },
     {
       label: "Avancement global",
@@ -227,10 +209,7 @@ function TopChantiers({ store }: { store: Store }) {
   return (
     <div style={CARD}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 14, fontWeight: 700 }}>Top 20 chantiers — 80 % du CA</span>
-        <span style={{ fontSize: 11.5, color: "#8a95a1" }}>
-          triés par CA de référence · les manquants sont prioritaires
-        </span>
+        <span style={{ fontSize: 14, fontWeight: 700 }}>Top 20 chantiers</span>
       </div>
       <div style={{ overflowX: "auto", marginTop: 12 }}>
         <div style={{ minWidth: 1040 }}>

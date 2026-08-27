@@ -98,7 +98,7 @@ export default function CaGaugeCard({ store, compact }: { store: Store; compact?
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontSize: 13.5, fontWeight: 700 }}>
-            {engine.isExploit ? "Avancement — en CA" : "Avancement — en CA (consolidé)"}
+            Avancement — en CA
           </div>
           <div style={{ fontSize: 11.5, color: "#8a95a1", marginTop: 2 }}>
             {engine.isExploit

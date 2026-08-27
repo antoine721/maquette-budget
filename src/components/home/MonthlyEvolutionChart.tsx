@@ -122,9 +122,9 @@ export default function MonthlyEvolutionChart({ store }: { store: Store }) {
     <div style={{ ...CARD, display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
         <span style={{ fontSize: 13.5, fontWeight: 700 }}>Évolution mensuelle du CA</span>
-        <span style={{ fontSize: 11.5, color: "#8a95a1" }}>
-          {engine.isExploit ? "mon périmètre" : "consolidé"}
-        </span>
+        {engine.isExploit && (
+          <span style={{ fontSize: 11.5, color: "#8a95a1" }}>mon périmètre</span>
+        )}
         <YearSelect year={year} onChange={setYear} />
         <span style={{ flex: 1 }} />
         <span style={{ fontSize: 13, fontWeight: 700, color: "#17202a" }}>{view.fmt(total)}</span>

@@ -123,7 +123,7 @@ export default function BudgetDonutCard({ store, compact }: { store: Store; comp
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontSize: 13.5, fontWeight: 700 }}>
-            {engine.isExploit ? "Avancement — en chantiers" : "Avancement — en chantiers (consolidé)"}
+            Avancement — en chantiers
           </div>
           <div style={{ fontSize: 11.5, color: "#8a95a1", marginTop: 2 }}>
             {tot} chantiers suivis · par statut

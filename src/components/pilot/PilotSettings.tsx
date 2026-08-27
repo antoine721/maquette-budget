@@ -14,7 +14,9 @@ export default function PilotSettings({ store }: { store: Store }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <Coefficients store={store} />
-      <PeriodRules store={store} />
+      {/* Le bloc « Périodes de gestion » est retiré de l'écran pour l'instant.
+          La mécanique reste en place côté état (aucune période bloquante active
+          par défaut) : réafficher <PeriodRules /> suffit à le remettre. */}
       <SaisieMonths store={store} />
     </div>
   );
@@ -195,72 +197,6 @@ function Coefficients({ store }: { store: Store }) {
   );
 }
 
-function PeriodRules({ store }: { store: Store }) {
-  const { state, updatePeriodRule } = store;
-
-  return (
-    <div style={CARD}>
-      <div style={{ fontSize: 14, fontWeight: 700 }}>Périodes de gestion</div>
-      <div style={{ fontSize: 12, color: "#6b7681", marginTop: 3 }}>
-        Une période active est un simple repère. Cochez <b>bloquante</b> pour interdire réellement
-        les modifications : la raison saisie s'affiche alors sur la page d'accueil de tout le monde.
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 14 }}>
-        {state.periodRules.map((r) => (
-          <div
-            key={r.id}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-              flexWrap: "wrap",
-              padding: "10px 12px",
-              borderRadius: 10,
-              border: "1px solid " + (r.active && r.blocking ? "#fecaca" : "#eef1f4"),
-              background: r.active ? (r.blocking ? "#fff7f7" : "#f8fafb") : "#fff",
-            }}
-          >
-            <div style={{ minWidth: 190 }}>
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: "#17202a" }}>{r.label}</div>
-              <div style={{ fontSize: 11.5, color: "#8a95a1" }}>{r.window}</div>
-            </div>
-
-            <Toggle
-              on={r.active}
-              label="Période active"
-              onColor="#0a9bd8"
-              onChange={() => updatePeriodRule(r.id, { active: !r.active })}
-            />
-            <Toggle
-              on={r.blocking}
-              label="Bloquante"
-              onColor="#dc2626"
-              onChange={() => updatePeriodRule(r.id, { blocking: !r.blocking })}
-            />
-
-            <input
-              value={r.reason}
-              onChange={(e) => updatePeriodRule(r.id, { reason: e.target.value })}
-              placeholder="Raison affichée sur l'accueil si la période bloque…"
-              style={{
-                flex: "1 1 280px",
-                minWidth: 220,
-                padding: "8px 10px",
-                border: "1px solid #dde3e8",
-                borderRadius: 8,
-                background: "#fff",
-                fontSize: 13,
-                color: "#17202a",
-              }}
-            />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /** Ouverture des mois de saisie, par entité. */
 function SaisieMonths({ store }: { store: Store }) {
   const { state, togglePeriod } = store;
@@ -361,49 +297,6 @@ function AgenceRow({
         );
       })}
     </>
-  );
-}
-
-function Toggle({
-  on,
-  label,
-  onColor,
-  onChange,
-}: {
-  on: boolean;
-  label: string;
-  onColor: string;
-  onChange: () => void;
-}) {
-  return (
-    <button
-      onClick={onChange}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 7,
-        padding: "7px 11px",
-        border: "1px solid " + (on ? onColor : "#dde3e8"),
-        borderRadius: 999,
-        background: on ? onColor : "#fff",
-        color: on ? "#fff" : "#6b7681",
-        fontFamily: "inherit",
-        fontSize: 12,
-        fontWeight: 700,
-        cursor: "pointer",
-        whiteSpace: "nowrap",
-      }}
-    >
-      <span
-        style={{
-          width: 8,
-          height: 8,
-          borderRadius: "50%",
-          background: on ? "#fff" : "#cbd5e1",
-        }}
-      />
-      {label}
-    </button>
   );
 }
 
