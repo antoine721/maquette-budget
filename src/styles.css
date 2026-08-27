@@ -1,0 +1,52 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: #f4f6f8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: #0a9bd8;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #0782b6;
+}
+
+input,
+select {
+  font-family: inherit;
+}
+
+input::placeholder {
+  color: #c7d0d9;
+  font-weight: 500;
+}
+
+::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cfd6dd;
+  border-radius: 6px;
+}
+
+/* Hover helpers — the prototype expressed these with `style-hover` attributes. */
+.hov-f4:hover {
+  background: #f4f6f8 !important;
+}
+
+.hov-f8:hover {
+  background: #f8fafb !important;
+}
+
+.hov-fa:hover {
+  background: #fafbfc !important;
+}

@@ -1,25 +1,78 @@
-# CODING AGENTS: READ THIS FIRST
+# Tableau prévisionnel budgétaire — Challancin
 
-This is a **handoff bundle** from Claude Design (claude.ai/design).
+Application de saisie et de pilotage du **budget prévisionnel** : en septembre N-1, l'exploitation
+renseigne les 12 mois de l'exercice N sur la base d'une baseline posée par le contrôle de gestion.
 
-A user mocked up designs in HTML/CSS/JS using an AI design tool, then exported this bundle so a coding agent can implement the designs for real.
+Implémentation React + TypeScript + Vite du design exporté depuis Claude Design
+(`project/Tableau prévisionnel.dc.html`). **La sidebar du prototype a été retirée** : le logo et la
+navigation de profil vivent dans le header.
 
-## What you should do — IMPORTANT
+## Démarrer
 
-**Read the chat transcripts first.** There are 1 chat transcript(s) in `chats/`. The transcripts show the full back-and-forth between the user and the design assistant — they tell you **what the user actually wants** and **where they landed** after iterating. Don't skip them. The final HTML files are the output, but the chat is where the intent lives.
+```bash
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # typecheck + bundle de production
+npm run typecheck
+```
 
-**Read `project/Tableau prévisionnel.dc.html` in full.** The user had this file open when they triggered the handoff, so it's almost certainly the primary design they want built. Read it top to bottom — don't skim. Then **follow its imports**: open every file it pulls in (shared components, CSS, scripts) so you understand how the pieces fit together before you start implementing.
+## Données
 
-**If anything is ambiguous, ask the user to confirm before you start implementing.** It's much cheaper to clarify scope up front than to build the wrong thing.
+Il n'y a **pas de backend** : tout est mocké en mémoire. `src/data/chantiers.ts` génère de façon
+déterministe (PRNG mulberry32, graine fixe) **350 chantiers**, dont **20 gros qui concentrent ~80 %
+du CA**, répartis sur **12 REX** et 3 entités (EGC / CPS / CAS). Les réalisés N-1, la baseline et la
+saisie sont dérivés de la même graine, donc le jeu de démo est identique à chaque chargement.
 
-## About the design files
+Pour brancher un vrai backend plus tard, seuls `src/data/chantiers.ts` (les chantiers) et les
+lectures `n1` / `baseField` / `saisiField` de `src/lib/engine.ts` sont à remplacer.
 
-The design medium is **HTML/CSS/JS** — these are prototypes, not production code. Your job is to **recreate them pixel-perfectly** in whatever technology makes sense for the target codebase (React, Vue, native, whatever fits). Match the visual output; don't copy the prototype's internal structure unless it happens to fit.
+## Circuit métier
 
-**Don't render these files in a browser or take screenshots unless the user asks you to.** Everything you need — dimensions, colors, layout rules — is spelled out in the source. Read the HTML and CSS directly; a screenshot won't tell you anything they don't.
+```
+Baseline CG  →  Saisie exploitation  →  À valider  →  Validé  →  Clôturé
+```
 
-## Bundle contents
+- Le **contrôle de gestion** pose les coefficients (inflation, revalorisation contractuelle), édite
+  la baseline par code chantier, publie à l'exploitation, vérifie et clôture. Il pose aussi les
+  **tags** de suivi (Sensible, Renégociation, Perte de marge, Nouveau marché).
+- L'**exploitation** saisit les 12 mois — CA par catégorie (Forfait / Réel / PAD / TE), heures et
+  masse salariale — puis envoie en validation. Les cases vides proposent la valeur N-1 en gris ; une
+  valeur reprise reste en pointillés tant qu'elle n'est pas **ressaisie pour confirmation**.
+- L'**admin** ouvre et ferme les périodes de saisie par entité.
 
-- `README.md` — this file
-- `chats/` — conversation transcripts (read these!)
-- `project/` — the `Tableau prévisionnel budgétaire` project files (HTML prototypes, assets, components)
+Les exercices 2024–2026 sont clos et en lecture seule ; la campagne active est 2027.
+
+## Structure
+
+| Chemin | Rôle |
+| --- | --- |
+| `src/config.ts` | Réglages de campagne et d'affichage (exercice, rôle et onglet de départ, taille de l'anneau, confirmation N-1) |
+| `src/data/constants.ts` | Référentiels : mois, entités, catégories de CA, statuts et leurs couleurs, indicateurs, tags, périodes |
+| `src/data/chantiers.ts` | Générateur déterministe du portefeuille de démo |
+| `src/lib/engine.ts` | Moteur de calcul : réalisé N-1, baseline, saisie, agrégats, filtres, tri, à-faire par rôle |
+| `src/lib/detail.ts` | Construction du détail dépliable d'un chantier et des actions en masse |
+| `src/state/store.ts` | État applicatif et actions (saisie, actions en masse, historique/annulation, tags, périodes) |
+| `src/components/` | Header, onglets, Accueil, Pilotage CDG, Tableau |
+
+### Performance
+
+Le moteur mémoïse les calculs coûteux dans un cache invalidé par une **signature d'état** (exercice,
+rôle, filtres, saisies…) : un survol ou l'ouverture d'une ligne ne recalcule rien. Le tableau ne rend
+que 40 chantiers à la fois (bouton « Afficher 40 chantiers de plus »), mais les totaux du pied restent
+calculés sur **tout** le périmètre filtré. La recherche est débouncée à 220 ms.
+
+## Onglets
+
+- **Accueil** — bandeau de campagne, carré « CA déclaré » (anneau segmenté par catégorie, gradué sur
+  l'objectif CDG), anneau « État des budgets », liste « À traiter en priorité », « Budgets terminés »,
+  et vue consolidée des REX pour le contrôle de gestion.
+- **Tableau prévisionnel** — vue liste 12 mois, colonne chantier figée au scroll horizontal, détail
+  dépliable par chantier (réalisé N-1 → coefficients → baseline → saisie → indicateurs calculés),
+  menu ⋯ d'actions en masse par ligne avec historique et annulation.
+- **Pilotage CDG** — indicateurs de portefeuille, Top 20 chantiers (80 % du CA) et avancement par REX.
+
+## Bundle de design d'origine
+
+`project/` contient le prototype exporté (HTML/CSS/JS + runtime Claude Design) et `chats/` la
+conversation qui l'a produit. Ils servent de référence visuelle ; ils ne sont pas utilisés à
+l'exécution.
