@@ -29,7 +29,7 @@ export default function App() {
         {state.tab === "Tableau prévisionnel" && <TableTab store={store} />}
       </main>
 
-      <Toast message={state.toast} />
+      <Toast store={store} />
     </div>
   );
 }

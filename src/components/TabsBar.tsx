@@ -42,10 +42,6 @@ export default function TabsBar({ store }: { store: Store }) {
           </button>
         );
       })}
-      <span style={{ flex: 1 }} />
-      <span style={{ padding: "0 0 12px", fontSize: 12.5, color: "#6b7681" }}>
-        {engine.campaignChip()}
-      </span>
     </div>
   );
 }

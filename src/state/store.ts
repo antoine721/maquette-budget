@@ -3,6 +3,7 @@ import { CONFIG } from "../config";
 import { AGENCES, MONTHS, STATUT_OPTS, type Statut } from "../data/constants";
 import type { Chantier } from "../data/chantiers";
 import { Engine } from "../lib/engine";
+import { loadSaved, readPosition, saveState, writePosition } from "./persist";
 import type {
   AppState,
   EditMap,
@@ -103,6 +104,7 @@ function initialState(): AppState {
     pageSize: 40,
     hoverSeg: null,
     toast: "",
+    toastUndo: false,
   };
 }
 
@@ -141,16 +143,30 @@ function signature(s: AppState): string {
 
 export type Patch = Partial<AppState>;
 
+/** État de départ : les réglages, puis ce que la visite précédente a laissé, puis l'URL. */
+function bootState(): AppState {
+  const base = { ...initialState(), ...loadSaved() };
+  const pos = readPosition();
+  return {
+    ...base,
+    tab: pos.tab ?? base.tab,
+    year: pos.year ?? base.year,
+    openRow: pos.openRow ?? base.openRow,
+  };
+}
+
 export function useApp() {
-  const [state, setRawState] = useState<AppState>(initialState);
+  const [state, setRawState] = useState<AppState>(bootState);
   const toastTimer = useRef<number | undefined>(undefined);
   const searchTimer = useRef<number | undefined>(undefined);
+  const saveTimer = useRef<number | undefined>(undefined);
   const cacheRef = useRef<{ sig: string; m: Record<string, unknown> }>({ sig: "", m: {} });
 
   useEffect(
     () => () => {
       window.clearTimeout(toastTimer.current);
       window.clearTimeout(searchTimer.current);
+      window.clearTimeout(saveTimer.current);
     },
     [],
   );
@@ -162,11 +178,36 @@ export function useApp() {
     }));
   }, []);
 
+  // La saisie se conserve d'une visite à l'autre ; l'écriture attend la fin de la frappe.
+  useEffect(() => {
+    window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => saveState(state), 400);
+  }, [state]);
+
+  // L'adresse suit l'écran, et le bouton Précédent revient où l'on était.
+  useEffect(() => {
+    writePosition(state);
+  }, [state.tab, state.year, state.openRow]);
+
+  useEffect(() => {
+    const onPop = () => {
+      const pos = readPosition();
+      set({
+        ...(pos.tab ? { tab: pos.tab } : {}),
+        ...(pos.year ? { year: pos.year } : {}),
+        openRow: pos.openRow ?? null,
+      });
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [set]);
+
   const toast = useCallback(
-    (msg: string) => {
-      set({ toast: msg });
+    (msg: string, undoable = false) => {
+      set({ toast: msg, toastUndo: undoable });
       window.clearTimeout(toastTimer.current);
-      toastTimer.current = window.setTimeout(() => set({ toast: "" }), 2600);
+      // Un message qui propose d'annuler doit laisser le temps de lire, puis d'agir.
+      toastTimer.current = window.setTimeout(() => set({ toast: "" }), undoable ? 6000 : 3000);
     },
     [set],
   );
@@ -207,7 +248,7 @@ export function useApp() {
             history: prev.history.concat([entry]).slice(-12),
           }) as Patch,
       );
-      toast(label + " · " + count + " cellules — " + ch.id);
+      toast(label + " · " + count + " cellules — " + ch.id, true);
     },
     [set, state, toast],
   );

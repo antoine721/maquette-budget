@@ -1,130 +1,76 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import type { EChartsOption } from "echarts";
-import { CONFIG } from "../../config";
 import { CAT_COLORS, type CatKey } from "../../data/constants";
 import type { Store } from "../../state/store";
+import { BRAND, FS, INK, RADIUS, SURFACE } from "../../theme";
 import EChart, { type EChartsInstance } from "../EChart";
-import { CARD } from "./cardStyles";
-import YearSelect from "./YearSelect";
+import { Card, CardHead } from "../ui";
 
-/** Part grise du portefeuille pas encore déclarée — l'anneau complet vaut l'objectif CDG. */
+/** Part non déclarée du portefeuille — l'anneau complet vaut l'objectif du contrôle de gestion. */
 const RESTE = "reste";
 
 /**
- * Avancement de la déclaration **en valeur de CA**.
+ * Le CA déclaré, mesuré contre l'objectif du contrôle de gestion.
  *
- * L'anneau complet vaut 100 % de l'objectif CDG ; les quatre catégories sont des
- * parts du déclaré et le solde ferme l'anneau en gris. Le centre porte le
- * pourcentage d'atteinte, la légende ne garde que la part de chaque catégorie.
+ * L'anneau entier vaut l'objectif : la portion pleine est ce qui a été déclaré,
+ * le gris ce qui manque encore. La composition par catégorie se lit dessous, en
+ * barre, où la comparaison des parts est plus juste qu'entre arcs de cercle.
  */
 export default function CaGaugeCard({ store, compact }: { store: Store; compact?: boolean }) {
   const { state, engine, set } = store;
-  const [year, setYear] = useState(CONFIG.campaignYear);
-  const view = engine.atYear(year);
+  // L'exercice est celui choisi dans le header : la carte n'a pas de période à elle.
+  const view = engine;
   const isGlobal = !engine.isExploit;
   const parts = view.caParts(isGlobal);
-  const baseTotal = view.caBaseTotal(isGlobal);
-  const declared = parts.reduce((a, x) => a + x.value, 0);
-  const pct = view.caPct(isGlobal);
+  const objectif = view.caBaseTotal(isGlobal);
+  const declare = parts.reduce((a, x) => a + x.value, 0);
+  const pct = objectif ? Math.round((declare / objectif) * 100) : 0;
   const chartRef = useRef<EChartsInstance | null>(null);
 
-  const ringPx = compact ? 132 : 176;
+  const ringPx = compact ? 132 : 156;
   const inset = Math.round(ringPx * (compact ? 0.2 : 0.24));
 
   const option = useMemo<EChartsOption>(() => {
-    type Slice = {
-      name: string;
-      value: number;
-      itemStyle: { color: string };
-      emphasis?: { disabled: boolean };
-    };
-    const data: Slice[] = parts.map((x) => ({
-      name: x.key,
-      value: Math.max(0, x.value),
-      itemStyle: { color: CAT_COLORS[x.key as CatKey] },
-    }));
-    const reste = Math.max(0, baseTotal - declared);
-    if (reste > 0)
-      data.push({
-        name: RESTE,
-        value: reste,
-        itemStyle: { color: "#eef1f4" },
-        emphasis: { disabled: true },
-      });
-
+    const reste = Math.max(0, objectif - declare);
     return {
       animationDuration: 420,
       series: [
         {
           type: "pie",
-          radius: ["71%", "93%"],
+          radius: ["74%", "94%"],
           center: ["50%", "50%"],
           startAngle: 90,
-          avoidLabelOverlap: false,
+          silent: true,
           label: { show: false },
           labelLine: { show: false },
-          cursor: "pointer",
-          itemStyle: { borderWidth: 0 },
-          emphasis: { focus: "self", scaleSize: 3 },
-          blur: { itemStyle: { opacity: 0.35 } },
-          data,
+          itemStyle: { borderWidth: 2, borderColor: SURFACE.card },
+          data: [
+            { name: "déclaré", value: Math.max(0, declare), itemStyle: { color: BRAND.base } },
+            { name: RESTE, value: reste, itemStyle: { color: "#eef1f4" } },
+          ],
         },
       ],
     };
-  }, [parts, baseTotal, declared]);
-
-  const focusSegment = (key: string | null) => {
-    set({ hoverSeg: key });
-    const chart = chartRef.current;
-    if (!chart) return;
-    const index = parts.findIndex((x) => x.key === key);
-    chart.dispatchAction({ type: "downplay", seriesIndex: 0 });
-    if (index >= 0) chart.dispatchAction({ type: "highlight", seriesIndex: 0, dataIndex: index });
-  };
+  }, [objectif, declare]);
 
   const hovered = parts.find((x) => x.key === state.hoverSeg);
-  const centerPct = hovered && declared ? Math.round((hovered.value / declared) * 100) : pct;
-  const centerLabel = hovered ? hovered.label : "de l'objectif CDG";
-  const centerColor = hovered
-    ? CAT_COLORS[hovered.key as CatKey]
-    : pct >= 100
-      ? "#15803d"
-      : pct >= 70
-        ? "#0a9bd8"
-        : "#dc2626";
 
   return (
-    <div style={CARD}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700 }}>
-            Avancement — en CA
-          </div>
-          <div style={{ fontSize: 11.5, color: "#8a95a1", marginTop: 2 }}>
-            {engine.isExploit
-              ? "mon périmètre"
-              : state.fEntity === "Toutes"
-                ? "toutes entités"
-                : state.fEntity}
-          </div>
-        </div>
-        <YearSelect year={year} onChange={setYear} />
-      </div>
+    <Card style={{ display: "flex", flexDirection: "column" }}>
+      <CardHead
+        title="CA déclaré"
+        hint={
+          (engine.isExploit
+            ? "mon périmètre"
+            : state.fEntity === "Toutes"
+              ? "toutes entités"
+              : state.fEntity) + " · face à l'objectif CDG"
+        }
+      />
 
-      <div style={{ display: "flex", justifyContent: "center", marginTop: 6 }}>
-        <div
-          onMouseLeave={() => set({ hoverSeg: null })}
-          style={{ position: "relative", width: ringPx, height: ringPx }}
-        >
-          <EChart
-            option={option}
-            instanceRef={chartRef}
-            events={{
-              mouseover: (p: { name: string }) =>
-                set({ hoverSeg: p.name === RESTE ? null : p.name }),
-              mouseout: () => set({ hoverSeg: null }),
-            }}
-          />
+      <div style={{ display: "flex", justifyContent: "center" }}>
+        <div style={{ position: "relative", width: ringPx, height: ringPx }}>
+          <EChart option={option} instanceRef={chartRef} />
           <div
             style={{
               position: "absolute",
@@ -138,28 +84,26 @@ export default function CaGaugeCard({ store, compact }: { store: Store; compact?
           >
             <span
               style={{
-                fontSize: compact ? 22 : 32,
+                fontSize: compact ? 22 : 28,
                 fontWeight: 700,
                 letterSpacing: "-1px",
-                color: centerColor,
+                color: INK.strong,
                 lineHeight: 1,
-                whiteSpace: "nowrap",
+                fontVariantNumeric: "tabular-nums",
               }}
             >
-              {centerPct} %
+              {pct} %
             </span>
             <span
               style={{
-                fontSize: compact ? 9.5 : 10.5,
+                fontSize: FS.micro,
                 fontWeight: 600,
-                color: "#8a95a1",
-                marginTop: 3,
+                color: INK.muted,
+                marginTop: 4,
                 textAlign: "center",
-                lineHeight: 1.2,
-                overflow: "hidden",
               }}
             >
-              {hovered ? centerLabel : compact ? "de l'objectif" : centerLabel}
+              de l'objectif
             </span>
           </div>
         </div>
@@ -167,82 +111,112 @@ export default function CaGaugeCard({ store, compact }: { store: Store; compact?
 
       <div
         style={{
-          marginTop: 8,
-          textAlign: "center",
-          fontSize: 12.5,
-          color: "#3b4753",
-          fontVariantNumeric: "tabular-nums",
+          display: "flex",
+          alignItems: "baseline",
+          justifyContent: "center",
+          gap: 6,
+          marginTop: 10,
+          fontSize: FS.small,
+          color: INK.muted,
         }}
       >
-        <strong style={{ fontWeight: 700, color: "#17202a" }}>{view.fmt(declared)}</strong>
-        <span style={{ color: "#8a95a1" }}> déclarés sur {view.fmt(baseTotal)}</span>
+        <b style={{ fontSize: FS.base, fontWeight: 700, color: INK.strong }}>
+          {view.fmt(declare)}
+        </b>
+        déclarés sur {view.fmt(objectif)}
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 8 }}>
-        {parts.map((x) => {
-          const share = declared ? Math.round((x.value / declared) * 100) : 0;
-          return (
-            <div
-              key={x.key}
-              onMouseEnter={() => focusSegment(x.key)}
-              onMouseLeave={() => focusSegment(null)}
-              title={
-                x.label +
-                " — déclaré " +
-                view.fmt(x.value) +
-                " · objectif " +
-                view.fmt(x.base) +
-                (x.base ? " (" + Math.round((x.value / x.base) * 100) + " % de l'objectif)" : "")
-              }
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "5px 8px",
-                borderRadius: 7,
-                background: state.hoverSeg === x.key ? "#f4f6f8" : "transparent",
-                transition: "background 140ms ease",
-                cursor: "default",
-              }}
-            >
-              <span
+      {/* Composition du déclaré : quatre parts d'un même total, donc une barre. */}
+      <div style={{ marginTop: 14 }}>
+        <div style={{ fontSize: FS.micro, fontWeight: 700, color: INK.muted, marginBottom: 6 }}>
+          RÉPARTITION DU DÉCLARÉ
+        </div>
+        <div
+          style={{
+            display: "flex",
+            gap: 2,
+            height: 10,
+            borderRadius: 5,
+            overflow: "hidden",
+            background: "#eef1f4",
+          }}
+        >
+          {parts.map((x) => {
+            const share = declare ? (x.value / declare) * 100 : 0;
+            if (share <= 0) return null;
+            return (
+              <div
+                key={x.key}
+                onMouseEnter={() => set({ hoverSeg: x.key })}
+                onMouseLeave={() => set({ hoverSeg: null })}
+                title={x.label + " · " + view.fmt(x.value)}
                 style={{
-                  flex: "0 0 auto",
-                  width: 8,
-                  height: 8,
-                  borderRadius: 2,
+                  width: share + "%",
                   background: CAT_COLORS[x.key as CatKey],
+                  opacity: hovered && hovered.key !== x.key ? 0.35 : 1,
+                  transition: "opacity 150ms",
                 }}
               />
-              <span
+            );
+          })}
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 8 }}>
+          {parts.map((x) => {
+            const share = declare ? Math.round((x.value / declare) * 100) : 0;
+            const on = state.hoverSeg === x.key;
+            return (
+              <div
+                key={x.key}
+                onMouseEnter={() => set({ hoverSeg: x.key })}
+                onMouseLeave={() => set({ hoverSeg: null })}
                 style={{
-                  minWidth: 0,
-                  flex: 1,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: "#3b4753",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 9,
+                  padding: "4px 8px",
+                  borderRadius: RADIUS.control,
+                  background: on ? SURFACE.hover : "transparent",
                 }}
               >
-                {x.label}
-              </span>
-              <span
-                style={{
-                  flex: "0 0 auto",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: "#6b7681",
-                  fontVariantNumeric: "tabular-nums",
-                }}
-              >
-                {share} %
-              </span>
-            </div>
-          );
-        })}
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    flex: "0 0 auto",
+                    borderRadius: 2,
+                    background: CAT_COLORS[x.key as CatKey],
+                  }}
+                />
+                <span style={{ flex: 1, fontSize: FS.small, fontWeight: 600, color: INK.base }}>
+                  {x.label}
+                </span>
+                <span
+                  style={{
+                    fontSize: FS.small,
+                    color: INK.muted,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {view.fmt(x.value)}
+                </span>
+                <span
+                  style={{
+                    width: 38,
+                    textAlign: "right",
+                    fontSize: FS.small,
+                    fontWeight: 700,
+                    color: INK.strong,
+                    fontVariantNumeric: "tabular-nums",
+                  }}
+                >
+                  {share} %
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </Card>
   );
 }

@@ -103,6 +103,8 @@ export interface AppState {
   pageSize: number;
   hoverSeg: string | null;
   toast: string;
+  /** Le toast annonce une action reversible : il propose alors de l'annuler. */
+  toastUndo: boolean;
 }
 
 /** Valeurs primaires d'un couple chantier/mois. La masse salariale est dérivée. */

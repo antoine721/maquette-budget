@@ -14,6 +14,8 @@ import {
   type Statut,
 } from "../data/constants";
 import { CHANTIERS, LATE, REX, hash, rng, type Chantier } from "../data/chantiers";
+import { CONFIG } from "../config";
+import { INK, STATE } from "../theme";
 import type { AppState, EditStore, Prims, RefIndicator, Todo } from "./types";
 
 export type CalcMode = "base" | "saisi";
@@ -67,7 +69,7 @@ export class Engine {
 
   /** Un exercice antérieur à la campagne en cours est clos, donc en lecture seule. */
   closed(): boolean {
-    return this.s.year <= 2026;
+    return this.s.year < CONFIG.campaignYear;
   }
 
   st(ch: Chantier): Statut {
@@ -113,17 +115,25 @@ export class Engine {
   }
 
   /** Vert au-dessus de l'objectif, ambre à moins de 3 %, rouge en dessous. */
+  /**
+   * Couleur d'une valeur au regard de sa baseline.
+   *
+   * Seul un écart qui mérite un regard est coloré. Colorer chaque cellule dès le
+   * premier euro d'écart peignait le tableau entier en rouge et vert : plus rien
+   * n'y ressortait. Sous 5 % d'écart, la valeur reste en encre normale.
+   */
   markerColor(
     v: number | null | undefined,
     b: number | null | undefined,
     better: "high" | "low",
   ): string {
-    if (v === null || v === undefined || b === null || b === undefined || !b) return "#94a3b8";
+    if (v === null || v === undefined || b === null || b === undefined || !b) return INK.faint;
     let d = (v - b) / Math.abs(b);
     if (better === "low") d = -d;
-    if (d >= 0) return "#15803d";
-    if (d > -0.03) return "#b45309";
-    return "#dc2626";
+    if (d <= -0.15) return STATE.danger;
+    if (d <= -0.05) return STATE.warn;
+    if (d >= 0.15) return STATE.good;
+    return INK.base;
   }
 
   // ------------------------------------------------------------- valeurs de base
@@ -389,24 +399,42 @@ export class Engine {
   }
 
   /**
-   * Série mensuelle du périmètre : CA déclaré de l'exercice, objectif CDG et réalisé N-1.
-   * Alimente le graphe d'évolution affiché hors campagne.
+   * Chantiers dont les douze mois sont saisis — les seuls comparables d'un exercice
+   * à l'autre. Un budget à moitié rempli n'est pas un budget en baisse : additionné
+   * aux autres, il tire la courbe vers le bas sur les mois manquants et se lit comme
+   * une chute d'activité alors qu'il ne dit qu'un retard de déclaration.
    */
-  monthly(isGlobal: boolean) {
-    return this.memo("monthly:" + isGlobal, () => {
-      const list = this.caList(isGlobal);
+  budgetedList(isGlobal: boolean): Chantier[] {
+    return this.memo("budgetedList:" + isGlobal, () =>
+      this.caList(isGlobal).filter((ch) => FULL_YEAR.every((m) => this.prims(ch, m, "saisi"))),
+    );
+  }
+
+  /**
+   * Série mensuelle du périmètre : CA déclaré de l'exercice, objectif CDG et budget N-1.
+   *
+   * `comparable` restreint le calcul aux chantiers entièrement budgétés : les trois
+   * séries portent alors sur le même sous-ensemble et l'évolution vs N-1 se lit sans
+   * biais. Sinon tout le saisi est agrégé, mois partiels compris — utile pour suivre
+   * l'avancement, trompeur pour comparer.
+   */
+  monthly(isGlobal: boolean, comparable: boolean) {
+    return this.memo("monthly:" + isGlobal + ":" + comparable, () => {
+      const all = this.caList(isGlobal);
+      const list = comparable ? this.budgetedList(isGlobal) : all;
       // Le budget de l'exercice précédent se lit sur un moteur calé sur N-1.
       const prevEngine = this.atYear(this.s.year - 1);
-      return MONTHS.map((_, m) => {
+      const rows = MONTHS.map((_, m) => {
         let objectif = 0;
         list.forEach((ch) => CAT.forEach((c) => (objectif += this.baseField(ch, m, c.k))));
         return {
           m,
           declare: this.aggregate(list, [m], "saisi", "ca", "Total"),
-          objectif,
+          objectif: list.length ? objectif : null,
           prev: prevEngine.aggregate(list, [m], "saisi", "ca", "Total"),
         };
       });
+      return { rows, count: list.length, total: all.length };
     });
   }
 
@@ -623,29 +651,60 @@ export class Engine {
     return names.join(", ");
   }
 
-  /** Campagne : part des cellules déjà déclarées sur le périmètre du rôle. */
-  campaignPct(): string {
-    let done = 0,
-      tot = 0;
-    this.perim().forEach((ch) =>
-      MONTHS.forEach((_, m) => {
-        tot++;
-        if (this.prims(ch, m, "saisi")) done++;
-      }),
-    );
-    return (tot ? Math.round((done / tot) * 100) : 0) + "%";
-  }
+  /**
+   * Les mesures d'avancement du périmètre, calculées une fois et au même endroit.
+   *
+   * L'accueil affichait auparavant quatre pourcentages issus de quatre calculs
+   * séparés — remplissage, budgets terminés, part de l'objectif CA, chantiers à
+   * traiter — sans que rien ne dise ce que chacun comptait ni comment les
+   * rapprocher. Ils vivent ici, nommés, avec le dénominateur qui va avec.
+   *
+   * Le portefeuille se lit d'abord en nombre de budgets : combien sont partis en
+   * validation, combien sont validés. Le taux de remplissage reste disponible pour
+   * qui veut le détail des mois saisis.
+   */
+  progress(isGlobal = this.s.role !== "Exploitation") {
+    return this.memo("progress:" + isGlobal, () => {
+      const list = this.caList(isGlobal);
+      let saisis = 0;
+      const attendus = list.length * MONTHS.length;
+      list.forEach((ch) => MONTHS.forEach((_, m) => this.prims(ch, m, "saisi") && saisis++));
 
-  fillPct(isCG: boolean): string {
-    let done = 0,
-      tot = 0;
-    this.caList(isCG).forEach((ch) =>
-      MONTHS.forEach((_, m) => {
-        tot++;
-        if (this.prims(ch, m, "saisi")) done++;
-      }),
-    );
-    return (tot ? Math.round((done / tot) * 100) : 0) + "%";
+      const g = this.budgetGroups();
+      // Déclaré = le budget est parti en validation, quel que soit son sort ensuite.
+      const declares = list.filter((ch) => {
+        const st = this.st(ch);
+        return st === "À valider" || st === "Validé" || st === "Clôturé";
+      }).length;
+      const declare = this.caParts(isGlobal).reduce((a, x) => a + x.value, 0);
+      const objectif = this.caBaseTotal(isGlobal);
+      const todo = list.filter((ch) => this.todoFor(ch, FULL_YEAR, this.s.role));
+      const crit = todo.filter((ch) => this.todoFor(ch, FULL_YEAR, this.s.role)!.crit).length;
+
+      return {
+        /** Chantiers du périmètre. */
+        chantiers: list.length,
+        /** Mois de budget renseignés / attendus — la mesure de référence. */
+        saisis,
+        attendus,
+        remplissage: attendus ? Math.round((saisis / attendus) * 100) : 0,
+        /** Budgets envoyés au contrôle de gestion — en attente ou déjà validés. */
+        declares,
+        /** Budgets validés par le contrôle de gestion, ou clos. */
+        termines: g.fini.length,
+        /** Envoyés, pas encore contrôlés. */
+        aControler: declares - g.fini.length,
+        /** Chantiers dont le budget reste entièrement à construire. */
+        aDeclarer: g.remplir.length + g.attente.length,
+        /** Chantiers sur lesquels le rôle connecté a quelque chose à faire. */
+        aTraiter: todo.length,
+        critiques: crit,
+        /** CA déclaré et objectif du contrôle de gestion, en euros. */
+        declare,
+        objectif,
+        partObjectif: objectif ? Math.round((declare / objectif) * 100) : 0,
+      };
+    });
   }
 
   campaignChip(): string {

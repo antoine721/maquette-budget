@@ -3,6 +3,7 @@ import { CAT, ST, isN2, N2_BORDER, N2_TINT, N2_FG, type Statut } from "../data/c
 import type { Chantier } from "../data/chantiers";
 import type { Engine } from "./engine";
 import type { AppState } from "./types";
+import { BRAND, INK } from "../theme";
 
 export interface DetailCell {
   editable: boolean;
@@ -58,6 +59,8 @@ export interface DetailLine {
   quick?: QuickInfo;
   /** Ligne grise cumulant les actions déjà appliquées. */
   applied?: { label: string; title: string };
+  /** Ligne d'ouverture de section : le détail se lit en trois zones successives. */
+  head?: { index: number; hint: string };
 }
 
 export interface MenuAction {
@@ -102,23 +105,26 @@ function mkLine(id: string, label: string, o: Partial<DetailLine> = {}): DetailL
     weight: 500,
     labelColor: "#475569",
     size: "13px",
-    pad: "9px 12px 9px 0",
+    pad: "9px 12px 9px 14px",
     spacing: "0",
     transform: "none",
     ...o,
   };
 }
 
-/** En-tête d'un des trois groupes du détail. */
-function groupHead(id: string, label: string): DetailLine {
+/**
+ * Ouverture d'une des trois zones du détail. Chaque zone est un bloc à part
+ * entière : on lit d'abord d'où part le budget, puis ce qu'on y saisit, puis ce
+ * qui en découle. Enchaînées sans séparation, les vingt lignes se confondaient.
+ */
+function groupHead(id: string, label: string, index: number, hint: string): DetailLine {
   return mkLine(id, label, {
     weight: 700,
-    labelColor: "#64748b",
-    size: "11px",
-    spacing: "0.8px",
-    transform: "uppercase",
-    pad: "18px 0 7px",
+    labelColor: "#334155",
+    size: "12px",
+    pad: "0 0 0 14px",
     sepColor: "transparent",
+    head: { index, hint },
   });
 }
 
@@ -143,7 +149,14 @@ export function buildDetail(
   const detail: DetailLine[] = [];
 
   // ------------------------------------------------------- 1. baseline contrôle de gestion
-  detail.push(groupHead("head:base", "1 · Baseline — contrôle de gestion"));
+  detail.push(
+    groupHead(
+      "head:base",
+      "Baseline — contrôle de gestion",
+      1,
+      "Le point de départ du budget : le réalisé de l'an dernier, corrigé des coefficients.",
+    ),
+  );
   const lineN1 = mkLine("n1", "Réalisé N-1 (source Gescof) — N-2 de septembre à décembre", { labelColor: "#6b7681" });
   const refLines = s.refs.map((r) => ({
     ref: r,
@@ -168,7 +181,14 @@ export function buildDetail(
   detail.push(lineBase);
 
   // ------------------------------------------------------------- 2. saisie exploitation
-  detail.push(groupHead("head:saisie", "2 · À remplir — exploitation"));
+  detail.push(
+    groupHead(
+      "head:saisie",
+      "À remplir — exploitation",
+      2,
+      "Les postes saisis mois par mois : le CA par catégorie, les heures et le taux horaire.",
+    ),
+  );
   const catLines = CAT.map((c) => ({
     c,
     line: mkLine("cat:" + c.k, "CA " + c.label, {
@@ -212,7 +232,14 @@ export function buildDetail(
   detail.push(lineHeures, lineTaux, lineMasse);
 
   // ---------------------------------------------------------- 3. indicateurs calculés
-  detail.push(groupHead("head:calc", "3 · Indicateurs calculés"));
+  detail.push(
+    groupHead(
+      "head:calc",
+      "Indicateurs calculés",
+      3,
+      "Ils découlent des deux zones ci-dessus — rien ne s'y saisit.",
+    ),
+  );
   const lineMsRatio = mkLine("msRatio", "% masse salariale / CA", { labelColor: "#334155" });
   const linePhv = mkLine("phv", "Prix horaire vendu (CA / heures)", { labelColor: "#334155" });
   const lineMarge = mkLine("marge", "% marge restant après MS", {
@@ -244,7 +271,7 @@ export function buildDetail(
         editableMonths: msEdit,
         doneLabel: Math.round((saisis / mIdx.length) * 100) + " %",
         doneBg: modifs ? "#e8f6fd" : "#f4f6f8",
-        doneFg: modifs ? "#0782b6" : "#8a95a1",
+        doneFg: modifs ? BRAND.strong : "#6b7681",
         doneTitle: last
           ? "Dernière action : " + last.label + " (" + last.count + " cellules)"
           : saisis + "/" + mIdx.length + " mois renseignés sur cette ligne",
@@ -367,7 +394,7 @@ export function buildDetail(
         return {
           editable: false,
           text: engine.fmt(v, kind),
-          color: ed ? readColor : v === null ? "#94a3b8" : preN2 ? N2_FG : readColor,
+          color: ed ? readColor : v === null ? INK.faint : preN2 ? N2_FG : readColor,
           bg: ed ? "#eff6ff" : preN2 ? N2_TINT : "transparent",
         };
       return {
@@ -391,8 +418,8 @@ export function buildDetail(
             ? "#17202a"
             : preN2
               ? N2_FG
-              : "#94a3b8",
-        border: ed ? "#0a9bd8" : preN2 ? N2_BORDER : stc.border,
+              : INK.faint,
+        border: ed ? BRAND.base : preN2 ? N2_BORDER : stc.border,
         bg: preN2 ? N2_TINT : "#fff",
         field,
         month: m,
@@ -405,7 +432,7 @@ export function buildDetail(
     lineCaTot.cells.push({
       editable: false,
       text: engine.fmt(pS ? pS.ca : null, "money"),
-      color: pS && pB ? engine.markerColor(pS.ca, pB.ca, "high") : "#94a3b8",
+      color: pS && pB ? engine.markerColor(pS.ca, pB.ca, "high") : INK.faint,
       bg: "transparent",
     });
 
@@ -414,7 +441,7 @@ export function buildDetail(
     lineMasse.cells.push({
       editable: false,
       text: engine.fmt(pS ? pS.masse : null, "money"),
-      color: pS && pB ? engine.markerColor(pS.masse, pB.masse, "low") : "#94a3b8",
+      color: pS && pB ? engine.markerColor(pS.masse, pB.masse, "low") : INK.faint,
       bg: "transparent",
     });
 

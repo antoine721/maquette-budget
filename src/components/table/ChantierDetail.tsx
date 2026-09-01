@@ -1,7 +1,12 @@
+import { useEffect, useRef } from "react";
 import type { Statut } from "../../data/constants";
 import type { Chantier } from "../../data/chantiers";
 import { buildDetail, menuActions, menuPlaceholder, type DetailLine } from "../../lib/detail";
 import type { Store } from "../../state/store";
+import { BRAND, FS, INK, LINE, RADIUS, STATE, SURFACE } from "../../theme";
+
+/** Une teinte par zone : d'où part le budget, ce qu'on saisit, ce qui en découle. */
+const SECTION_ACCENT = [INK.muted, BRAND.base, "#8b5cf6"];
 
 /** Détail du calcul d'un chantier : les trois groupes de lignes et le circuit de validation. */
 export default function ChantierDetail({
@@ -32,6 +37,12 @@ export default function ChantierDetail({
   const isExploit = engine.isExploit;
 
   const detail = buildDetail(engine, state, ch, mIdx);
+  // Les lignes arrivent à plat ; chaque en-tête ouvre la zone qui le suit.
+  const sections: { head: DetailLine; lines: DetailLine[] }[] = [];
+  detail.forEach((d) => {
+    if (d.head) sections.push({ head: d, lines: [] });
+    else sections[sections.length - 1]?.lines.push(d);
+  });
   const rowSaisi = engine.aggregate([ch], mIdx, "saisi", met.key, cat);
   const rowBase = engine.aggregate([ch], mIdx, "base", met.key, cat);
   const filledM = mIdx.filter((m) => engine.prims(ch, m, "saisi"));
@@ -43,7 +54,7 @@ export default function ChantierDetail({
   const predRateColor = (() => {
     if (!rowBase || rowSaisi === null) return "#94a3b8";
     const r = rowSaisi / rowBase;
-    return r >= 1 ? "#15803d" : r > 0.97 ? "#b45309" : "#dc2626";
+    return r >= 1 ? STATE.good : r > 0.97 ? STATE.warn : STATE.danger;
   })();
 
   const trace =
@@ -89,7 +100,7 @@ export default function ChantierDetail({
             fontWeight: 700,
             letterSpacing: "0.6px",
             textTransform: "uppercase",
-            color: "#8a95a1",
+            color: "#6b7681",
           }}
         >
           Détail du calcul — {ch.id}
@@ -111,7 +122,52 @@ export default function ChantierDetail({
         <CristalBadge n={cristal} pending={st === "À valider"} />
       </div>
 
-      {detail.map((d) => (
+      {sections.map((sec) => (
+        <section
+          key={sec.head.id}
+          style={{
+            marginTop: 14,
+            border: "1px solid " + LINE.base,
+            borderRadius: RADIUS.card,
+            background: SURFACE.card,
+            overflow: "hidden",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              padding: "10px 14px",
+              background: SURFACE.sunken,
+              borderBottom: "1px solid " + LINE.base,
+              borderLeft: "3px solid " + SECTION_ACCENT[sec.head.head!.index - 1],
+            }}
+          >
+            <span
+              style={{
+                width: 20,
+                height: 20,
+                flex: "0 0 auto",
+                borderRadius: "50%",
+                background: SECTION_ACCENT[sec.head.head!.index - 1],
+                color: "#fff",
+                fontSize: 11,
+                fontWeight: 700,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {sec.head.head!.index}
+            </span>
+            <span style={{ fontSize: FS.body, fontWeight: 700, color: INK.strong }}>
+              {sec.head.label}
+            </span>
+            <span style={{ fontSize: FS.small, color: INK.muted }}>{sec.head.head!.hint}</span>
+          </div>
+
+          {sec.lines.map((d) => (
         <div
           key={d.id}
           style={{
@@ -166,7 +222,7 @@ export default function ChantierDetail({
                 style={{
                   fontSize: 11,
                   fontWeight: 500,
-                  color: "#94a3b8",
+                  color: INK.faint,
                   letterSpacing: 0,
                   textTransform: "none",
                   overflow: "hidden",
@@ -198,7 +254,7 @@ export default function ChantierDetail({
                     border: "1px " + (c.dash || "solid") + " " + c.border,
                     borderRadius: 6,
                     background: c.bg || "#fff",
-                    fontSize: 12.5,
+                    fontSize: 13,
                     fontVariantNumeric: "tabular-nums",
                     fontWeight: 600,
                     color: c.fg,
@@ -211,7 +267,7 @@ export default function ChantierDetail({
                     padding: "6px 4px",
                     borderRadius: 6,
                     background: c.bg,
-                    fontSize: 12.5,
+                    fontSize: 13,
                     fontVariantNumeric: "tabular-nums",
                     color: c.color,
                   }}
@@ -235,6 +291,8 @@ export default function ChantierDetail({
             {d.total}
           </div>
         </div>
+          ))}
+        </section>
       ))}
 
       {/* Bandeau de clôture : le récapitulatif chiffré, puis les actions du circuit. */}
@@ -360,7 +418,7 @@ export default function ChantierDetail({
           marginTop: 10,
         }}
       >
-        <div style={{ fontSize: 12.5, color: "#6b7681" }}>{trace}</div>
+        <div style={{ fontSize: 13, color: "#6b7681" }}>{trace}</div>
         <span style={{ flex: 1 }} />
       </div>
     </div>
@@ -406,9 +464,30 @@ function LineQuick({
   const menuOpen = state.openMenu === q.menuId;
   const listOpen = menuOpen && !state.menuStep;
   const stepOpen = menuOpen && !!state.menuStep;
+  const wrap = useRef<HTMLSpanElement | null>(null);
+
+  // Le menu se referme au clic ailleurs et à l'échappement : il ne restait ouvert
+  // que jusqu'au prochain clic sur son propre bouton.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = () => set({ openMenu: null, menuStep: null, menuValue: "" });
+    const onDown = (e: MouseEvent) => {
+      if (!wrap.current?.contains(e.target as Node)) close();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen, set]);
 
   return (
     <span
+      ref={wrap}
       style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, flex: "0 0 auto" }}
     >
       <span
@@ -416,7 +495,7 @@ function LineQuick({
         style={{
           padding: "2px 8px",
           borderRadius: 20,
-          fontSize: 10.5,
+          fontSize: 11,
           fontWeight: 700,
           background: q.doneBg,
           color: q.doneFg,
@@ -497,7 +576,7 @@ function LineQuick({
                       borderRadius: 7,
                       background: "transparent",
                       fontFamily: "inherit",
-                      fontSize: 12.5,
+                      fontSize: 13,
                       fontWeight: 600,
                       color: a.color,
                       cursor: "pointer",
@@ -509,7 +588,7 @@ function LineQuick({
 
               {stepOpen && (
                 <span style={{ display: "flex", flexDirection: "column", gap: 8, padding: 2 }}>
-                  <span style={{ fontSize: 12.5, fontWeight: 700, color: "#17202a" }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#17202a" }}>
                     {state.menuStep}
                   </span>
                   <input
@@ -549,10 +628,10 @@ function LineQuick({
                         padding: 8,
                         border: 0,
                         borderRadius: 7,
-                        background: "#0a9bd8",
+                        background: BRAND.base,
                         color: "#fff",
                         fontFamily: "inherit",
-                        fontSize: 12.5,
+                        fontSize: 13,
                         fontWeight: 600,
                         cursor: "pointer",
                       }}
@@ -570,7 +649,7 @@ function LineQuick({
                         borderRadius: 7,
                         background: "#fff",
                         fontFamily: "inherit",
-                        fontSize: 12.5,
+                        fontSize: 13,
                         fontWeight: 600,
                         color: "#6b7681",
                         cursor: "pointer",
@@ -604,7 +683,7 @@ function Stat({
     <span style={{ display: "flex", flexDirection: "column" }}>
       <span
         style={{
-          fontSize: 10.5,
+          fontSize: 11,
           fontWeight: 700,
           letterSpacing: "0.5px",
           textTransform: "uppercase",
@@ -653,7 +732,7 @@ function FlowButton({
         border: disabled ? "1px solid #e2e8f0" : 0,
         borderRadius: 8,
         background: disabled ? "#f1f5f9" : bg,
-        color: disabled ? "#94a3b8" : "#fff",
+        color: disabled ? INK.faint : "#fff",
         fontFamily: "inherit",
         fontSize: 13,
         fontWeight: 600,

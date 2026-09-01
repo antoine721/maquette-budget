@@ -7,13 +7,16 @@ import CaGaugeCard from "../home/CaGaugeCard";
 import MonthlyEvolutionChart from "../home/MonthlyEvolutionChart";
 import { CARD } from "../home/cardStyles";
 import PilotSettings from "./PilotSettings";
+import StatutBadge from "../StatutBadge";
+import { BRAND, FS, INK, LINE, RADIUS, SHADOW, STATE, SURFACE } from "../../theme";
+import { Kpi, PageHead } from "../ui";
 
 const COL_HEAD: React.CSSProperties = {
-  fontSize: 10.5,
+  fontSize: 11,
   fontWeight: 700,
   letterSpacing: "0.5px",
   textTransform: "uppercase",
-  color: "#8a95a1",
+  color: "#6b7681",
 };
 
 const TOP_GRID = "300px 120px 110px 130px 110px 100px 1fr";
@@ -23,7 +26,7 @@ const TABS: PilotTabId[] = ["Vue d'ensemble", "Chantiers", "Responsables", "Rég
 
 /** Espace de pilotage du contrôle de gestion, découpé en onglets internes. */
 export default function PilotTab({ store }: { store: Store }) {
-  const { state, set } = store;
+  const { state, engine, set } = store;
   const tab = state.pilotTab;
 
   return (
@@ -31,47 +34,54 @@ export default function PilotTab({ store }: { store: Store }) {
       style={{
         flex: 1,
         minWidth: 0,
-        padding: "22px 28px 48px",
+        padding: "20px 28px 48px",
         display: "flex",
         flexDirection: "column",
         gap: 14,
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          gap: 4,
-          padding: 4,
-          background: "#fff",
-          border: "1px solid #e6eaee",
-          borderRadius: 12,
-          alignSelf: "flex-start",
-          flexWrap: "wrap",
-        }}
-      >
-        {TABS.map((t) => {
-          const on = tab === t;
-          return (
-            <button
-              key={t}
-              onClick={() => set({ pilotTab: t })}
-              style={{
-                padding: "8px 16px",
-                border: 0,
-                borderRadius: 9,
-                background: on ? "#0a9bd8" : "transparent",
-                color: on ? "#fff" : "#6b7681",
-                fontFamily: "inherit",
-                fontSize: 13,
-                fontWeight: on ? 700 : 600,
-                cursor: "pointer",
-              }}
-            >
-              {t}
-            </button>
-          );
-        })}
-      </div>
+      <PageHead
+        eyebrow={"Exercice " + state.year}
+        title="Pilotage CDG"
+        hint={engine.scope().length + " chantiers suivis · toutes entités"}
+        right={
+          <div
+            style={{
+              display: "flex",
+              gap: 3,
+              padding: 3,
+              background: SURFACE.canvas,
+              border: "1px solid " + LINE.base,
+              borderRadius: RADIUS.control + 3,
+            }}
+          >
+            {TABS.map((t) => {
+              const on = tab === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => set({ pilotTab: t })}
+                  aria-pressed={on}
+                  style={{
+                    padding: "7px 14px",
+                    border: 0,
+                    borderRadius: RADIUS.control,
+                    background: on ? SURFACE.card : "transparent",
+                    color: on ? INK.strong : INK.muted,
+                    boxShadow: on ? SHADOW.raised : "none",
+                    fontFamily: "inherit",
+                    fontSize: FS.body,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                >
+                  {t}
+                </button>
+              );
+            })}
+          </div>
+        }
+      />
 
       {tab === "Vue d'ensemble" && <Overview store={store} />}
       {tab === "Chantiers" && <TopChantiers store={store} />}
@@ -86,64 +96,43 @@ function Overview({ store }: { store: Store }) {
   const { engine } = store;
   const all = engine.scope();
   const totCa = all.reduce((a, ch) => a + ch.ca, 0);
-
-  const kpis = [
-    {
-      label: "Nombre de chantiers",
-      value: String(all.length),
-      hint: engine.fmt(totCa) + " de CA de référence",
-      color: "#17202a",
-    },
-    {
-      label: "Avancement global",
-      value: (() => {
-        let d = 0,
-          t = 0;
-        all.forEach((ch) =>
-          FULL_YEAR.forEach((m) => {
-            t++;
-            if (engine.prims(ch, m, "saisi")) d++;
-          }),
-        );
-        return (t ? Math.round((d / t) * 100) : 0) + " %";
-      })(),
-      hint: "cellules saisies",
-      color: "#475569",
-    },
-  ];
+  // Les mêmes mesures que l'accueil, sur le portefeuille entier : un seul calcul,
+  // un seul vocabulaire, des chiffres qui se recoupent d'un écran à l'autre.
+  const p = engine.progress(true);
 
   return (
     <>
-      <div
-        style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))", gap: 14 }}
-      >
-        {kpis.map((k) => (
-          <div key={k.label} style={{ ...CARD, padding: "14px 16px" }}>
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: "0.4px",
-                textTransform: "uppercase",
-                color: "#8a95a1",
-              }}
-            >
-              {k.label}
-            </div>
-            <div
-              style={{
-                marginTop: 6,
-                fontSize: 24,
-                fontWeight: 700,
-                letterSpacing: "-0.6px",
-                color: k.color,
-              }}
-            >
-              {k.value}
-            </div>
-            <div style={{ marginTop: 2, fontSize: 12, color: "#8a95a1" }}>{k.hint}</div>
-          </div>
-        ))}
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <Kpi
+          label="NOMBRE DE CHANTIERS"
+          value={String(all.length)}
+          hint={engine.fmt(totCa) + " de CA de référence"}
+        />
+        <Kpi
+          label="BUDGETS DÉCLARÉS"
+          value={p.declares + " / " + p.chantiers}
+          meter={{
+            pct: p.chantiers ? (p.declares / p.chantiers) * 100 : 0,
+            color: ST["À valider"].accent,
+          }}
+          hint={p.aDeclarer + " chantiers pas encore commencés"}
+        />
+        <Kpi
+          label="BUDGETS VALIDÉS"
+          value={p.termines + " / " + p.chantiers}
+          meter={{ pct: p.chantiers ? (p.termines / p.chantiers) * 100 : 0, color: ST["Validé"].accent }}
+          hint={p.aControler + " en attente de contrôle"}
+        />
+        <Kpi
+          label="À CONTRÔLER"
+          value={String(p.aTraiter)}
+          tone={p.critiques ? STATE.danger : INK.strong}
+          hint={
+            p.aTraiter === 0
+              ? "rien en attente"
+              : p.critiques + " critique" + (p.critiques > 1 ? "s" : "") + " · baselines et marges"
+          }
+        />
       </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 14, alignItems: "stretch" }}>
@@ -189,10 +178,10 @@ function TopChantiers({ store }: { store: Store }) {
         ref: engine.fmt(ch.ca),
         declare: engine.fmt(v),
         pct: Math.round((doneM / 12) * 100) + "%",
-        pctColor: doneM === 12 ? "#16a34a" : doneM >= 6 ? "#0a9bd8" : "#dc2626",
+        pctColor: doneM === 12 ? STATE.good : doneM >= 6 ? BRAND.base : STATE.danger,
         ecart:
           ec === null ? "—" : (ec >= 0 ? "+" : "−") + Math.abs(ec).toFixed(1).replace(".", ",") + " %",
-        ecartColor: ec === null ? "#94a3b8" : ec >= 0 ? "#15803d" : ec > -3 ? "#b45309" : "#dc2626",
+        ecartColor: ec === null ? INK.faint : ec >= 0 ? STATE.good : ec > -3 ? STATE.warn : STATE.danger,
         risk:
           st === "Non budgétisé"
             ? "Non budgétisé"
@@ -201,7 +190,7 @@ function TopChantiers({ store }: { store: Store }) {
               : st === "À valider"
                 ? "À valider"
                 : "Complet",
-        riskColor: st === "Non budgétisé" || miss.length ? "#b91c1c" : "#6b7681",
+        riskColor: st === "Non budgétisé" || miss.length ? STATE.danger : "#6b7681",
         flagged: !!state.flags[ch.id],
       };
     });
@@ -253,7 +242,7 @@ function TopChantiers({ store }: { store: Store }) {
                   style={{
                     flex: "0 0 auto",
                     fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: 11.5,
+                    fontSize: 12,
                     fontWeight: 600,
                     color: "#334155",
                     background: "#f1f5f9",
@@ -264,7 +253,7 @@ function TopChantiers({ store }: { store: Store }) {
                   {r.ch.id}
                 </span>
                 {r.flagged && (
-                  <span title="Chantier signalé" style={{ flex: "0 0 auto", color: "#dc2626" }}>
+                  <span title="Chantier signalé" style={{ flex: "0 0 auto", color: STATE.danger }}>
                     ⚑
                   </span>
                 )}
@@ -281,24 +270,11 @@ function TopChantiers({ store }: { store: Store }) {
                 >
                   {r.ch.nom}
                 </span>
-                <span
-                  style={{
-                    flex: "0 0 auto",
-                    padding: "2px 8px",
-                    borderRadius: 20,
-                    fontSize: 10.5,
-                    fontWeight: 700,
-                    background: ST[r.st].bg,
-                    color: ST[r.st].fg,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {engine.statutLabel(r.st)}
-                </span>
+                <StatutBadge st={r.st} engine={engine} size="sm" />
               </span>
               <span
                 style={{
-                  fontSize: 12.5,
+                  fontSize: 13,
                   color: "#3b4753",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -309,10 +285,10 @@ function TopChantiers({ store }: { store: Store }) {
               </span>
               <span style={{ ...NUM, fontWeight: 700, color: "#17202a" }}>{r.ref}</span>
               <span style={{ ...NUM, color: "#475569" }}>{r.declare}</span>
-              <span style={{ ...NUM, fontSize: 12.5, fontWeight: 700, color: r.ecartColor }}>
+              <span style={{ ...NUM, fontSize: 13, fontWeight: 700, color: r.ecartColor }}>
                 {r.ecart}
               </span>
-              <span style={{ ...NUM, fontSize: 12.5, fontWeight: 700, color: r.pctColor }}>
+              <span style={{ ...NUM, fontSize: 13, fontWeight: 700, color: r.pctColor }}>
                 {r.pct}
               </span>
               <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
@@ -373,17 +349,17 @@ function RexGrid({ store }: { store: Store }) {
       bigsMiss: bigsMiss.length,
       pctNum: pct,
       pct: pct + "%",
-      color: pct >= 90 ? "#16a34a" : pct >= 50 ? "#0a9bd8" : "#dc2626",
+      color: pct >= 90 ? STATE.good : pct >= 50 ? BRAND.base : STATE.danger,
       rest: aFaire
         ? aFaire + " à traiter" + (crit ? " · " + crit + " critique" + (crit > 1 ? "s" : "") : "")
         : "à jour",
-      restColor: crit ? "#b91c1c" : aFaire ? "#92400e" : "#16a34a",
+      restColor: crit ? STATE.danger : aFaire ? STATE.warn : STATE.good,
       ca: engine.fmt(ca),
       base: engine.fmt(engine.aggregate(list, FULL_YEAR, "base", "ca", "Total")),
       ecart:
         ecart === null ? "—" : (ecart >= 0 ? "+" : "") + ecart.toFixed(1).replace(".", ",") + " %",
       ecartColor:
-        ecart === null ? "#94a3b8" : ecart >= 0 ? "#15803d" : ecart > -3 ? "#b45309" : "#dc2626",
+        ecart === null ? INK.faint : ecart >= 0 ? STATE.good : ecart > -3 ? STATE.warn : STATE.danger,
       pick: () => set({ tab: "Tableau prévisionnel", fRex: nom, fSearch: "", searchDraft: "" }),
     };
   }).sort((a, b) => a.pctNum - b.pctNum);
@@ -405,7 +381,7 @@ function RexGrid({ store }: { store: Store }) {
     <div style={CARD}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
         <span style={{ fontSize: 14, fontWeight: 700 }}>Avancement par REX</span>
-        <span style={{ fontSize: 11.5, color: "#8a95a1" }}>
+        <span style={{ fontSize: 12, color: "#6b7681" }}>
           {rows.length} responsables · les moins avancés en premier
         </span>
       </div>
@@ -457,7 +433,7 @@ function RexGrid({ store }: { store: Store }) {
                     borderRadius: "50%",
                     background: "#eef2ff",
                     color: "#3730a3",
-                    fontSize: 10.5,
+                    fontSize: 11,
                     fontWeight: 700,
                     display: "flex",
                     alignItems: "center",
@@ -482,7 +458,7 @@ function RexGrid({ store }: { store: Store }) {
                   <span
                     style={{
                       fontSize: 11,
-                      color: "#94a3b8",
+                      color: INK.faint,
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
@@ -499,7 +475,7 @@ function RexGrid({ store }: { store: Store }) {
                 style={{
                   fontSize: 12,
                   fontWeight: 600,
-                  color: r.bigsMiss ? "#b91c1c" : "#6b7681",
+                  color: r.bigsMiss ? STATE.danger : "#6b7681",
                   whiteSpace: "nowrap",
                 }}
               >
@@ -527,7 +503,7 @@ function RexGrid({ store }: { store: Store }) {
 
               <span style={{ ...NUM, fontWeight: 600, color: "#17202a" }}>{r.ca}</span>
               <span style={{ ...NUM, color: "#6b7681" }}>{r.base}</span>
-              <span style={{ ...NUM, fontSize: 12.5, fontWeight: 700, color: r.ecartColor }}>
+              <span style={{ ...NUM, fontSize: 13, fontWeight: 700, color: r.ecartColor }}>
                 {r.ecart}
               </span>
             </div>
@@ -552,11 +528,11 @@ function RexGrid({ store }: { store: Store }) {
                 style={{ flex: 1, height: 7, borderRadius: 6, background: "#eef1f4", overflow: "hidden" }}
               >
                 <span
-                  style={{ display: "block", height: 7, width: totPct + "%", background: "#0a9bd8" }}
+                  style={{ display: "block", height: 7, width: totPct + "%", background: BRAND.base }}
                 />
               </span>
               <span
-                style={{ flex: "0 0 auto", width: 40, fontSize: 12, fontWeight: 700, color: "#0a9bd8" }}
+                style={{ flex: "0 0 auto", width: 40, fontSize: 12, fontWeight: 700, color: BRAND.base }}
               >
                 {totPct}%
               </span>

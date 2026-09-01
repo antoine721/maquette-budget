@@ -1,10 +1,13 @@
-/** Styles partagés par les cartes de la page d'accueil. */
+/** Styles partagés par les cartes — les valeurs viennent toutes des jetons. */
+
+import { FS, INK, LINE, MONO, RADIUS, SHADOW, SURFACE } from "../../theme";
 
 export const CARD: React.CSSProperties = {
-  background: "#fff",
-  border: "1px solid #e6eaee",
-  borderRadius: 14,
-  padding: "16px 18px",
+  background: SURFACE.card,
+  border: "1px solid " + LINE.base,
+  borderRadius: RADIUS.card,
+  boxShadow: SHADOW.card,
+  padding: 16,
 };
 
 export const LIST_BUTTON: React.CSSProperties = {
@@ -13,9 +16,9 @@ export const LIST_BUTTON: React.CSSProperties = {
   alignItems: "stretch",
   gap: 4,
   padding: "9px 11px",
-  border: "1px solid #f1f4f7",
-  borderRadius: 9,
-  background: "#fff",
+  border: "1px solid " + LINE.soft,
+  borderRadius: RADIUS.control,
+  background: SURFACE.card,
   fontFamily: "inherit",
   textAlign: "left",
   cursor: "pointer",
@@ -25,11 +28,11 @@ export const LIST_BUTTON: React.CSSProperties = {
 export const CODE_BADGE: React.CSSProperties = {
   flex: "0 0 auto",
   whiteSpace: "nowrap",
-  fontFamily: "'IBM Plex Mono', monospace",
-  fontSize: 11.5,
+  fontFamily: MONO,
+  fontSize: FS.micro,
   fontWeight: 600,
-  color: "#334155",
-  background: "#f1f5f9",
+  color: INK.base,
+  background: SURFACE.canvas,
   borderRadius: 5,
   padding: "2px 6px",
 };
@@ -37,9 +40,9 @@ export const CODE_BADGE: React.CSSProperties = {
 export const NAME: React.CSSProperties = {
   minWidth: 0,
   flex: 1,
-  fontSize: 13,
+  fontSize: FS.body,
   fontWeight: 600,
-  color: "#17202a",
+  color: INK.strong,
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
@@ -48,16 +51,16 @@ export const NAME: React.CSSProperties = {
 export const PILL: React.CSSProperties = {
   flex: "0 0 auto",
   padding: "2px 8px",
-  borderRadius: 20,
-  fontSize: 10.5,
+  borderRadius: RADIUS.pill,
+  fontSize: FS.micro,
   fontWeight: 700,
   whiteSpace: "nowrap",
 };
 
 export const COL_HEAD: React.CSSProperties = {
-  fontSize: 10.5,
+  fontSize: FS.micro,
   fontWeight: 700,
   letterSpacing: "0.6px",
   textTransform: "uppercase",
-  color: "#8a95a1",
+  color: INK.muted,
 };

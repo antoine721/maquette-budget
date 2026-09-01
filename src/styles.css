@@ -24,8 +24,15 @@ select {
 }
 
 input::placeholder {
-  color: #c7d0d9;
+  color: #a8b1ba;
   font-weight: 500;
+}
+
+/* Le clavier doit voir où il est : le halo remplace l'anneau système effacé par les styles inline. */
+:focus-visible {
+  outline: 2px solid #0a9bd8;
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 ::-webkit-scrollbar {
@@ -38,15 +45,48 @@ input::placeholder {
   border-radius: 6px;
 }
 
-/* Hover helpers — the prototype expressed these with `style-hover` attributes. */
-.hov-f4:hover {
+::-webkit-scrollbar-thumb:hover {
+  background: #b6c0c9;
+}
+
+/* Survols — le prototype les exprimait par des attributs `style-hover`. */
+.hov-soft:hover {
   background: #f4f6f8 !important;
 }
 
-.hov-f8:hover {
-  background: #f8fafb !important;
+.hov-lift:hover {
+  filter: brightness(1.06);
 }
 
-.hov-fa:hover {
-  background: #fafbfc !important;
+.hov-row:hover {
+  background: #f4f8fb !important;
+}
+
+.hov-row:hover .row-sticky {
+  background: #f4f8fb !important;
+}
+
+/* Le drapeau n'occupe l'œil que sur la ligne visée. */
+.flag {
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.hov-row:hover .flag,
+.flag:focus-visible {
+  opacity: 1;
+}
+
+/* Sur un écran étroit, le header garde l'essentiel : exercice, rôle, compte. */
+@media (max-width: 1200px) {
+  .hide-narrow {
+    display: none !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

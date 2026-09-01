@@ -1,11 +1,14 @@
 import type { Role } from "../data/constants";
 import type { Store } from "../state/store";
+import YearPicker from "./YearPicker";
 
 const ROLES: Role[] = ["Exploitation", "Contrôle de gestion"];
 
 /**
- * Barre haute : logo, titre, sélecteur de profil, agence, notifications, compte.
- * La sidebar du prototype a été retirée, le logo remonte donc dans le header.
+ * Barre haute : titre, exercice, profil, agence, notifications, compte.
+ *
+ * L'exercice se choisit ici et nulle part ailleurs : toute l'application travaille
+ * sur la période sélectionnée.
  */
 export default function Header({ store }: { store: Store }) {
   const { state, set } = store;
@@ -20,17 +23,24 @@ export default function Header({ store }: { store: Store }) {
         display: "flex",
         alignItems: "center",
         justifyContent: "flex-end",
-        gap: 16,
-        padding: "0 28px",
+        gap: 14,
+        padding: "0 20px",
+        // Le menu du sélecteur d'exercice descend hors du header : celui-ci ne doit
+        // ni le rogner, ni le laisser passer sous les en-têtes figés du tableau.
+        // (Sous ~1200 px, ce sont les blocs `.hide-narrow` qui s'effacent.)
+        position: "relative",
+        zIndex: 60,
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 14, marginRight: "auto", minWidth: 0 }}>
-        <img src="/assets/logo-challancin.png" alt="Challancin" style={{ height: 34, width: "auto" }} />
-        <span style={{ width: 1, height: 26, background: "#e6eaee" }} />
-        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, letterSpacing: "-0.2px", whiteSpace: "nowrap" }}>
           Tableau prévisionnel
         </div>
       </div>
+
+      <YearPicker store={store} />
+
+      <span style={{ width: 1, height: 26, background: "#e6eaee" }} />
 
       <div style={{ display: "flex", background: "#f4f6f8", borderRadius: 9, padding: 3 }}>
         {ROLES.map((r) => {
@@ -59,6 +69,7 @@ export default function Header({ store }: { store: Store }) {
       </div>
 
       <div
+        className="hide-narrow"
         style={{
           padding: "7px 14px",
           borderRadius: 8,
@@ -66,12 +77,14 @@ export default function Header({ store }: { store: Store }) {
           fontSize: 14,
           fontWeight: 600,
           color: "#3b4753",
+          whiteSpace: "nowrap",
         }}
       >
         Saint Ouen
       </div>
 
       <div
+        className="hide-narrow"
         style={{
           position: "relative",
           width: 34,

@@ -2,6 +2,8 @@
  * Référentiels statiques de l'application — repris à l'identique du prototype.
  */
 
+import { STATUS_COLORS } from "../theme";
+
 export const MONTHS = [
   "Janvier",
   "Février",
@@ -39,8 +41,8 @@ export const AGENCES = ["Saint Ouen", "Lyon Est", "Marseille", "Lille"];
 
 export const ENTITIES = [
   { code: "EGC", name: "Entreprise Générale de Confiance" },
-  { code: "CPS", name: "Challancin Prévention & Sécurité" },
-  { code: "CAS", name: "Challancin Assistance & Services" },
+  { code: "PRS", name: "Prévention & Sécurité" },
+  { code: "ASV", name: "Assistance & Services" },
 ];
 
 export type CatKey = "forfait" | "reel" | "pad" | "te";
@@ -75,13 +77,21 @@ export interface StatutStyle {
   accent: string;
 }
 
+/**
+ * Couleurs des statuts.
+ *
+ * `accent` est la couleur de l'étape, la même sur tous les écrans : elle sert de
+ * pastille, de case de filtre, de segment d'anneau et de liseré de ligne. Le fond
+ * du badge, lui, reste neutre — c'est le mot qui nomme l'étape, la couleur qui la
+ * repère. Teinter en plus le fond des badges et des cellules noyait le tableau.
+ */
 export const ST: Record<Statut, StatutStyle> = {
-  "En attente baseline CG": { bg: "#f1f5f9", fg: "#475569", border: "#e2e8f0", cell: "#f8fafc", accent: "#94a3b8" },
-  "En saisie": { bg: "#fef3c7", fg: "#92400e", border: "#fde68a", cell: "#fffdf3", accent: "#f59e0b" },
-  "À valider": { bg: "#e0f2fe", fg: "#075985", border: "#bae6fd", cell: "#f5fbff", accent: "#0a9bd8" },
-  Validé: { bg: "#dcfce7", fg: "#166534", border: "#bbf7d0", cell: "#f4fdf7", accent: "#16a34a" },
-  Clôturé: { bg: "#e2e8f0", fg: "#334155", border: "#cbd5e1", cell: "#f6f8fa", accent: "#64748b" },
-  "Non budgétisé": { bg: "#fee2e2", fg: "#991b1b", border: "#fecaca", cell: "#fffafa", accent: "#dc2626" },
+  "En attente baseline CG": { bg: "#f4f6f8", fg: "#3b4753", border: "#e6eaee", cell: "#fff", accent: STATUS_COLORS.attente },
+  "Non budgétisé": { bg: "#f4f6f8", fg: "#3b4753", border: "#e6eaee", cell: "#fff", accent: STATUS_COLORS.nonBudgete },
+  "En saisie": { bg: "#f4f6f8", fg: "#3b4753", border: "#e6eaee", cell: "#fff", accent: STATUS_COLORS.saisie },
+  "À valider": { bg: "#f4f6f8", fg: "#3b4753", border: "#e6eaee", cell: "#fff", accent: STATUS_COLORS.aValider },
+  Validé: { bg: "#f4f6f8", fg: "#3b4753", border: "#e6eaee", cell: "#fbfdfe", accent: STATUS_COLORS.valide },
+  Clôturé: { bg: "#f4f6f8", fg: "#3b4753", border: "#e6eaee", cell: "#f8fafb", accent: STATUS_COLORS.clos },
 };
 
 export type MetricKey = "ca" | "heures" | "taux" | "masse" | "msRatio" | "phv" | "marge";

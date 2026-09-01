@@ -1,23 +1,19 @@
-import { AGENCES, FULL_YEAR, MONTHS, SHORT } from "../../data/constants";
+import { FULL_YEAR, SHORT } from "../../data/constants";
 import type { Store } from "../../state/store";
 import { CARD } from "../home/cardStyles";
+import { FS, INK, LINE, SURFACE } from "../../theme";
 
 const COEF_GRID = "300px repeat(12, 1fr) 90px";
 
-/**
- * Réglages du contrôle de gestion : coefficients de baseline et fenêtres de gestion.
- *
- * Les périodes sont informatives par défaut ; elles ne bloquent que lorsque c'est
- * explicitement demandé, et la raison est alors reprise sur la page d'accueil.
- */
+/** Réglages du contrôle de gestion : les coefficients de baseline. */
 export default function PilotSettings({ store }: { store: Store }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
       <Coefficients store={store} />
-      {/* Le bloc « Périodes de gestion » est retiré de l'écran pour l'instant.
-          La mécanique reste en place côté état (aucune période bloquante active
-          par défaut) : réafficher <PeriodRules /> suffit à le remettre. */}
-      <SaisieMonths store={store} />
+      {/* Les blocs « Périodes de gestion » et « Mois ouverts à la saisie » sont
+          retirés de l'écran. La mécanique reste en place côté état — aucune période
+          bloquante active, tous les mois ouverts — et l'historique du dépôt garde
+          les composants si l'on veut les réafficher. */}
     </div>
   );
 }
@@ -39,7 +35,7 @@ function Coefficients({ store }: { store: Store }) {
       >
         <div>
           <div style={{ fontSize: 14, fontWeight: 700 }}>Coefficients de baseline</div>
-          <div style={{ fontSize: 12, color: "#6b7681", marginTop: 3 }}>
+          <div style={{ fontSize: 12, color: INK.muted, marginTop: 3 }}>
             Les coefficients se saisissent en <b>% d'évolution</b> : <code>0 %</code> vaut
             × 1,000, <code>2,4 %</code> vaut × 1,024. Un coefficient <b>commun</b> s'applique à tout
             le portefeuille ; un coefficient <b>particulier</b> est rattaché à tous les chantiers
@@ -76,7 +72,7 @@ function Coefficients({ store }: { store: Store }) {
               display: "grid",
               gridTemplateColumns: COEF_GRID,
               alignItems: "center",
-              borderBottom: "1px solid #eef1f4",
+              borderBottom: "1px solid " + LINE.soft,
             }}
           >
             <div style={HEAD}>Coefficient</div>
@@ -97,7 +93,7 @@ function Coefficients({ store }: { store: Store }) {
                   display: "grid",
                   gridTemplateColumns: COEF_GRID,
                   alignItems: "center",
-                  borderBottom: "1px solid #f1f4f7",
+                  borderBottom: "1px solid " + LINE.soft,
                   background: particulier ? "#fbfaff" : "transparent",
                 }}
               >
@@ -111,7 +107,7 @@ function Coefficients({ store }: { store: Store }) {
                     <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                       <span
                         style={{
-                          fontSize: 13.5,
+                          fontSize: 14,
                           fontWeight: 600,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
@@ -135,7 +131,7 @@ function Coefficients({ store }: { store: Store }) {
                         {particulier ? "Particulier" : "Commun"}
                       </span>
                     </div>
-                    <div style={{ fontSize: 11.5, color: "#94a3b8" }}>{r.role}</div>
+                    <div style={{ fontSize: 12, color: "#94a3b8" }}>{r.role}</div>
                   </div>
                 </div>
 
@@ -156,16 +152,16 @@ function Coefficients({ store }: { store: Store }) {
                           width: "100%",
                           padding: "5px 6px",
                           textAlign: "right",
-                          border: "1px solid #bfe3f6",
+                          border: "1px solid " + LINE.active,
                           borderRadius: 6,
-                          background: "#fff",
-                          fontSize: 12.5,
+                          background: SURFACE.card,
+                          fontSize: 13,
                           fontVariantNumeric: "tabular-nums",
                           color: "#17202a",
                         }}
                       />
                     ) : (
-                      <span style={{ fontSize: 12.5, color: "#475569" }}>
+                      <span style={{ fontSize: 13, color: INK.base }}>
                         {(Number(r.values[m]) || 0).toFixed(1).replace(".", ",") + " %"}
                       </span>
                     )}
@@ -197,135 +193,23 @@ function Coefficients({ store }: { store: Store }) {
   );
 }
 
-/** Ouverture des mois de saisie, par entité. */
-function SaisieMonths({ store }: { store: Store }) {
-  const { state, togglePeriod } = store;
-
-  return (
-    <div style={CARD}>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          justifyContent: "space-between",
-          gap: 16,
-          flexWrap: "wrap",
-        }}
-      >
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>Mois ouverts à la saisie</div>
-          <div style={{ fontSize: 12, color: "#6b7681", marginTop: 3 }}>
-            Un mois fermé bloque la saisie de l'exploitation sur l'entité concernée.
-          </div>
-        </div>
-        <div style={{ display: "flex", gap: 14, fontSize: 12, color: "#6b7681" }}>
-          <Legend color="#16a34a" label="Ouvert" />
-          <Legend color="#cbd5e1" label="Fermé" />
-        </div>
-      </div>
-
-      <div style={{ overflowX: "auto", marginTop: 14 }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "170px repeat(12, 60px)",
-            gap: 6,
-            minWidth: 890,
-          }}
-        >
-          <div />
-          {SHORT.map((s) => (
-            <div
-              key={s}
-              style={{
-                textAlign: "center",
-                fontSize: 11,
-                fontWeight: 700,
-                color: "#8a95a1",
-                letterSpacing: "0.4px",
-              }}
-            >
-              {s}
-            </div>
-          ))}
-          {AGENCES.map((a) => (
-            <AgenceRow key={a} agence={a} periods={state.periods[a]} toggle={togglePeriod} />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AgenceRow({
-  agence,
-  periods,
-  toggle,
-}: {
-  agence: string;
-  periods: boolean[];
-  toggle: (agence: string, m: number) => void;
-}) {
-  return (
-    <>
-      <div
-        style={{ fontSize: 13, fontWeight: 600, color: "#3b4753", display: "flex", alignItems: "center" }}
-      >
-        {agence}
-      </div>
-      {MONTHS.map((mo, m) => {
-        const o = periods[m];
-        return (
-          <button
-            key={mo}
-            onClick={() => toggle(agence, m)}
-            title={mo + " — " + agence}
-            style={{
-              height: 30,
-              border: "1px solid " + (o ? "#bbf7d0" : "#e2e8f0"),
-              borderRadius: 7,
-              background: o ? "#dcfce7" : "#f1f5f9",
-              color: o ? "#166534" : "#64748b",
-              fontFamily: "inherit",
-              fontSize: 11,
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            {o ? "Ouvert" : "Fermé"}
-          </button>
-        );
-      })}
-    </>
-  );
-}
-
-function Legend({ color, label }: { color: string; label: string }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-      <span style={{ width: 10, height: 10, borderRadius: 3, background: color, display: "inline-block" }} />
-      {label}
-    </div>
-  );
-}
-
 const HEAD: React.CSSProperties = {
   padding: "8px 0",
-  fontSize: 11,
+  fontSize: FS.micro,
   fontWeight: 700,
   letterSpacing: "0.7px",
   textTransform: "uppercase",
-  color: "#8a95a1",
+  color: INK.muted,
 };
 
 const ADD_BUTTON: React.CSSProperties = {
   padding: "8px 13px",
-  border: "1px solid #dde3e8",
+  border: "1px solid " + LINE.base,
   borderRadius: 8,
-  background: "#fff",
+  background: SURFACE.card,
   fontFamily: "inherit",
   fontSize: 13,
   fontWeight: 600,
-  color: "#3b4753",
+  color: INK.base,
   cursor: "pointer",
 };

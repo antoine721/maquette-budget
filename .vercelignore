@@ -1,0 +1,10 @@
+node_modules
+dist
+tsconfig.tsbuildinfo
+*.local
+.DS_Store
+
+# Pas nécessaire au build : notes de travail et sources de la maquette.
+chats
+project
+README.md

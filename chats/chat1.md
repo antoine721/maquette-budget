@@ -86,7 +86,7 @@ _[tool: dc_html_str_replace]_
 
 _[tool: ready_for_verification]_
 
-Corrigé : les écarts, marqueurs et totaux ne se calculent plus que sur les mois réellement saisis (un chantier sans saisie reste gris, plus de rouge injustifié), et la coque reprend le vrai logo Challancin extrait de votre capture, les icônes de navigation, la cloche en icône et les chevrons SECTIONS / repli du menu.
+Corrigé : les écarts, marqueurs et totaux ne se calculent plus que sur les mois réellement saisis (un chantier sans saisie reste gris, plus de rouge injustifié), et la coque reprend le vrai logo extrait de votre capture, les icônes de navigation, la cloche en icône et les chevrons SECTIONS / repli du menu.
 
 ## User
 
@@ -721,11 +721,11 @@ Entreprise Générale de Confiance
 100%
 3 chantiers · 1 validés
 CPS
-Challancin Prévention & Sécurité
+Prévention & Sécurité
 50%
 3 chantiers · 1 validés
 CAS
-Challancin Assistance & Services
+Assistance & Services
 81%
 3 chantiers · 1 validés
 
@@ -792,11 +792,11 @@ Entreprise Générale de Confiance
 33%
 3 chantiers · 2 en cours · 1 terminé
 CPS
-Challancin Prévention & Sécurité
+Prévention & Sécurité
 33%
 3 chantiers · 2 à remplir · 1 terminé
 CAS
-Challancin Assistance & Services
+Assistance & Services
 33%
 3 chantiers · 2 à remplir · 1 terminé
 

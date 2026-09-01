@@ -27,7 +27,7 @@
 
   <aside style="position: relative; width: {{ sidebarW }}; flex: 0 0 {{ sidebarW }}; background: #fff; border-right: 1px solid #e6eaee; display: flex; flex-direction: column; padding: 22px {{ sidebarPad }}; transition: width 180ms ease, flex-basis 180ms ease">
     <div style="display: flex; align-items: center; justify-content: center; padding: 2px 4px 26px; overflow: hidden">
-      <img src="assets/logo-challancin.png" alt="Challancin" style="height: {{ logoH }}; width: auto">
+      <div style="height: {{ logoH }}; display: flex; align-items: center; font-weight: 700; font-size: 15px; letter-spacing: -0.2px; white-space: nowrap; color: #17202a">Tableau prévisionnel</div>
     </div>
     <sc-if value="{{ navOpen }}" hint-placeholder-val="{{ true }}">
       <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; letter-spacing: 1.2px; color: #8a95a1; font-weight: 600; padding: 0 8px 12px">
@@ -641,8 +641,8 @@ const SEASON = [1.0,0.97,1.05,1.0,1.02,1.06,0.82,0.74,1.08,1.06,1.0,0.9];
 const AGENCES = ["Saint Ouen","Lyon Est","Marseille","Lille"];
 const ENTITIES = [
   { code:"EGC", name:"Entreprise Générale de Confiance" },
-  { code:"CPS", name:"Challancin Prévention & Sécurité" },
-  { code:"CAS", name:"Challancin Assistance & Services" }
+  { code:"PRS", name:"Prévention & Sécurité" },
+  { code:"ASV", name:"Assistance & Services" }
 ];
 
 const CAT = [

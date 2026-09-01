@@ -8,11 +8,17 @@ import {
 } from "../../data/constants";
 import type { Chantier } from "../../data/chantiers";
 import type { Store } from "../../state/store";
+import { BRAND, FS, INK, LINE, MONO, RADIUS, STATE, SURFACE } from "../../theme";
+import StatutBadge from "../StatutBadge";
+import { Button, Card, EmptyState, PageHead } from "../ui";
 import ChantierDetail from "./ChantierDetail";
 import FilterBar from "./FilterBar";
 
 /** Séparateurs de trimestre. */
-const sepColor = (m: number) => (m === 2 || m === 5 || m === 8 ? "#e6eaee" : "transparent");
+const sepColor = (m: number) => (m === 2 || m === 5 || m === 8 ? LINE.base : "transparent");
+
+/** Hauteur d'une ligne repliée. Deux lignes de texte serrées, pas trois espacées. */
+const ROW_PAD = "7px 14px";
 
 export default function TableTab({ store }: { store: Store }) {
   const { state, engine, set } = store;
@@ -23,9 +29,9 @@ export default function TableTab({ store }: { store: Store }) {
 
   // La largeur de colonne s'élargit quand la période est courte.
   const colW = mIdx.length <= 3 ? 160 : mIdx.length <= 6 ? 110 : 82;
-  const gridCols = "460px repeat(" + mIdx.length + ", " + colW + "px) 120px";
-  const gridColsDetail = "420px repeat(" + mIdx.length + ", " + colW + "px) 120px";
-  const tableMin = 460 + mIdx.length * colW + 120 + "px";
+  const gridCols = "440px repeat(" + mIdx.length + ", " + colW + "px) 120px";
+  const gridColsDetail = "400px repeat(" + mIdx.length + ", " + colW + "px) 120px";
+  const tableMin = 440 + mIdx.length * colW + 120 + "px";
 
   const list = engine.sorted(engine.filtered(), mIdx);
   const shown = list.slice(0, state.pageSize);
@@ -42,292 +48,348 @@ export default function TableTab({ store }: { store: Store }) {
   const grandTotal = engine.fmt(engine.aggregate(list, mIdx, "saisi", met.key, cat), met.kind);
 
   return (
-    <div style={{ flex: 1, minWidth: 0, padding: "22px 28px 48px" }}>
-      <div
-        style={{
-          background: "#fff",
-          border: "1px solid #e6eaee",
-          borderRadius: 16,
-          padding: "18px 20px 22px",
-        }}
-      >
+    <div
+      style={{
+        flex: 1,
+        minWidth: 0,
+        padding: "20px 28px 32px",
+        display: "flex",
+        flexDirection: "column",
+        gap: 14,
+      }}
+    >
+      <PageHead
+        eyebrow={"Exercice " + state.year}
+        title="Tableau prévisionnel"
+        hint={
+          list.length +
+          " chantier" +
+          (list.length > 1 ? "s" : "") +
+          " · " +
+          state.fPeriode.toLowerCase() +
+          " · " +
+          (met.key === "ca" ? catLabel : met.label) +
+          (engine.closed() ? " · lecture seule" : "")
+        }
+      />
+
+      <Card pad={14} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <FilterBar store={store} />
 
+        {/* La légende est le filtre : chaque étape se coche, avec sa couleur. */}
         <div
           style={{
-            marginTop: 20,
-            border: "1px solid #e6eaee",
-            borderRadius: 12,
-            overflow: "hidden",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            flexWrap: "wrap",
+            paddingTop: 2,
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 16,
-              padding: "13px 18px",
-              background: "#f8fafb",
-              borderBottom: "1px solid #eef1f4",
-              flexWrap: "wrap",
-            }}
-          >
-            <div style={{ fontSize: 13, fontWeight: 600, color: "#3b4753" }}>
-              {list.length +
-                " chantier" +
-                (list.length > 1 ? "s" : "") +
-                " · " +
-                state.year +
-                " · " +
-                state.fPeriode +
-                " · " +
-                (met.key === "ca" ? catLabel : met.label)}
-            </div>
-            {/* La légende devient le filtre : on coche les statuts à afficher. */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                fontSize: 12,
-                color: "#6b7681",
-                flexWrap: "wrap",
-              }}
-            >
-              {STATUT_OPTS.map((x) => {
-                const on = state.fStatuts.includes(x);
-                return (
-                  <button
-                    key={x}
-                    onClick={() =>
-                      set((p) => ({
-                        fStatuts: p.fStatuts.includes(x)
-                          ? p.fStatuts.filter((y) => y !== x)
-                          : STATUT_OPTS.filter((y) => y === x || p.fStatuts.includes(y)),
-                      }))
-                    }
-                    title={
-                      (on ? "Masquer « " : "Afficher « ") + engine.statutLabel(x) + " »"
-                    }
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 7,
-                      padding: "5px 10px",
-                      border: "1px solid " + (on ? ST[x].border : "#e6eaee"),
-                      borderRadius: 8,
-                      background: on ? ST[x].cell : "#fff",
-                      color: on ? ST[x].fg : "#a8b1ba",
-                      fontFamily: "inherit",
-                      fontSize: 12,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: 13,
-                        height: 13,
-                        borderRadius: 3,
-                        border: "1px solid " + (on ? ST[x].accent : "#cbd5e1"),
-                        background: on ? ST[x].accent : "#fff",
-                        color: "#fff",
-                        fontSize: 10,
-                        lineHeight: "11px",
-                        textAlign: "center",
-                        flex: "0 0 auto",
-                      }}
-                    >
-                      {on ? "✓" : ""}
-                    </span>
-                    {engine.statutLabel(x)}
-                  </button>
-                );
-              })}
+          {STATUT_OPTS.map((x) => {
+            const on = state.fStatuts.includes(x);
+            const c = ST[x].accent;
+            return (
               <button
+                key={x}
                 onClick={() =>
-                  set({
-                    fStatuts:
-                      state.fStatuts.length === STATUT_OPTS.length ? [] : [...STATUT_OPTS],
-                  })
+                  set((p) => ({
+                    fStatuts: p.fStatuts.includes(x)
+                      ? p.fStatuts.filter((y) => y !== x)
+                      : STATUT_OPTS.filter((y) => y === x || p.fStatuts.includes(y)),
+                  }))
                 }
+                title={(on ? "Masquer « " : "Afficher « ") + engine.statutLabel(x) + " »"}
+                aria-pressed={on}
+                className="hov-soft"
                 style={{
-                  padding: "5px 10px",
-                  border: "1px solid #dde3e8",
-                  borderRadius: 8,
-                  background: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                  padding: "5px 11px",
+                  border: "1px solid " + (on ? c + "66" : LINE.base),
+                  borderRadius: RADIUS.pill,
+                  background: on ? c + "14" : SURFACE.card,
+                  color: on ? INK.strong : INK.faint,
                   fontFamily: "inherit",
-                  fontSize: 12,
+                  fontSize: FS.small,
                   fontWeight: 600,
-                  color: "#6b7681",
                   cursor: "pointer",
                 }}
               >
-                {state.fStatuts.length === STATUT_OPTS.length ? "Tout décocher" : "Tout cocher"}
-              </button>
-            </div>
-          </div>
-
-          <div style={{ overflowX: "auto" }}>
-            <div style={{ minWidth: tableMin }}>
-              {/* En-tête */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: gridCols,
-                  alignItems: "center",
-                  background: "#fff",
-                  borderBottom: "1px solid #e6eaee",
-                }}
-              >
-                <div
+                <span
                   style={{
-                    padding: "11px 16px",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: "0.7px",
-                    textTransform: "uppercase",
-                    color: "#8a95a1",
-                    position: "sticky",
-                    left: 0,
-                    background: "#fff",
-                    zIndex: 2,
+                    width: 13,
+                    height: 13,
+                    flex: "0 0 auto",
+                    borderRadius: 3,
+                    border: "1px solid " + (on ? c : "#cbd5e1"),
+                    background: on ? c : SURFACE.card,
+                    color: "#fff",
+                    fontSize: 10,
+                    lineHeight: "11px",
+                    textAlign: "center",
                   }}
                 >
-                  Code chantier / site
-                </div>
-                {mIdx.map((m) => {
-                  const open = state.periods["Saint Ouen"][m];
-                  return (
+                  {on ? "✓" : ""}
+                </span>
+                {engine.statutLabel(x)}
+              </button>
+            );
+          })}
+          <Button
+            size="sm"
+            tone="subtle"
+            onClick={() =>
+              set({
+                fStatuts: state.fStatuts.length === STATUT_OPTS.length ? [] : [...STATUT_OPTS],
+              })
+            }
+          >
+            {state.fStatuts.length === STATUT_OPTS.length ? "Tout décocher" : "Tout cocher"}
+          </Button>
+        </div>
+
+        {list.length === 0 ? (
+          <EmptyState
+            title="Aucun chantier ne correspond aux filtres"
+            hint="Retirez un filtre ci-dessus, ou remettez la vue à zéro pour retrouver tout le portefeuille."
+            action={
+              <Button
+                size="sm"
+                tone="primary"
+                onClick={() =>
+                  set({
+                    fSearch: "",
+                    searchDraft: "",
+                    onlyTodo: false,
+                    onlyFlagged: false,
+                    fRex: "Tous",
+                    fEntity: "Toutes",
+                    fStatuts: [...STATUT_OPTS],
+                  })
+                }
+              >
+                Tout réinitialiser
+              </Button>
+            }
+          />
+        ) : (
+          <div
+            style={{
+              border: "1px solid " + LINE.base,
+              borderRadius: RADIUS.card,
+              overflow: "hidden",
+            }}
+          >
+            {/*
+              Le tableau a son propre cadre de défilement : sans hauteur bornée, ni
+              l'en-tête des mois ni la ligne de total ne peuvent tenir à l'écran, et
+              l'on perd les repères dès la quinzième ligne.
+            */}
+            <div
+              style={{
+                overflow: "auto",
+                height: "calc(100vh - 340px)",
+                minHeight: 380,
+              }}
+            >
+              <div style={{ minWidth: tableMin }}>
+                {/* En-tête */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: gridCols,
+                    alignItems: "center",
+                    background: SURFACE.card,
+                    borderBottom: "1px solid " + LINE.base,
+                    position: "sticky",
+                    top: 0,
+                    zIndex: 3,
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: "10px 14px",
+                      fontSize: FS.micro,
+                      fontWeight: 700,
+                      letterSpacing: "0.6px",
+                      textTransform: "uppercase",
+                      color: INK.muted,
+                      position: "sticky",
+                      left: 0,
+                      background: SURFACE.card,
+                      zIndex: 2,
+                    }}
+                  >
+                    Chantier
+                  </div>
+                  {mIdx.map((m) => (
                     <div
                       key={m}
                       style={{
-                        padding: "11px 8px",
+                        padding: "10px 8px",
                         textAlign: "right",
-                        fontSize: 11,
+                        fontSize: FS.micro,
                         fontWeight: 700,
                         letterSpacing: "0.5px",
                         textTransform: "uppercase",
-                        color: open ? "#0a9bd8" : "#8a95a1",
+                        color: INK.muted,
                         borderRight: "1px solid " + sepColor(m),
-                        background: open ? "#f5fbff" : "#fff",
                       }}
                     >
                       {SHORT[m]}
                     </div>
-                  );
-                })}
-                <div
-                  style={{
-                    padding: "11px 16px",
-                    textAlign: "right",
-                    fontSize: 11,
-                    fontWeight: 700,
-                    letterSpacing: "0.7px",
-                    textTransform: "uppercase",
-                    color: "#8a95a1",
-                  }}
-                >
-                  {met.agg === "ratio" ? "Moyenne" : "Total"}
-                </div>
-              </div>
-
-              {shown.map((ch) => (
-                <Row
-                  key={ch.id}
-                  store={store}
-                  ch={ch}
-                  mIdx={mIdx}
-                  gridCols={gridCols}
-                  gridColsDetail={gridColsDetail}
-                />
-              ))}
-
-              {list.length > shown.length && (
-                <div
-                  style={{
-                    position: "sticky",
-                    left: 0,
-                    display: "flex",
-                    justifyContent: "center",
-                    padding: 12,
-                  }}
-                >
-                  <button
-                    className="hov-f4"
-                    onClick={() => set((p) => ({ pageSize: p.pageSize + 40 }))}
-                    style={{
-                      padding: "9px 18px",
-                      border: "1px solid #dde3e8",
-                      borderRadius: 8,
-                      background: "#fff",
-                      fontFamily: "inherit",
-                      fontSize: 13,
-                      fontWeight: 600,
-                      color: "#3b4753",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {"Afficher 40 chantiers de plus (" + shown.length + " / " + list.length + ")"}
-                  </button>
-                </div>
-              )}
-
-              {/* Total du périmètre filtré — calculé sur toute la liste, pas seulement la page. */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: gridCols,
-                  alignItems: "center",
-                  background: "#f8fafb",
-                  borderTop: "1px solid #e6eaee",
-                }}
-              >
-                <div
-                  style={{
-                    padding: "14px 16px",
-                    fontSize: 13,
-                    fontWeight: 700,
-                    position: "sticky",
-                    left: 0,
-                    background: "#f8fafb",
-                  }}
-                >
-                  Total périmètre filtré
-                </div>
-                {totals.map((t) => (
+                  ))}
                   <div
-                    key={t.m}
                     style={{
-                      padding: "14px 8px",
+                      padding: "10px 14px",
                       textAlign: "right",
-                      fontSize: 13,
+                      fontSize: FS.micro,
                       fontWeight: 700,
-                      fontVariantNumeric: "tabular-nums",
-                      color: t.color,
-                      borderRight: "1px solid " + sepColor(t.m),
+                      letterSpacing: "0.6px",
+                      textTransform: "uppercase",
+                      color: INK.muted,
                     }}
                   >
-                    {t.text}
+                    {met.agg === "ratio" ? "Moyenne" : "Total"}
                   </div>
+                </div>
+
+                {shown.map((ch) => (
+                  <Row
+                    key={ch.id}
+                    store={store}
+                    ch={ch}
+                    mIdx={mIdx}
+                    gridCols={gridCols}
+                    gridColsDetail={gridColsDetail}
+                  />
                 ))}
+
+                {list.length > shown.length && (
+                  <div
+                    style={{
+                      position: "sticky",
+                      left: 0,
+                      display: "flex",
+                      justifyContent: "center",
+                      padding: 12,
+                    }}
+                  >
+                    <Button onClick={() => set((p) => ({ pageSize: p.pageSize + 40 }))}>
+                      {"Afficher 40 chantiers de plus (" + shown.length + " / " + list.length + ")"}
+                    </Button>
+                  </div>
+                )}
+
+                {/* Total du périmètre filtré — calculé sur toute la liste, pas seulement la page. */}
                 <div
                   style={{
-                    padding: "14px 16px",
-                    textAlign: "right",
-                    fontSize: 14,
-                    fontWeight: 700,
-                    fontVariantNumeric: "tabular-nums",
+                    display: "grid",
+                    gridTemplateColumns: gridCols,
+                    alignItems: "center",
+                    background: SURFACE.sunken,
+                    borderTop: "1px solid " + LINE.base,
+                    position: "sticky",
+                    bottom: 0,
+                    zIndex: 3,
                   }}
                 >
-                  {grandTotal}
+                  <div
+                    style={{
+                      padding: "12px 14px",
+                      fontSize: FS.body,
+                      fontWeight: 700,
+                      color: INK.strong,
+                      position: "sticky",
+                      left: 0,
+                      background: SURFACE.sunken,
+                      zIndex: 2,
+                    }}
+                  >
+                    Total périmètre filtré
+                  </div>
+                  {totals.map((t) => (
+                    <div
+                      key={t.m}
+                      style={{
+                        padding: "12px 8px",
+                        textAlign: "right",
+                        fontSize: FS.body,
+                        fontWeight: 700,
+                        fontVariantNumeric: "tabular-nums",
+                        color: t.color,
+                        borderRight: "1px solid " + sepColor(t.m),
+                      }}
+                    >
+                      {t.text}
+                    </div>
+                  ))}
+                  <div
+                    style={{
+                      padding: "12px 14px",
+                      textAlign: "right",
+                      fontSize: FS.base,
+                      fontWeight: 700,
+                      color: INK.strong,
+                      fontVariantNumeric: "tabular-nums",
+                    }}
+                  >
+                    {grandTotal}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        )}
+
+        {/* Ce que les repères du tableau veulent dire — une infobulle ne se lit pas au clavier. */}
+        <div
+          style={{
+            display: "flex",
+            gap: 16,
+            flexWrap: "wrap",
+            alignItems: "center",
+            fontSize: FS.small,
+            color: INK.muted,
+          }}
+        >
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: 3,
+                background: "#fffdf5",
+                border: "1px solid " + LINE.base,
+              }}
+            />
+            mois à saisir
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: 3,
+                background: SURFACE.card,
+                border: "1px solid " + LINE.base,
+                boxShadow: "inset 0 -3px 0 " + BRAND.base,
+              }}
+            />
+            valeur modifiée à la main
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ color: STATE.warn, fontWeight: 700 }}>−7 %</span>
+            écart à la baseline au-delà de 5 %
+          </span>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ color: STATE.danger, fontWeight: 700 }}>−22 %</span>
+            au-delà de 15 %
+          </span>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
@@ -350,58 +412,50 @@ function Row({
   const met = engine.metric;
   const cat = state.cat;
   const st = engine.st(ch) as Statut;
-  const stc = ST[st];
   const open = state.openRow === ch.id;
-  const rowBg = open ? "#fbfcfd" : "#fff";
+  const rowBg = open ? BRAND.wash : SURFACE.card;
 
   const cells = mIdx.map((m) => {
     const v = engine.metricFrom(engine.prims(ch, m, "saisi"), met.key, cat);
     const b = engine.metricFrom(engine.prims(ch, m, "base"), met.key, cat);
-    const periodOpen = state.periods[ch.agence][m];
     const touched = SAISIE_FIELDS.some(
       (f) => engine.edited(ch, f, m, false) || engine.edited(ch, f, m, true),
     );
     return {
       m,
+      empty: v === null,
       text: engine.fmt(v, met.kind),
       color: engine.markerColor(v, b, met.better),
-      bg: v === null ? (periodOpen ? "#fffbeb" : "#fff") : stc.cell,
-      mark: touched ? "#0a9bd8" : "transparent",
+      mark: touched ? BRAND.base : "transparent",
       markTitle: touched ? "Valeur modifiée manuellement" : "",
     };
   });
 
   const rowSaisi = engine.aggregate([ch], mIdx, "saisi", met.key, cat);
   const completion = engine.completionPct(ch, mIdx);
-  const nEdits = mIdx.reduce(
-    (a, m) =>
-      a +
-      SAISIE_FIELDS.filter((f) => engine.edited(ch, f, m, false) || engine.edited(ch, f, m, true))
-        .length,
-    0,
-  );
-  const mine = state.history.filter((h) => h.cible === ch.id);
-  const last = mine.length ? mine[mine.length - 1] : null;
   const flagged = !!state.flags[ch.id];
+  const editable = engine.editableMonths(ch, mIdx).length > 0;
 
   return (
-    <div style={{ borderBottom: "1px solid #f1f4f7", background: rowBg }}>
+    <div style={{ borderBottom: "1px solid " + LINE.soft, background: rowBg }}>
       <div
+        className={open ? undefined : "hov-row"}
         onClick={() => set({ openRow: open ? null : ch.id })}
         style={{
           display: "grid",
           gridTemplateColumns: gridCols,
           alignItems: "stretch",
           cursor: "pointer",
-          borderLeft: "3px solid " + stc.accent,
+          borderLeft: "3px solid " + ST[st].accent,
         }}
       >
         <div
+          className="row-sticky"
           style={{
-            padding: "12px 16px",
+            padding: ROW_PAD,
             display: "flex",
             alignItems: "center",
-            gap: 10,
+            gap: 8,
             minWidth: 0,
             position: "sticky",
             left: 0,
@@ -409,16 +463,15 @@ function Row({
             zIndex: 1,
           }}
         >
-          <span style={{ width: 14, color: "#8a95a1", fontSize: 11 }}>{open ? "▾" : "▸"}</span>
+          <span style={{ width: 12, color: INK.faint, fontSize: 10 }}>{open ? "▾" : "▸"}</span>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, minWidth: 0 }}>
               <span
                 title={ch.nom}
                 style={{
-                  fontSize: 15.5,
-                  fontWeight: 700,
-                  letterSpacing: "-0.2px",
-                  color: "#17202a",
+                  fontSize: FS.body,
+                  fontWeight: 600,
+                  color: INK.strong,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -426,113 +479,67 @@ function Row({
               >
                 {ch.nom}
               </span>
-              {/* Signalement : les chantiers durs à repérer dans les analytiques. */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleFlag(ch);
-                }}
-                title={
-                  flagged
-                    ? "Chantier signalé — cliquer pour retirer le signalement"
-                    : "Signaler ce chantier"
-                }
-                style={{
-                  flex: "0 0 auto",
-                  width: 22,
-                  height: 22,
-                  padding: 0,
-                  border: "1px solid " + (flagged ? "#fecaca" : "#e6eaee"),
-                  borderRadius: 6,
-                  background: flagged ? "#fee2e2" : "transparent",
-                  color: flagged ? "#dc2626" : "#c7d0d9",
-                  fontFamily: "inherit",
-                  fontSize: 12,
-                  lineHeight: 1,
-                  cursor: "pointer",
-                }}
-              >
-                ⚑
-              </button>
+              {flagged && <span style={{ fontSize: 11, color: STATE.danger }}>⚑</span>}
             </div>
             <div
-              style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3, minWidth: 0 }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                minWidth: 0,
+                fontSize: FS.micro,
+                color: INK.muted,
+                marginTop: 1,
+              }}
             >
+              <span style={{ fontFamily: MONO, flex: "0 0 auto" }}>{ch.id}</span>
+              <span style={{ color: LINE.base }}>·</span>
               <span
-                style={{
-                  flex: "0 0 auto",
-                  fontFamily: "'IBM Plex Mono', monospace",
-                  fontSize: 11.5,
-                  fontWeight: 600,
-                  color: "#94a3b8",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {ch.id}
-              </span>
-              <span style={{ flex: "0 0 auto", color: "#d5dbe1" }}>·</span>
-              <span
-                style={{
-                  fontSize: 12,
-                  color: "#8a95a1",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
+                style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
               >
                 {ch.entite + (engine.isCG ? " · " + ch.client : "")}
               </span>
+              <span style={{ color: LINE.base }}>·</span>
               <span
-                title={
-                  last
-                    ? "Dernière action : " + last.label + " (" + last.count + " cellules)"
-                    : completion + " % des champs renseignés sur la période"
-                }
-                style={{
-                  flex: "0 0 auto",
-                  padding: "1px 7px",
-                  borderRadius: 20,
-                  fontSize: 10.5,
-                  fontWeight: 700,
-                  background: completion === 100 ? "#dcfce7" : nEdits ? "#e8f6fd" : "#f4f6f8",
-                  color: completion === 100 ? "#166534" : nEdits ? "#0782b6" : "#8a95a1",
-                  whiteSpace: "nowrap",
-                }}
+                style={{ flex: "0 0 auto", fontVariantNumeric: "tabular-nums" }}
+                title="Part des champs de budget renseignés sur la période affichée"
               >
-                {completion + " %" + (nEdits ? " · " + nEdits + " modif." : "")}
+                {completion} % rempli
               </span>
             </div>
-            {mine.length > 0 && (
-              <div
-                title={mine.map((h) => h.label + " (" + h.count + " cellules)").join("  |  ")}
-                style={{
-                  fontSize: 11,
-                  color: "#94a3b8",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  marginTop: 2,
-                }}
-              >
-                {mine.map((h) => h.short).join(" · ")}
-              </div>
-            )}
           </div>
-          <span style={{ flex: "0 0 auto", display: "flex", alignItems: "center", gap: 5 }}>
-            <span
-              style={{
-                padding: "4px 10px",
-                borderRadius: 20,
-                fontSize: 11,
-                fontWeight: 700,
-                background: stc.bg,
-                color: stc.fg,
-                border: "1px solid " + stc.border,
-              }}
-            >
-              {engine.statutLabel(st)}
-            </span>
-          </span>
+
+          <StatutBadge st={st} engine={engine} size="sm" />
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleFlag(ch);
+            }}
+            title={
+              flagged
+                ? "Chantier signalé — cliquer pour retirer le signalement"
+                : "Signaler ce chantier"
+            }
+            aria-pressed={flagged}
+            className={flagged ? undefined : "flag"}
+            style={{
+              flex: "0 0 auto",
+              width: 22,
+              height: 22,
+              padding: 0,
+              border: "1px solid " + (flagged ? "#f5c6c2" : "transparent"),
+              borderRadius: 6,
+              background: flagged ? STATE.dangerTint : "transparent",
+              color: flagged ? STATE.danger : INK.faint,
+              fontFamily: "inherit",
+              fontSize: 12,
+              lineHeight: 1,
+              cursor: "pointer",
+            }}
+          >
+            ⚑
+          </button>
         </div>
 
         {cells.map((c) => (
@@ -540,13 +547,12 @@ function Row({
             key={c.m}
             title={c.markTitle}
             style={{
-              padding: "12px 8px",
+              padding: "8px",
               textAlign: "right",
-              fontSize: 13,
+              fontSize: FS.body,
               fontVariantNumeric: "tabular-nums",
-              fontWeight: 500,
-              color: c.color,
-              background: c.bg,
+              color: c.empty ? INK.faint : c.color,
+              background: c.empty && editable ? "#fffdf5" : "transparent",
               borderRight: "1px solid " + sepColor(c.m),
               boxShadow: "inset 0 -2px 0 " + c.mark,
             }}
@@ -557,12 +563,12 @@ function Row({
 
         <div
           style={{
-            padding: "12px 16px",
+            padding: "8px 14px",
             textAlign: "right",
-            fontSize: 14,
+            fontSize: FS.body,
             fontWeight: 700,
+            color: INK.strong,
             fontVariantNumeric: "tabular-nums",
-            background: st === "Validé" || st === "Clôturé" ? stc.cell : "transparent",
           }}
         >
           {engine.fmt(rowSaisi, met.kind)}

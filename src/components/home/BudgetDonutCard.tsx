@@ -1,13 +1,12 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef } from "react";
 import type { EChartsOption } from "echarts";
-import { CONFIG } from "../../config";
 import { ST, STATUT_OPTS, type Statut } from "../../data/constants";
 import type { Chantier } from "../../data/chantiers";
 import type { Engine } from "../../lib/engine";
 import type { Store } from "../../state/store";
+import { FS, INK, RADIUS, SURFACE } from "../../theme";
 import EChart, { type EChartsInstance } from "../EChart";
-import { CARD } from "./cardStyles";
-import YearSelect from "./YearSelect";
+import { Card, CardHead } from "../ui";
 
 export interface StatutSegment {
   key: Statut;
@@ -40,7 +39,6 @@ export function statutSegments(store: Store, view: Engine): StatutSegment[] {
     pick: () =>
       set({
         tab: "Tableau prévisionnel",
-        year: view.s.year,
         fStatuts: [st],
         onlyTodo: false,
         fSearch: "",
@@ -51,13 +49,16 @@ export function statutSegments(store: Store, view: Engine): StatutSegment[] {
 }
 
 /**
- * Avancement de la déclaration **en nombre de chantiers**, ventilé par statut.
- * Le centre porte la part de budgets terminés ; chaque segment renvoie au tableau filtré.
+ * Où en est le portefeuille dans le cycle de vie d'un budget.
+ *
+ * Une teinte par étape, la même que sur les filtres et les badges du tableau : la
+ * couleur sert à reconnaître l'étape d'un coup d'œil. Les teintes sont adoucies et
+ * séparées par un filet de surface — c'était la saturation, pas le nombre de
+ * couleurs, qui rendait l'anneau criard.
  */
 export default function BudgetDonutCard({ store, compact }: { store: Store; compact?: boolean }) {
   const { state, engine, set } = store;
-  const [year, setYear] = useState(CONFIG.campaignYear);
-  const view = engine.atYear(year);
+  const view = engine;
 
   const segs = statutSegments(store, view);
   const tot = segs.reduce((a, x) => a + x.list.length, 0) || 1;
@@ -67,7 +68,7 @@ export default function BudgetDonutCard({ store, compact }: { store: Store; comp
   const donePct = Math.round((done / tot) * 100);
   const chartRef = useRef<EChartsInstance | null>(null);
 
-  const ringPx = compact ? 132 : 176;
+  const ringPx = compact ? 132 : 168;
   const inset = Math.round(ringPx * (compact ? 0.2 : 0.24));
 
   const option = useMemo<EChartsOption>(
@@ -76,16 +77,17 @@ export default function BudgetDonutCard({ store, compact }: { store: Store; comp
       series: [
         {
           type: "pie",
-          radius: ["62%", "89%"],
+          radius: ["64%", "90%"],
           center: ["50%", "50%"],
           startAngle: 90,
           avoidLabelOverlap: false,
           label: { show: false },
           labelLine: { show: false },
           cursor: "pointer",
-          itemStyle: { borderWidth: 0 },
+          // Un filet de surface entre deux parts : elles se touchent sans se confondre.
+          itemStyle: { borderWidth: 2, borderColor: SURFACE.card },
           emphasis: { focus: "self", scaleSize: 4 },
-          blur: { itemStyle: { opacity: 0.32 } },
+          blur: { itemStyle: { opacity: 0.28 } },
           data: segs.map((x) => ({
             name: x.key,
             value: x.list.length,
@@ -110,29 +112,15 @@ export default function BudgetDonutCard({ store, compact }: { store: Store; comp
 
   const hit = segs.find((x) => x.key === state.hoverSeg);
   const centerPct = hit ? Math.round((hit.list.length / tot) * 100) : donePct;
-  const centerColor = hit
-    ? hit.color
-    : donePct >= 90
-      ? "#16a34a"
-      : donePct >= 50
-        ? "#0a9bd8"
-        : "#dc2626";
 
   return (
-    <div style={CARD}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontSize: 13.5, fontWeight: 700 }}>
-            Avancement — en chantiers
-          </div>
-          <div style={{ fontSize: 11.5, color: "#8a95a1", marginTop: 2 }}>
-            {tot} chantiers suivis · par statut
-          </div>
-        </div>
-        <YearSelect year={year} onChange={setYear} />
-      </div>
+    <Card style={{ display: "flex", flexDirection: "column" }}>
+      <CardHead
+        title="Avancement du portefeuille"
+        hint={tot + " chantiers · par étape du circuit"}
+      />
 
-      <div style={{ display: "flex", justifyContent: "center", marginTop: 6 }}>
+      <div style={{ display: "flex", justifyContent: "center" }}>
         <div
           onMouseLeave={() => set({ hoverSeg: null })}
           style={{ position: "relative", width: ringPx, height: ringPx }}
@@ -159,34 +147,52 @@ export default function BudgetDonutCard({ store, compact }: { store: Store; comp
           >
             <span
               style={{
-                fontSize: compact ? 22 : 32,
+                fontSize: compact ? 22 : 30,
                 fontWeight: 700,
                 letterSpacing: "-1px",
-                color: centerColor,
+                color: hit ? hit.color : INK.strong,
                 lineHeight: 1,
                 whiteSpace: "nowrap",
+                fontVariantNumeric: "tabular-nums",
               }}
             >
               {centerPct} %
             </span>
             <span
               style={{
-                fontSize: compact ? 9.5 : 10.5,
+                fontSize: FS.micro,
                 fontWeight: 600,
-                color: "#8a95a1",
-                marginTop: 3,
+                color: INK.muted,
+                marginTop: 4,
                 textAlign: "center",
                 lineHeight: 1.2,
                 overflow: "hidden",
               }}
             >
-              {hit ? hit.label : compact ? "terminés" : "budgets terminés"}
+              {hit ? hit.label : "terminés"}
             </span>
           </div>
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 8 }}>
+      {/* Ce que dit l'étape survolée, en clair : l'infobulle système arrive trop tard. */}
+      <div
+        style={{
+          minHeight: 30,
+          marginTop: 8,
+          padding: "0 4px",
+          textAlign: "center",
+          fontSize: FS.small,
+          color: INK.muted,
+          lineHeight: 1.3,
+        }}
+      >
+        {hit
+          ? hit.hint
+          : "Survolez une étape pour la définir, cliquez pour l'ouvrir dans le tableau."}
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 1, marginTop: 4 }}>
         {segs.map((x) => {
           const on = state.hoverSeg === x.key;
           return (
@@ -195,15 +201,15 @@ export default function BudgetDonutCard({ store, compact }: { store: Store; comp
               onClick={x.pick}
               onMouseEnter={() => focusSegment(x.key)}
               onMouseLeave={() => focusSegment(null)}
-              title={x.hint + " — cliquer pour filtrer le tableau"}
+              title={"Ouvrir « " + x.label + " » dans le tableau"}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 8,
-                padding: "5px 8px",
+                gap: 9,
+                padding: "6px 8px",
                 border: 0,
-                borderRadius: 7,
-                background: on ? "#f4f6f8" : "#fff",
+                borderRadius: RADIUS.control,
+                background: on ? SURFACE.hover : SURFACE.card,
                 fontFamily: "inherit",
                 textAlign: "left",
                 cursor: "pointer",
@@ -217,9 +223,9 @@ export default function BudgetDonutCard({ store, compact }: { store: Store; comp
                 style={{
                   minWidth: 0,
                   flex: 1,
-                  fontSize: 12,
+                  fontSize: FS.small,
                   fontWeight: 600,
-                  color: "#3b4753",
+                  color: INK.base,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
@@ -227,16 +233,23 @@ export default function BudgetDonutCard({ store, compact }: { store: Store; comp
               >
                 {x.label}
               </span>
-              <span style={{ flex: "0 0 auto", fontSize: 12, fontWeight: 700, color: x.color }}>
+              <span
+                style={{
+                  flex: "0 0 auto",
+                  fontSize: FS.small,
+                  fontWeight: 700,
+                  color: INK.strong,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
                 {x.list.length}
               </span>
               <span
                 style={{
                   flex: "0 0 auto",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: "#6b7681",
-                  width: 44,
+                  fontSize: FS.small,
+                  color: INK.muted,
+                  width: 42,
                   textAlign: "right",
                   whiteSpace: "nowrap",
                   fontVariantNumeric: "tabular-nums",
@@ -248,6 +261,6 @@ export default function BudgetDonutCard({ store, compact }: { store: Store; comp
           );
         })}
       </div>
-    </div>
+    </Card>
   );
 }
