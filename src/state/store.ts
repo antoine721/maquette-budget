@@ -63,6 +63,7 @@ function initialState(): AppState {
     onlyFlagged: false,
     openRow: null,
     openCa: {},
+    openReel: {},
     openMenu: null,
     menuStep: null,
     menuValue: "",
@@ -349,13 +350,23 @@ export function useApp() {
       let touched = 0;
       if (!mList.length) return toast("Aucun mois modifiable dans le périmètre");
 
-      /** Valeur courante de la cellule, baseline si rien n'a encore été déclaré. */
-      const current = (f: string, m: number) =>
-        onBaseline
-          ? engine.baseField(ch, m, f)
-          : engine.saisiField(ch, m, f) === null
-            ? engine.baseField(ch, m, f)
-            : (engine.saisiField(ch, m, f) as number);
+      /**
+       * Valeur courante de la cellule, baseline si rien n'a encore été déclaré.
+       * `null` sur un mois que ni la saisie ni la baseline ne couvrent : l'action
+       * en masse le saute plutôt que d'y écrire un zéro.
+       */
+      const current = (f: string, m: number): number | null => {
+        if (onBaseline) return engine.baseField(ch, m, f);
+        const v = engine.saisiField(ch, m, f);
+        return v === null ? engine.baseField(ch, m, f) : v;
+      };
+
+      /** Écrit une valeur si elle existe, et compte la cellule touchée. */
+      const put = (f: string, m: number, v: number | null) => {
+        if (v === null || isNaN(v)) return;
+        next[engine.ek(ch, f, m)] = Math.round(v);
+        touched++;
+      };
 
       if (action.indexOf("Reprendre les valeurs ") === 0) {
         const src = parseInt(action.replace(/\D/g, ""), 10);
@@ -363,16 +374,14 @@ export function useApp() {
         fields.forEach((f) =>
           mList.forEach((m) => {
             const v = srcEngine.saisiField(ch, m, f);
-            const b = srcEngine.baseField(ch, m, f);
-            next[engine.ek(ch, f, m)] = Math.round(v === null ? b : v);
-            touched++;
+            put(f, m, v === null ? srcEngine.baseField(ch, m, f) : v);
           }),
         );
       } else if (action === "Arrondir à la centaine") {
         fields.forEach((f) =>
           mList.forEach((m) => {
-            next[engine.ek(ch, f, m)] = Math.round(current(f, m) / 100) * 100;
-            touched++;
+            const v = current(f, m);
+            put(f, m, v === null ? null : Math.round(v / 100) * 100);
           }),
         );
       } else if (action === "Vider la saisie" || action === "Vider la ligne") {
@@ -383,49 +392,39 @@ export function useApp() {
           }),
         );
       } else if (action === "Recopier la baseline sur tous les mois") {
-        fields.forEach((f) =>
-          mList.forEach((m) => {
-            next[engine.ek(ch, f, m)] = Math.round(engine.baseField(ch, m, f));
-            touched++;
-          }),
-        );
+        fields.forEach((f) => mList.forEach((m) => put(f, m, engine.baseField(ch, m, f))));
       } else if (action === "Recopier le 1er mois saisi sur tous les mois") {
         fields.forEach((f) => {
           const src = mList.find((m) => engine.saisiField(ch, m, f) !== null);
           if (src === undefined) return;
-          const v = Math.round(
-            onBaseline ? engine.baseField(ch, src, f) : (engine.saisiField(ch, src, f) as number),
-          );
-          mList.forEach((m) => {
-            next[engine.ek(ch, f, m)] = v;
-            touched++;
-          });
+          const v = onBaseline ? engine.baseField(ch, src, f) : engine.saisiField(ch, src, f);
+          mList.forEach((m) => put(f, m, v));
         });
       } else if (action === "Appliquer un % d'évolution") {
         if (isNaN(val)) return toast("Saisissez un pourcentage, ex. 2,5");
         fields.forEach((f) =>
           mList.forEach((m) => {
-            next[engine.ek(ch, f, m)] = Math.round(current(f, m) * (1 + val / 100));
-            touched++;
+            const v = current(f, m);
+            put(f, m, v === null ? null : v * (1 + val / 100));
           }),
         );
       } else if (action === "Saisir une valeur fixe par mois") {
         if (isNaN(val)) return toast("Saisissez un montant");
-        fields.forEach((f) =>
-          mList.forEach((m) => {
-            next[engine.ek(ch, f, m)] = Math.round(val);
-            touched++;
-          }),
-        );
+        fields.forEach((f) => mList.forEach((m) => put(f, m, val)));
       } else if (action === "Répartir un total sur la période") {
         if (isNaN(val)) return toast("Saisissez le total à répartir");
         let sum = 0;
-        fields.forEach((f) => mList.forEach((m) => (sum += engine.baseField(ch, m, f))));
+        fields.forEach((f) =>
+          mList.forEach((m) => {
+            const b = engine.baseField(ch, m, f);
+            if (b !== null) sum += b;
+          }),
+        );
         if (!sum) return toast("Répartition impossible : baseline vide");
         fields.forEach((f) =>
           mList.forEach((m) => {
-            next[engine.ek(ch, f, m)] = Math.round((val * engine.baseField(ch, m, f)) / sum);
-            touched++;
+            const b = engine.baseField(ch, m, f);
+            put(f, m, b === null ? null : (val * b) / sum);
           }),
         );
       }

@@ -6,7 +6,6 @@ import {
   MONTHS,
   PER_MONTHS,
   SAISIE_FIELDS,
-  SEASON,
   SHORT,
   type CatKey,
   type MetricKey,
@@ -14,6 +13,14 @@ import {
   type Statut,
 } from "../data/constants";
 import { CHANTIERS, LATE, REX, hash, rng, type Chantier } from "../data/chantiers";
+import {
+  anneeReference,
+  budget,
+  estReel,
+  moisRemontes,
+  realise,
+  type PosteReel,
+} from "../data/realise";
 import { CONFIG } from "../config";
 import { INK, STATE } from "../theme";
 import type { AppState, EditStore, Prims, RefIndicator, Todo } from "./types";
@@ -25,7 +32,7 @@ export type CalcMode = "base" | "saisi";
  *
  * Une instance est construite à chaque rendu ; le cache mémoïsé lui est fourni de
  * l'extérieur et n'est vidé que lorsque la signature de l'état change, de sorte
- * qu'un simple survol ne recalcule pas les 350 chantiers × 12 mois × 4 catégories.
+ * qu'un simple survol ne relise pas tout le portefeuille × 12 mois × 4 catégories.
  */
 export class Engine {
   constructor(
@@ -138,44 +145,54 @@ export class Engine {
 
   // ------------------------------------------------------------- valeurs de base
 
-  /** Réalisé N-1 reconstitué (source Gescof dans la vraie vie). */
-  n1(ch: Chantier, m: number, field: string, year: number): number {
-    return this.memo("n1:" + ch.id + ":" + m + ":" + field + ":" + year, () =>
-      this.n1Raw(ch, m, field, year),
-    );
+  /**
+   * Réalisé de référence pour construire le budget de l'exercice `year`.
+   *
+   * C'est le dernier exercice dont la paie couvre ce mois-là : pour le budget
+   * 2027 monté en septembre 2026, le réalisé 2026 de janvier à juillet, puis le
+   * réalisé 2025 d'août à décembre. `null` quand l'export ne remonte pas si
+   * loin — l'exercice 2025 n'a pas de 2024 derrière lui.
+   */
+  n1(ch: Chantier, m: number, field: string, year: number): number | null {
+    return this.memo("n1:" + ch.id + ":" + m + ":" + field + ":" + year, () => {
+      const ref = anneeReference(year, m);
+      return ref === null ? null : realise(ch.id, ref, field as PosteReel, m);
+    });
   }
 
-  private n1Raw(ch: Chantier, m: number, field: string, year: number): number {
-    const r = rng(hash(ch.id + field + year + m));
-    const yf = 1 + (year - 2026) * 0.03;
-    const monthCA = (ch.ca / 12) * SEASON[m] * yf * (0.96 + r() * 0.08);
-    const c = CAT.find((x) => x.k === field);
-    if (c) return monthCA * c.share * (0.9 + r() * 0.2);
-    if (field === "heures") return monthCA / ch.taux;
-    // Taux horaire chargé : la masse salariale en découle (heures × taux).
-    if (field === "taux") return ch.msRate * ch.taux * (0.99 + r() * 0.02);
-    if (field === "masse") return monthCA * ch.msRate;
-    return monthCA;
-  }
-
-  /** Baseline contrôle de gestion : réalisé N-1 × coefficients, ou valeur saisie par le CG. */
-  baseField(ch: Chantier, m: number, field: string): number {
+  /**
+   * Baseline contrôle de gestion.
+   *
+   * Sur un exercice révolu, c'est l'objectif que Gescof a réellement porté :
+   * les lignes « Budget CA » et « Budget heures » de l'export. Sur la campagne
+   * en cours, il n'y a pas encore de budget déposé — la baseline se construit
+   * alors comme le fait le contrôle de gestion, en indexant le réalisé de
+   * référence par les coefficients. Dans les deux cas, une valeur saisie par le
+   * CG l'emporte.
+   */
+  baseField(ch: Chantier, m: number, field: string): number | null {
     const e = this.s.baseEdits[this.ek(ch, field, m)];
     if (e !== undefined && e !== null) return e;
+    if (estReel(this.s.year)) return budget(ch.id, this.s.year, field as PosteReel, m);
     const raw = this.n1(ch, m, field, this.s.year);
+    if (raw === null) return null;
     // Les coefficients portent sur les valeurs en euros, pas sur un volume d'heures.
     return field === "heures" ? raw : raw * this.coef(ch, m);
   }
 
-  /** Prévisionnel déclaré par l'exploitation — `null` tant que le mois n'est pas saisi. */
+  /**
+   * Ce que l'exploitation a déclaré — `null` tant que le mois n'est pas saisi.
+   *
+   * Sur un exercice couvert par l'export, il n'y a rien à déclarer : la colonne
+   * porte le réalisé Gescof, et s'arrête où l'export s'arrête. Sur la campagne
+   * en cours, les valeurs sont celles d'une saisie de démonstration, dérivées de
+   * la baseline pour que les écrans d'avancement aient de quoi montrer.
+   */
   saisiField(ch: Chantier, m: number, field: string): number | null {
     const k = this.ek(ch, field, m);
     if (this.s.edits[k] !== undefined) return this.s.edits[k];
+    if (estReel(this.s.year)) return realise(ch.id, this.s.year, field as PosteReel, m);
     const st = this.st(ch);
-    if (this.closed()) {
-      const r0 = rng(hash(ch.id + field + "c" + this.s.year + m));
-      return this.baseField(ch, m, field) * (0.95 + r0() * 0.1);
-    }
     if (st === "En attente baseline CG" || st === "Non budgétisé") return null;
     if (st === "En saisie") {
       const late = LATE.indexOf(ch.id);
@@ -185,8 +202,10 @@ export class Engine {
         if (m >= 6) return null;
       } else if (m >= 9) return null;
     }
+    const base = this.baseField(ch, m, field);
+    if (base === null) return null;
     const r = rng(hash(ch.id + field + "s" + this.s.year + m));
-    return this.baseField(ch, m, field) * (0.93 + r() * 0.14);
+    return base * (0.93 + r() * 0.14);
   }
 
   prims(ch: Chantier, m: number, mode: CalcMode): Prims | null {
@@ -305,7 +324,8 @@ export class Engine {
         base = 0;
       list.forEach((ch) =>
         FULL_YEAR.forEach((m) => {
-          base += this.baseField(ch, m, c.k);
+          const b = this.baseField(ch, m, c.k);
+          if (b !== null) base += b;
           const v = this.saisiField(ch, m, c.k);
           if (v !== null) value += v;
         }),
@@ -326,7 +346,12 @@ export class Engine {
       const prevYear = this.s.year - 1;
       let prev = 0;
       this.caList(isCG).forEach((ch) =>
-        MONTHS.forEach((_, m) => CAT.forEach((c) => (prev += this.n1(ch, m, c.k, prevYear)))),
+        MONTHS.forEach((_, m) =>
+          CAT.forEach((c) => {
+            const v = this.n1(ch, m, c.k, prevYear);
+            if (v !== null) prev += v;
+          }),
+        ),
       );
       return prev;
     });
@@ -425,12 +450,21 @@ export class Engine {
       // Le budget de l'exercice précédent se lit sur un moteur calé sur N-1.
       const prevEngine = this.atYear(this.s.year - 1);
       const rows = MONTHS.map((_, m) => {
-        let objectif = 0;
-        list.forEach((ch) => CAT.forEach((c) => (objectif += this.baseField(ch, m, c.k))));
+        let objectif = 0,
+          poses = 0;
+        list.forEach((ch) =>
+          CAT.forEach((c) => {
+            const b = this.baseField(ch, m, c.k);
+            if (b === null) return;
+            objectif += b;
+            poses++;
+          }),
+        );
         return {
           m,
           declare: this.aggregate(list, [m], "saisi", "ca", "Total"),
-          objectif: list.length ? objectif : null,
+          // Un mois hors couverture n'a pas d'objectif : la courbe s'y interrompt.
+          objectif: poses ? objectif : null,
           prev: prevEngine.aggregate(list, [m], "saisi", "ca", "Total"),
         };
       });
@@ -443,7 +477,7 @@ export class Engine {
     if (this.closed()) return [];
     const st = this.st(ch);
     if (st === "Validé" || st === "Clôturé") return [];
-    return mIdx.filter((m) => this.s.periods[ch.agence][m] && !this.prims(ch, m, "saisi"));
+    return mIdx.filter((m) => this.periodOpen(ch, m) && !this.prims(ch, m, "saisi"));
   }
 
   /** Ce qu'il reste à faire sur un chantier, du point de vue du rôle donné. */
@@ -597,8 +631,18 @@ export class Engine {
     // Une période explicitement bloquante gèle la saisie de l'exploitation.
     if (this.activeBlock()) return [];
     return mIdx.filter(
-      (m) => this.s.periods[ch.agence][m] && st !== "Clôturé" && st !== "En attente baseline CG",
+      (m) => this.periodOpen(ch, m) && st !== "Clôturé" && st !== "En attente baseline CG",
     );
+  }
+
+  /**
+   * Mois ouvert à la saisie sur l'agence du chantier.
+   *
+   * Le calendrier est mémorisé d'une visite à l'autre : une agence ajoutée depuis
+   * peut manquer à l'appel, auquel cas le mois est réputé ouvert.
+   */
+  periodOpen(ch: Chantier, m: number): boolean {
+    return this.s.periods[ch.agence]?.[m] ?? true;
   }
 
   /** Période de gestion active qui bloque explicitement les modifications, s'il y en a une. */
@@ -613,7 +657,7 @@ export class Engine {
   remainingToSubmit(ch: Chantier): number {
     let n = 0;
     FULL_YEAR.forEach((m) => {
-      if (!this.s.periods[ch.agence][m]) return;
+      if (!this.periodOpen(ch, m)) return;
       SAISIE_FIELDS.forEach((f) => {
         if (this.saisiField(ch, m, f) === null) n++;
       });
@@ -707,9 +751,20 @@ export class Engine {
     });
   }
 
+  /** Jusqu'où l'export remonte le réalisé de l'exercice affiché, en clair. */
+  private couverture(): string {
+    const fin = moisRemontes(this.s.year);
+    if (!fin) return "réalisé non remonté";
+    if (fin >= MONTHS.length) return "réalisé complet";
+    return "réalisé remonté jusqu'à " + MONTHS[fin - 1].toLowerCase();
+  }
+
   campaignChip(): string {
     return this.closed()
-      ? "Exercice " + this.s.year + " — budget clos, consultation seule"
+      ? "Exercice " +
+          this.s.year +
+          " — budget clos, consultation seule · " +
+          this.couverture()
       : "Campagne de septembre " +
           (this.s.year - 1) +
           " — validation du budget janvier à décembre " +
@@ -718,7 +773,7 @@ export class Engine {
 
   campaignShort(): string {
     return this.closed()
-      ? "Budget clos · lecture seule"
+      ? "Budget clos · lecture seule · " + this.couverture()
       : "Saisie ouverte · échéance fin septembre " + (this.s.year - 1);
   }
 

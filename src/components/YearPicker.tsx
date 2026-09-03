@@ -5,6 +5,10 @@ import type { Store } from "../state/store";
 
 /** Un exercice se lit à sa position vis-à-vis de la campagne budgétée. */
 function statusOf(year: number): { label: string; fg: string; bg: string } {
+  // L'exercice qui précède la campagne n'est pas terminé : son budget est figé,
+  // mais son réalisé continue de tomber mois après mois.
+  if (year === CONFIG.campaignYear - 1)
+    return { label: "Budget clos · réalisé en cours", fg: "#6b7681", bg: "#f1f4f7" };
   if (year < CONFIG.campaignYear) return { label: "Clos", fg: "#6b7681", bg: "#f1f4f7" };
   if (year > CONFIG.campaignYear) return { label: "À venir", fg: "#92400e", bg: "#fef3c7" };
   return { label: "Campagne en cours", fg: "#0782b6", bg: "#e8f6fd" };

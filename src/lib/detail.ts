@@ -1,5 +1,21 @@
 import { CONFIG } from "../config";
-import { CAT, ST, isN2, N2_BORDER, N2_TINT, N2_FG, type Statut } from "../data/constants";
+import {
+  CAT,
+  ST,
+  N2_BORDER,
+  N2_TINT,
+  N2_FG,
+  type MetricKey,
+  type Statut,
+} from "../data/constants";
+import type { LigneGescof } from "../data/gescof";
+import {
+  COMPTE_RESULTAT,
+  anneeReference,
+  estReel,
+  ligneReelle,
+  refDegradee,
+} from "../data/realise";
 import type { Chantier } from "../data/chantiers";
 import type { Engine } from "./engine";
 import type { AppState } from "./types";
@@ -59,8 +75,8 @@ export interface DetailLine {
   quick?: QuickInfo;
   /** Ligne grise cumulant les actions déjà appliquées. */
   applied?: { label: string; title: string };
-  /** Ligne d'ouverture de section : le détail se lit en trois zones successives. */
-  head?: { index: number; hint: string };
+  /** Ligne d'ouverture de section : le détail se lit en zones successives. */
+  head?: { index: number; hint: string; fold?: { open: boolean } };
 }
 
 export interface MenuAction {
@@ -117,15 +133,47 @@ function mkLine(id: string, label: string, o: Partial<DetailLine> = {}): DetailL
  * entière : on lit d'abord d'où part le budget, puis ce qu'on y saisit, puis ce
  * qui en découle. Enchaînées sans séparation, les vingt lignes se confondaient.
  */
-function groupHead(id: string, label: string, index: number, hint: string): DetailLine {
+function groupHead(
+  id: string,
+  label: string,
+  index: number,
+  hint: string,
+  fold?: { open: boolean },
+): DetailLine {
   return mkLine(id, label, {
     weight: 700,
     labelColor: "#334155",
     size: "12px",
     pad: "0 0 0 14px",
     sepColor: "transparent",
-    head: { index, hint },
+    head: { index, hint, fold },
   });
+}
+
+/**
+ * Valeur de l'indicateur affiché sur le réalisé de référence d'un mois.
+ *
+ * Les indicateurs composés — masse salariale, ratios, prix horaire — ne sont
+ * pas des lignes de l'export : ils se recomposent à partir du CA, des heures et
+ * du taux. Si l'un des trois manque, l'indicateur ne veut rien dire et vaut
+ * `null` plutôt que zéro.
+ */
+function valeurReference(
+  engine: Engine,
+  ch: Chantier,
+  m: number,
+  year: number,
+  key: MetricKey,
+  cat: string,
+): number | null {
+  const n = (f: string) => engine.n1(ch, m, f, year);
+  if (key === "ca") return cat === "Total" ? n("ca") : n(engine.catKey(cat));
+  if (key === "heures" || key === "taux") return n(key);
+  const ca = n("ca"),
+    heures = n("heures"),
+    taux = n("taux");
+  if (ca === null || heures === null || taux === null) return null;
+  return engine.metricFrom({ cats: {}, ca, heures, taux, masse: heures * taux }, key, cat);
 }
 
 /**
@@ -147,17 +195,29 @@ export function buildDetail(
   const isExploit = engine.isExploit;
 
   const detail: DetailLine[] = [];
+  // Un exercice couvert par l'export ne se budgète plus : il se lit.
+  const reel = estReel(s.year);
 
   // ------------------------------------------------------- 1. baseline contrôle de gestion
   detail.push(
     groupHead(
       "head:base",
-      "Baseline — contrôle de gestion",
+      reel ? "Objectif — contrôle de gestion" : "Baseline — contrôle de gestion",
       1,
-      "Le point de départ du budget : le réalisé de l'an dernier, corrigé des coefficients.",
+      reel
+        ? "L'objectif que Gescof a porté sur l'exercice, en regard du réalisé de l'année d'avant."
+        : "Le point de départ du budget : le réalisé de l'an dernier, corrigé des coefficients.",
     ),
   );
-  const lineN1 = mkLine("n1", "Réalisé N-1 (source Gescof) — N-2 de septembre à décembre", { labelColor: "#6b7681" });
+  const lineN1 = mkLine("n1", "Réalisé de référence (export Gescof)", {
+    labelColor: "#6b7681",
+    title:
+      "Le dernier exercice dont la paie couvre le mois : " +
+      (anneeReference(s.year, 0) ?? "—") +
+      " en début d'année, " +
+      (anneeReference(s.year, 11) ?? "—") +
+      " sur les mois qu'il n'atteint pas.",
+  });
   const refLines = s.refs.map((r) => ({
     ref: r,
     line: mkLine("ref:" + r.id, "× " + r.label + " (%)", {
@@ -170,23 +230,34 @@ export function buildDetail(
       labelColor: r.scope === "particulier" ? "#5b21b6" : "#475569",
     }),
   }));
-  const lineBase = mkLine("base", "= Baseline contrôle de gestion", {
-    weight: 700,
-    labelColor: "#334155",
-    rowBg: "#f8fafc",
-    sepColor: "#e2e8f0",
-  });
+  const lineBase = mkLine(
+    "base",
+    reel ? "= Objectif Gescof (Budget CA / Budget heures)" : "= Baseline contrôle de gestion",
+    {
+      weight: 700,
+      labelColor: "#334155",
+      rowBg: "#f8fafc",
+      sepColor: "#e2e8f0",
+      title: reel
+        ? "Lignes « Budget CA » et « Budget heures » de l'export — les coefficients ne s'y appliquent pas."
+        : "Réalisé de référence multiplié par les coefficients.",
+    },
+  );
   detail.push(lineN1);
-  refLines.forEach((r) => detail.push(r.line));
+  // Les coefficients construisent la baseline d'une campagne ; sur un exercice
+  // révolu l'objectif est déjà posé, les afficher laisserait croire qu'il en dépend.
+  if (!reel) refLines.forEach((r) => detail.push(r.line));
   detail.push(lineBase);
 
   // ------------------------------------------------------------- 2. saisie exploitation
   detail.push(
     groupHead(
       "head:saisie",
-      "À remplir — exploitation",
+      reel ? "Réalisé — exploitation" : "À remplir — exploitation",
       2,
-      "Les postes saisis mois par mois : le CA par catégorie, les heures et le taux horaire.",
+      reel
+        ? "Ce que le chantier a produit mois par mois, tel que Gescof le remonte."
+        : "Les postes saisis mois par mois : le CA par catégorie, les heures et le taux horaire.",
     ),
   );
   const catLines = CAT.map((c) => ({
@@ -198,7 +269,7 @@ export function buildDetail(
     }),
   }));
   const caOpen = s.openCa[ch.id] !== false;
-  const lineCaTot = mkLine("catotal", (caOpen ? "▾ " : "▸ ") + "CA total budgété", {
+  const lineCaTot = mkLine("catotal", (caOpen ? "▾ " : "▸ ") + (reel ? "CA total réalisé" : "CA total budgété"), {
     weight: 700,
     labelColor: stc.fg,
     rowBg: stc.cell,
@@ -301,24 +372,9 @@ export function buildDetail(
     const pB = engine.prims(ch, m, "base");
     const pS = engine.prims(ch, m, "saisi");
     const bMet = engine.metricFrom(pB, met.key, cat);
-    const n2 = isN2(m);
+    const n2 = refDegradee(s.year, m);
 
-    const n1v =
-      met.key === "msRatio" || met.key === "phv" || met.key === "marge" || met.key === "masse"
-        ? engine.metricFrom(
-            {
-              cats: {},
-              ca: engine.n1(ch, m, "ca", s.year),
-              heures: engine.n1(ch, m, "heures", s.year),
-              taux: engine.n1(ch, m, "taux", s.year),
-              masse: engine.n1(ch, m, "heures", s.year) * engine.n1(ch, m, "taux", s.year),
-            },
-            met.key,
-            cat,
-          )
-        : met.key === "ca" && cat !== "Total"
-          ? engine.n1(ch, m, engine.catKey(cat), s.year)
-          : engine.n1(ch, m, met.key === "ca" ? "ca" : met.key, s.year);
+    const n1v = valeurReference(engine, ch, m, s.year, met.key, cat);
     // Sur septembre-décembre, les réalisés de l'année en cours manquent : la
     // référence remonte à N-2. C'est la seule cellule où l'information a du sens.
     lineN1.cells.push({
@@ -360,11 +416,12 @@ export function buildDetail(
     const baseEditable = cgEdit && (met.key === "ca" || met.key === "heures" || met.key === "taux");
     const baseField =
       met.key === "ca" ? (cat === "Total" ? null : engine.catKey(cat)) : (met.key as string);
+    const baseRaw = baseField === null ? null : engine.baseField(ch, m, baseField);
     lineBase.cells.push(
-      baseEditable && baseField
+      baseEditable && baseField && baseRaw !== null
         ? {
             editable: true,
-            raw: String(Math.round(engine.baseField(ch, m, baseField))),
+            raw: String(Math.round(baseRaw)),
             border: "#cbd5e1",
             dash: "solid",
             fg: "#17202a",
@@ -388,7 +445,8 @@ export function buildDetail(
     const saisiCell = (field: string, kind: typeof met.kind, readColor: string): DetailCell => {
       const v = engine.saisiField(ch, m, field);
       const ed = engine.edited(ch, field, m, isCG);
-      const refYear = n2 ? s.year - 2 : s.year - 1;
+      const refYear = anneeReference(s.year, m);
+      const ref = engine.n1(ch, m, field, s.year);
       const preN2 = n2 && !ed;
       if (!exEdit)
         return {
@@ -401,17 +459,19 @@ export function buildDetail(
         editable: true,
         raw: v === null ? "" : field === "taux" ? v.toFixed(2) : String(Math.round(v)),
         ghost:
-          CONFIG.ghostN1 === false
+          CONFIG.ghostN1 === false || ref === null
             ? "—"
             : field === "taux"
-              ? engine.n1(ch, m, field, refYear).toFixed(2)
-              : String(Math.round(engine.n1(ch, m, field, refYear))),
+              ? ref.toFixed(2)
+              : String(Math.round(ref)),
         ghostTitle:
-          v === null
-            ? "Valeur " + refYear + " proposée — saisissez le montant " + s.year
-            : ed
-              ? "Montant confirmé"
-              : "Repris de " + refYear + " — à confirmer en le ressaisissant",
+          ref === null
+            ? "Aucun réalisé de référence sur ce mois"
+            : v === null
+              ? "Valeur " + refYear + " proposée — saisissez le montant " + s.year
+              : ed
+                ? "Montant confirmé"
+                : "Repris de " + refYear + " — à confirmer en le ressaisissant",
         dash: CONFIG.confirmN1 !== false && v !== null && !ed ? "dashed" : "solid",
         fg:
           CONFIG.confirmN1 === false || v === null || ed
@@ -464,26 +524,18 @@ export function buildDetail(
   });
 
   // ------------------------------------------------------------------------- totaux
-  lineN1.total =
-    met.agg === "ratio"
-      ? engine.fmt(
-          lineN1.cells.reduce((a, c) => a + (parseFloat(String(c.text).replace(",", ".")) || 0), 0) /
-            (lineN1.cells.length || 1),
-          met.kind,
-        )
-      : engine.fmt(
-          mIdx.reduce(
-            (a, m) =>
-              a +
-              (met.key === "ca" && cat !== "Total"
-                ? engine.n1(ch, m, engine.catKey(cat), s.year)
-                : met.key === "masse"
-                  ? engine.n1(ch, m, "heures", s.year) * engine.n1(ch, m, "taux", s.year)
-                  : engine.n1(ch, m, met.key, s.year)),
-            0,
-          ),
-          met.kind,
-        );
+  // Un ratio se moyenne sur les mois couverts, un montant s'additionne.
+  const refs = mIdx
+    .map((m) => valeurReference(engine, ch, m, s.year, met.key, cat))
+    .filter((v): v is number => v !== null);
+  lineN1.total = refs.length
+    ? engine.fmt(
+        met.agg === "ratio"
+          ? refs.reduce((a, v) => a + v, 0) / refs.length
+          : refs.reduce((a, v) => a + v, 0),
+        met.kind,
+      )
+    : "—";
 
   lineBase.total = engine.fmt(engine.aggregate([ch], mIdx, "base", met.key, cat), met.kind);
   lineBase.totalColor = "#334155";
@@ -519,11 +571,106 @@ export function buildDetail(
     "high",
   );
 
-  if (isCG && met.key === "ca" && cat === "Total")
+  if (!reel && isCG && met.key === "ca" && cat === "Total")
     lineBase.label =
       "= Baseline contrôle de gestion — choisissez une catégorie (Forfait / Réel / PAD / TE) pour la saisir";
-  if (isCG && met.key === "masse")
+  if (!reel && isCG && met.key === "masse")
     lineBase.label = "= Baseline contrôle de gestion — la masse salariale se règle via le taux horaire";
 
+  // ------------------------------------------------- 4. compte de résultat Gescof
+  detail.push(...compteResultat(engine, s, ch, mIdx));
+
   return detail;
+}
+
+/**
+ * Le compte de résultat réalisé, tel qu'il sort de Gescof.
+ *
+ * Les trois premières zones ne montrent du réalisé que ce qui sert à budgéter :
+ * le CA, les heures, le taux. Le reste de l'export — les six lignes de
+ * facturation, le détail des charges, les deux niveaux de marge, les prix
+ * horaires — n'entre dans aucun calcul de la maquette mais dit pourquoi un
+ * chantier va bien ou mal. Il est donc là, replié par défaut, en lecture seule.
+ *
+ * Chaque mois est lu sur son propre exercice de référence : celui de la ligne
+ * « Réalisé de référence » plus haut. D'où le violet sur les mois qui
+ * redescendent d'un cran, et le trait sur ceux que l'export ne couvre pas.
+ */
+function compteResultat(
+  engine: Engine,
+  s: AppState,
+  ch: Chantier,
+  mIdx: number[],
+): DetailLine[] {
+  const ouvert = s.openReel[ch.id] === true;
+  // Sur un exercice couvert par l'export, c'est celui-là qu'on lit, pas sa référence.
+  const anneeDe = (m: number) => (estReel(s.year) ? s.year : anneeReference(s.year, m));
+  const annees = Array.from(new Set(mIdx.map(anneeDe).filter((a): a is number => a !== null)));
+
+  const head = groupHead(
+    "head:reel",
+    (ouvert ? "▾ " : "▸ ") + "Réalisé Gescof — compte de résultat",
+    4,
+    annees.length
+      ? "Les vingt-cinq lignes de l'export sur " +
+        annees.sort((a, b) => a - b).join(" et ") +
+        ". Lecture seule : rien ici n'entre dans le budget."
+      : "L'export ne couvre aucun mois de la période affichée.",
+    { open: ouvert },
+  );
+  head.cursor = "pointer";
+  if (!ouvert) return [head];
+
+  const lignes = COMPTE_RESULTAT.map((l) => {
+    const line = mkLine("reel:" + l.k, l.label, {
+      title: l.title,
+      weight: l.fort ? 700 : 500,
+      labelColor: l.fort ? "#334155" : "#6b7681",
+      rowBg: l.fort ? "#f8fafc" : "transparent",
+      sepColor: l.fort ? "#e2e8f0" : "#f1f4f7",
+      pad: l.creux ? "9px 12px 9px 30px" : "9px 12px 9px 14px",
+      size: l.creux ? "12.5px" : "13px",
+    });
+    const vals: number[] = [];
+    mIdx.forEach((m) => {
+      const annee = anneeDe(m);
+      const v = annee === null ? null : ligneReelle(ch.id, annee, l.k, m);
+      if (v !== null) vals.push(v);
+      const n2 = refDegradee(s.year, m);
+      line.cells.push({
+        editable: false,
+        text: engine.fmt(v, l.kind),
+        color: v === null ? INK.faint : n2 ? N2_FG : l.fort ? "#17202a" : "#475569",
+        bg: n2 ? N2_TINT : "transparent",
+      });
+    });
+    if (l.ratio) {
+      /**
+       * Un rapport se refait sur les cumuls, il ne se moyenne pas — et les deux
+       * cumuls doivent porter sur les mêmes mois. En 2026 la facturation d'août
+       * est remontée mais pas les heures : additionner l'une sans les autres
+       * donnerait un prix horaire de 34 € sur un chantier qui vend à 30 €.
+       */
+      const lignes = l.ratio.num.concat([l.ratio.den]);
+      const communs = mIdx.filter((m) => {
+        const annee = anneeDe(m);
+        return annee !== null && lignes.every((k) => ligneReelle(ch.id, annee, k, m) !== null);
+      });
+      const cumule = (ks: LigneGescof[]) =>
+        communs.reduce(
+          (a, m) => a + ks.reduce((b, k) => b + (ligneReelle(ch.id, anneeDe(m)!, k, m) ?? 0), 0),
+          0,
+        );
+      const den = cumule([l.ratio.den]);
+      line.total = den
+        ? engine.fmt((cumule(l.ratio.num) / den) * (l.ratio.pct ? 100 : 1), l.kind)
+        : "—";
+    } else {
+      line.total = vals.length ? engine.fmt(vals.reduce((a, v) => a + v, 0), l.kind) : "—";
+    }
+    line.totalColor = l.fort ? "#17202a" : "#475569";
+    return line;
+  });
+
+  return [head, ...lignes];
 }

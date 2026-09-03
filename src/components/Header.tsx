@@ -1,8 +1,14 @@
-import type { Role } from "../data/constants";
+import { CURRENT_REX, type Role } from "../data/constants";
+import { CHANTIERS, REX } from "../data/chantiers";
 import type { Store } from "../state/store";
 import YearPicker from "./YearPicker";
 
 const ROLES: Role[] = ["Exploitation", "Contrôle de gestion"];
+
+/** Agences du responsable connecté — le contrôle de gestion, lui, voit tout. */
+const AGENCES_REX = Array.from(
+  new Set(CHANTIERS.filter((ch) => REX[ch.id] === CURRENT_REX).map((ch) => ch.agence)),
+).join(", ");
 
 /**
  * Barre haute : titre, exercice, profil, agence, notifications, compte.
@@ -12,6 +18,7 @@ const ROLES: Role[] = ["Exploitation", "Contrôle de gestion"];
  */
 export default function Header({ store }: { store: Store }) {
   const { state, set } = store;
+  const agence = state.role === "Exploitation" ? AGENCES_REX : "Toutes agences";
 
   return (
     <header
@@ -79,8 +86,13 @@ export default function Header({ store }: { store: Store }) {
           color: "#3b4753",
           whiteSpace: "nowrap",
         }}
+        title={
+          state.role === "Exploitation"
+            ? "Agences du responsable connecté (" + CURRENT_REX + ")"
+            : "Le contrôle de gestion voit tout le portefeuille"
+        }
       >
-        Saint Ouen
+        {agence}
       </div>
 
       <div

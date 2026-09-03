@@ -10,7 +10,7 @@
 import type { AppState } from "../lib/types";
 import type { Tab } from "../data/constants";
 
-const KEY = "tableau-previsionnel:v1";
+const KEY = "tableau-previsionnel:v2";
 
 /** Ce qui est du travail de l'utilisateur, donc à conserver. */
 const SAVED = [

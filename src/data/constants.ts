@@ -1,5 +1,9 @@
 /**
- * Référentiels statiques de l'application — repris à l'identique du prototype.
+ * Référentiels statiques de l'application.
+ *
+ * Les listes de rattachement — agences, villes, entités, responsables — décrivent
+ * le portefeuille réel de `chantiers.ts` : ce sont ses valeurs distinctes, pas un
+ * catalogue générique. Les faire évoluer ensemble.
  */
 
 import { STATUS_COLORS } from "../theme";
@@ -34,24 +38,25 @@ export const SHORT = [
   "Déc",
 ] as const;
 
-/** Saisonnalité mensuelle appliquée au réalisé N-1. */
-export const SEASON = [1.0, 0.97, 1.05, 1.0, 1.02, 1.06, 0.82, 0.74, 1.08, 1.06, 1.0, 0.9];
-
-export const AGENCES = ["Saint Ouen", "Lyon Est", "Marseille", "Lille"];
+/**
+ * Agences de rattachement. Elles ouvrent et ferment les mois à la saisie, d'où
+ * leur présence dans `state.periods`.
+ */
+export const AGENCES = ["Saint-Ouen", "Paris Sud", "Marne-la-Vallée", "Orly"];
 
 export const ENTITIES = [
   { code: "EGC", name: "Entreprise Générale de Confiance" },
   { code: "PRS", name: "Prévention & Sécurité" },
-  { code: "ASV", name: "Assistance & Services" },
 ];
 
 export type CatKey = "forfait" | "reel" | "pad" | "te";
 
-export const CAT: { k: CatKey; label: string; share: number; title: string }[] = [
-  { k: "forfait", label: "Forfait", share: 0.62, title: "CA contractuel forfaitaire" },
-  { k: "reel", label: "Réel", share: 0.22, title: "CA facturé au réel" },
-  { k: "pad", label: "PAD", share: 0.1, title: "PAD — Prestations à la Demande" },
-  { k: "te", label: "TE", share: 0.06, title: "TE — Travaux Exceptionnels" },
+/** Les quatre catégories de CA que l'exploitation budgète, lignes 1, 2, 5 et 6 de Gescof. */
+export const CAT: { k: CatKey; label: string; title: string }[] = [
+  { k: "forfait", label: "Forfait", title: "CA contractuel forfaitaire" },
+  { k: "reel", label: "Réel", title: "CA facturé au réel" },
+  { k: "pad", label: "PAD", title: "PAD — Prestations à la Demande" },
+  { k: "te", label: "TE", title: "TE — Travaux Exceptionnels" },
 ];
 
 export const CAT_COLORS: Record<CatKey, string> = {
@@ -116,42 +121,12 @@ export const METRICS: Metric[] = [
   { key: "marge", label: "% marge après MS", kind: "pct", better: "high", agg: "ratio", formula: "% marge = (CA − MS) / CA × 100" },
 ];
 
-export const REX_NAMES = [
-  "A. Bernard",
-  "M. Legrand",
-  "S. Faure",
-  "K. Morel",
-  "P. Dufour",
-  "L. Mercier",
-  "N. Roussel",
-  "T. Girard",
-  "C. Blanchard",
-  "J. Perrot",
-  "H. Vasseur",
-  "E. Caron",
-];
+export const REX_NAMES = ["A. Bernard", "M. Legrand", "S. Faure"];
 
 /** REX connecté lorsque le rôle affiché est « Exploitation ». */
 export const CURRENT_REX = "A. Bernard";
 
-export const VILLES = [
-  "Courbevoie",
-  "Puteaux",
-  "Saint-Ouen",
-  "Lyon",
-  "Marseille",
-  "Marignane",
-  "Lille",
-  "Lesquin",
-  "Nanterre",
-  "Villeurbanne",
-  "Aubagne",
-  "Roubaix",
-  "Créteil",
-  "Vénissieux",
-  "Aix-en-Provence",
-  "Tourcoing",
-];
+export const VILLES = ["Paris", "Paris 15e", "Orly", "Chessy", "Bailly-Romainvilliers"];
 
 export const PERIODES = [
   "Année complète",
@@ -179,12 +154,13 @@ export const FULL_YEAR = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 export const SAISIE_FIELDS = CAT.map((c) => c.k as string).concat(["heures", "taux"]);
 
 /**
- * Septembre à décembre : la campagne se déroule en septembre N-1, les réalisés de
- * l'année en cours ne sont pas connus sur ces mois, la référence est donc N-2.
+ * Le violet signale une valeur adossée à N-2 plutôt qu'à N-1.
+ *
+ * La campagne se déroule en septembre N-1 : à cette date la paie de l'exercice
+ * en cours n'est remontée que jusqu'en juillet, et la référence des mois
+ * suivants redescend d'un cran. La coupure n'est pas une convention, elle se lit
+ * dans l'export — voir `refDegradee`.
  */
-export const N2_MONTHS = [8, 9, 10, 11];
-export const isN2 = (m: number) => m >= 8;
-/** Le violet signale une valeur adossée à N-2 plutôt qu'à N-1. */
 export const N2_TINT = "#faf8ff";
 export const N2_BORDER = "#ddd6fe";
 export const N2_FG = "#6d28d9";
@@ -222,7 +198,8 @@ export const STATUT_OPTS: Statut[] = [
   "Clôturé",
 ];
 
-export const YEARS = [2024, 2025, 2026, 2027];
+/** 2025 et 2026 sont couverts par l'export Gescof ; 2027 est la campagne à saisir. */
+export const YEARS = [2025, 2026, 2027];
 
 export type Role = "Exploitation" | "Contrôle de gestion";
 export type Tab = "Accueil" | "Tableau prévisionnel" | "Pilotage CDG";

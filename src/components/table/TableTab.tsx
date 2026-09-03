@@ -502,9 +502,13 @@ function Row({
               <span style={{ color: LINE.base }}>·</span>
               <span
                 style={{ flex: "0 0 auto", fontVariantNumeric: "tabular-nums" }}
-                title="Part des champs de budget renseignés sur la période affichée"
+                title={
+                  engine.closed()
+                    ? "Part de la période que le réalisé Gescof couvre"
+                    : "Part des champs de budget renseignés sur la période affichée"
+                }
               >
-                {completion} % rempli
+                {completion} % {engine.closed() ? "remonté" : "rempli"}
               </span>
             </div>
           </div>

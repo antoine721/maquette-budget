@@ -156,13 +156,13 @@ function Overview({ store }: { store: Store }) {
   );
 }
 
-/** Top 20 chantiers : la concentration du CA et les manquants. */
+/** Le portefeuille chantier par chantier : le CA, l'écart à l'objectif, ce qui manque. */
 function TopChantiers({ store }: { store: Store }) {
   const { state, engine, openChantier } = store;
 
   const rows = engine
     .scope()
-    .filter((ch) => ch.big)
+    .slice()
     .sort((a, b) => b.ca - a.ca)
     .map((ch) => {
       const st = engine.st(ch) as Statut;
@@ -198,7 +198,10 @@ function TopChantiers({ store }: { store: Store }) {
   return (
     <div style={CARD}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 14, fontWeight: 700 }}>Top 20 chantiers</span>
+        <span style={{ fontSize: 14, fontWeight: 700 }}>Chantiers du portefeuille</span>
+        <span style={{ fontSize: 12, color: "#6b7681" }}>
+          {rows.length} chantiers · du plus gros CA au plus petit
+        </span>
       </div>
       <div style={{ overflowX: "auto", marginTop: 12 }}>
         <div style={{ minWidth: 1040 }}>
