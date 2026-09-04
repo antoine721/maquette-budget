@@ -78,8 +78,6 @@ export interface AppState {
 
   openRow: string | null;
   openCa: Record<string, boolean>;
-  /** Chantiers dont le compte de résultat Gescof est déplié — replié par défaut. */
-  openReel: Record<string, boolean>;
   openMenu: string | null;
   menuStep: string | null;
   menuValue: string;

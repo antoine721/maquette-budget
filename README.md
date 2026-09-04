@@ -70,8 +70,7 @@ Deux points de jonction méritent d'être connus :
 - **Un mois sans paie n'existe pas pour l'application.** Août 2026 est facturé mais ni les heures
   ni les salaires ne sont remontés. Un mois auquel il manque une des six valeurs du budget
   n'entre dans aucun calcul : le laisser passer sur son seul CA gonflerait les totaux d'un côté
-  sans les charges de l'autre. Le compte de résultat détaillé, lui, continue de l'afficher — il
-  lit les lignes brutes.
+  sans les charges de l'autre.
 
 Pour brancher un vrai backend, c'est `src/data/gescof.ts` qu'il faut remplacer : `realise.ts` et
 le moteur n'en connaissent que la forme.
@@ -215,15 +214,12 @@ calculés sur **tout** le périmètre filtré. La recherche est débouncée à 2
   elles passent au bleu dès qu'elles sont reconfirmées. Sur un exercice déjà réalisé, où la
   référence est franchement N-1 sur les douze mois, le violet ne s'affiche pas.
 
-  Le détail dépliable se lit en **quatre zones encadrées et numérotées** : **1 · Baseline —
+  Le détail dépliable se lit en **trois zones encadrées et numérotées** : **1 · Baseline —
   contrôle de gestion** (réalisé de référence → coefficients → baseline ; sur un exercice
   révolu, l'objectif Gescof directement, sans coefficients), **2 · À remplir — exploitation**
   (CA par catégorie, heures, taux horaire chargé, d'où découle la masse salariale — intitulée
-  « Réalisé » sur un exercice révolu), **3 · Indicateurs calculés**, et **4 · Réalisé Gescof —
-  compte de résultat**, replié par défaut. Cette dernière zone n'entre dans aucun calcul : elle
-  déroule les 25 lignes de l'export, du budget CA à la marge 2, parce que c'est là que se lit
-  *pourquoi* un chantier va bien ou mal. Chaque mois y est lu sur son propre exercice de
-  référence. Le menu ⋯ de chaque ligne de saisie propose deux gestes — appliquer un %
+  « Réalisé » sur un exercice révolu) et **3 · Indicateurs calculés**.
+  Le menu ⋯ de chaque ligne de saisie propose deux gestes — appliquer un %
   d'évolution, recopier le 1er mois saisi — avec historique et annulation. Le récapitulatif
   **Prévu CG / Déclaré / % objectif / Couverture** est en bas, contre les boutons du circuit.
 - **Pilotage CDG** — quatre onglets internes : **Vue d'ensemble** (nombre de chantiers, avancement

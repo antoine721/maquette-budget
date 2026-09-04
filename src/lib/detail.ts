@@ -8,14 +8,7 @@ import {
   type MetricKey,
   type Statut,
 } from "../data/constants";
-import type { LigneGescof } from "../data/gescof";
-import {
-  COMPTE_RESULTAT,
-  anneeReference,
-  estReel,
-  ligneReelle,
-  refDegradee,
-} from "../data/realise";
+import { anneeReference, estReel, refDegradee } from "../data/realise";
 import type { Chantier } from "../data/chantiers";
 import type { Engine } from "./engine";
 import type { AppState } from "./types";
@@ -76,7 +69,7 @@ export interface DetailLine {
   /** Ligne grise cumulant les actions déjà appliquées. */
   applied?: { label: string; title: string };
   /** Ligne d'ouverture de section : le détail se lit en zones successives. */
-  head?: { index: number; hint: string; fold?: { open: boolean } };
+  head?: { index: number; hint: string };
 }
 
 export interface MenuAction {
@@ -133,20 +126,14 @@ function mkLine(id: string, label: string, o: Partial<DetailLine> = {}): DetailL
  * entière : on lit d'abord d'où part le budget, puis ce qu'on y saisit, puis ce
  * qui en découle. Enchaînées sans séparation, les vingt lignes se confondaient.
  */
-function groupHead(
-  id: string,
-  label: string,
-  index: number,
-  hint: string,
-  fold?: { open: boolean },
-): DetailLine {
+function groupHead(id: string, label: string, index: number, hint: string): DetailLine {
   return mkLine(id, label, {
     weight: 700,
     labelColor: "#334155",
     size: "12px",
     pad: "0 0 0 14px",
     sepColor: "transparent",
-    head: { index, hint, fold },
+    head: { index, hint },
   });
 }
 
@@ -577,100 +564,5 @@ export function buildDetail(
   if (!reel && isCG && met.key === "masse")
     lineBase.label = "= Baseline contrôle de gestion — la masse salariale se règle via le taux horaire";
 
-  // ------------------------------------------------- 4. compte de résultat Gescof
-  detail.push(...compteResultat(engine, s, ch, mIdx));
-
   return detail;
-}
-
-/**
- * Le compte de résultat réalisé, tel qu'il sort de Gescof.
- *
- * Les trois premières zones ne montrent du réalisé que ce qui sert à budgéter :
- * le CA, les heures, le taux. Le reste de l'export — les six lignes de
- * facturation, le détail des charges, les deux niveaux de marge, les prix
- * horaires — n'entre dans aucun calcul de la maquette mais dit pourquoi un
- * chantier va bien ou mal. Il est donc là, replié par défaut, en lecture seule.
- *
- * Chaque mois est lu sur son propre exercice de référence : celui de la ligne
- * « Réalisé de référence » plus haut. D'où le violet sur les mois qui
- * redescendent d'un cran, et le trait sur ceux que l'export ne couvre pas.
- */
-function compteResultat(
-  engine: Engine,
-  s: AppState,
-  ch: Chantier,
-  mIdx: number[],
-): DetailLine[] {
-  const ouvert = s.openReel[ch.id] === true;
-  // Sur un exercice couvert par l'export, c'est celui-là qu'on lit, pas sa référence.
-  const anneeDe = (m: number) => (estReel(s.year) ? s.year : anneeReference(s.year, m));
-  const annees = Array.from(new Set(mIdx.map(anneeDe).filter((a): a is number => a !== null)));
-
-  const head = groupHead(
-    "head:reel",
-    (ouvert ? "▾ " : "▸ ") + "Réalisé Gescof — compte de résultat",
-    4,
-    annees.length
-      ? "Les vingt-cinq lignes de l'export sur " +
-        annees.sort((a, b) => a - b).join(" et ") +
-        ". Lecture seule : rien ici n'entre dans le budget."
-      : "L'export ne couvre aucun mois de la période affichée.",
-    { open: ouvert },
-  );
-  head.cursor = "pointer";
-  if (!ouvert) return [head];
-
-  const lignes = COMPTE_RESULTAT.map((l) => {
-    const line = mkLine("reel:" + l.k, l.label, {
-      title: l.title,
-      weight: l.fort ? 700 : 500,
-      labelColor: l.fort ? "#334155" : "#6b7681",
-      rowBg: l.fort ? "#f8fafc" : "transparent",
-      sepColor: l.fort ? "#e2e8f0" : "#f1f4f7",
-      pad: l.creux ? "9px 12px 9px 30px" : "9px 12px 9px 14px",
-      size: l.creux ? "12.5px" : "13px",
-    });
-    const vals: number[] = [];
-    mIdx.forEach((m) => {
-      const annee = anneeDe(m);
-      const v = annee === null ? null : ligneReelle(ch.id, annee, l.k, m);
-      if (v !== null) vals.push(v);
-      const n2 = refDegradee(s.year, m);
-      line.cells.push({
-        editable: false,
-        text: engine.fmt(v, l.kind),
-        color: v === null ? INK.faint : n2 ? N2_FG : l.fort ? "#17202a" : "#475569",
-        bg: n2 ? N2_TINT : "transparent",
-      });
-    });
-    if (l.ratio) {
-      /**
-       * Un rapport se refait sur les cumuls, il ne se moyenne pas — et les deux
-       * cumuls doivent porter sur les mêmes mois. En 2026 la facturation d'août
-       * est remontée mais pas les heures : additionner l'une sans les autres
-       * donnerait un prix horaire de 34 € sur un chantier qui vend à 30 €.
-       */
-      const lignes = l.ratio.num.concat([l.ratio.den]);
-      const communs = mIdx.filter((m) => {
-        const annee = anneeDe(m);
-        return annee !== null && lignes.every((k) => ligneReelle(ch.id, annee, k, m) !== null);
-      });
-      const cumule = (ks: LigneGescof[]) =>
-        communs.reduce(
-          (a, m) => a + ks.reduce((b, k) => b + (ligneReelle(ch.id, anneeDe(m)!, k, m) ?? 0), 0),
-          0,
-        );
-      const den = cumule([l.ratio.den]);
-      line.total = den
-        ? engine.fmt((cumule(l.ratio.num) / den) * (l.ratio.pct ? 100 : 1), l.kind)
-        : "—";
-    } else {
-      line.total = vals.length ? engine.fmt(vals.reduce((a, v) => a + v, 0), l.kind) : "—";
-    }
-    line.totalColor = l.fort ? "#17202a" : "#475569";
-    return line;
-  });
-
-  return [head, ...lignes];
 }

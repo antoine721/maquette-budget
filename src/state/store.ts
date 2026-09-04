@@ -63,7 +63,6 @@ function initialState(): AppState {
     onlyFlagged: false,
     openRow: null,
     openCa: {},
-    openReel: {},
     openMenu: null,
     menuStep: null,
     menuValue: "",

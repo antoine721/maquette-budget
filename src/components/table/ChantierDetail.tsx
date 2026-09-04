@@ -9,7 +9,7 @@ import { BRAND, FS, INK, LINE, RADIUS, STATE, SURFACE } from "../../theme";
  * Une teinte par zone : d'où part le budget, ce qu'on saisit, ce qui en découle,
  * et le réalisé qui l'éclaire.
  */
-const SECTION_ACCENT = [INK.muted, BRAND.base, "#8b5cf6", "#0f766e"];
+const SECTION_ACCENT = [INK.muted, BRAND.base, "#8b5cf6"];
 
 /** Détail du calcul d'un chantier : les quatre zones de lignes et le circuit de validation. */
 export default function ChantierDetail({
@@ -137,15 +137,6 @@ export default function ChantierDetail({
           }}
         >
           <div
-            onClick={
-              sec.head.head!.fold
-                ? () =>
-                    set((p) => ({
-                      openReel: { ...p.openReel, [ch.id]: !p.openReel[ch.id] },
-                    }))
-                : undefined
-            }
-            title={sec.head.head!.fold ? "Afficher ou masquer le compte de résultat" : undefined}
             style={{
               display: "flex",
               alignItems: "center",
@@ -154,7 +145,6 @@ export default function ChantierDetail({
               background: SURFACE.sunken,
               borderBottom: sec.lines.length ? "1px solid " + LINE.base : 0,
               borderLeft: "3px solid " + SECTION_ACCENT[sec.head.head!.index - 1],
-              cursor: sec.head.head!.fold ? "pointer" : "default",
             }}
           >
             <span
